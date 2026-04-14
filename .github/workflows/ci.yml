@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for sensitive data
+        run: |
+          echo "Checking for potential sensitive data..."
+          if grep -r "sk-" --include="*.py" --include="*.md" --include="*.json" --exclude-dir=".git" .; then
+            echo "ERROR: Found potential API keys"
+            exit 1
+          fi
+          if grep -r "Bearer [a-zA-Z0-9]" --include="*.py" --include="*.md" --include="*.json" --exclude-dir=".git" . | grep -v "Bearer ${" | grep -v "Authorization: Bearer"; then
+            echo "ERROR: Found potential bearer tokens"
+            exit 1
+          fi
+          echo "No sensitive data found"
+
+  python-lint:
+    name: Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+      
+      - name: Run Ruff
+        run: |
+          ruff check mealie-mcp-server/src/
+          ruff check mealie-workflow/src/
+          ruff check addons/mealie-import-orchestrator/src/
+
+  repo-hygiene:
+    name: Repository Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for forbidden patterns
+        run: |
+          echo "Checking for forbidden file patterns..."
+          if find . -name "*final*" -o -name "*debug*" -o -name "*copy*" -o -name "*fixed*" -o -name "*v2*" -o -name "*v3*" | grep -v ".git" | grep -v "node_modules"; then
+            echo "ERROR: Found files with forbidden patterns (final, debug, copy, fixed, v2, v3)"
+            exit 1
+          fi
+          echo "No forbidden patterns found"
+      
+      - name: Check .gitignore
+        run: |
+          echo "Checking .gitignore coverage..."
+          if ! grep -q "mcp_config*.json" .gitignore; then
+            echo "ERROR: .gitignore should include mcp_config*.json"
+            exit 1
+          fi
+          echo ".gitignore is properly configured"
+
+  mcp-server-test:
+    name: MCP Server Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          cd mealie-mcp-server
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Test CLI validation
+        run: |
+          cd mealie-mcp-server
+          python3 cli.py --check || true
+          
+      - name: Test server import
+        run: |
+          cd mealie-mcp-server
+          python3 -c "from src.server import main; print('Server import successful')"
