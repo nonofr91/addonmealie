@@ -14,7 +14,7 @@ Implémenter une architecture d'abstraction pour les providers IA (Cascade, Open
   - Email : bruno.arasa@laposte.net
   - Password : password123 (réinitialisé via base de données)
   - URL : http://127.0.0.1:39077
-  - API Key : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb25nX3Rva2VuIjp0cnVlLCJpZCI6ImQwMmY5MzIxLTY1NjktNGM3My05YWEyLTdlY2IyOGU1NjU4MyIsIm5hbWUiOiJ0ZXN0bG9jYWwiLCJpbnRlZ3JhdGlvbl9pZCI6ImdlbmVyaWMiLCJleHAiOjE5MzM2ODAyODJ9.GB47FPapfXueztVnsU7BTclXYECuJAU7_3QIJrfLCig
+  - API Key : [Généré via interface web Mealie]
 
 ### 2. Adaptation MCP pour Coolify
 - **Transport SSE** : Support ajouté via variable d'environnement `MCP_TRANSPORT`
