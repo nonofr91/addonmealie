@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created_at": "2026-04-02T11:07:53.615771",
+    "total_recipes": 1,
+    "format": "mealie_compatible",
+    "language": "fr",
+    "cuisine": "Française",
+    "structurer": "mealie_data_structurer"
+  },
+  "recipes": [
+    {
+      "name": "Recette Exemple",
+      "slug": "recette-exemple",
+      "description": "Recette délicieuse et facile à réaliser",
+      "prepTime": "PT15M",
+      "cookTime": "PT20M",
+      "totalTime": "PT35M",
+      "recipeServings": 4.0,
+      "recipeYieldQuantity": 4.0,
+      "recipeYield": "4 servings",
+      "recipeIngredient": [
+        {
+          "quantity": 0.0,
+          "unit": "",
+          "food": "Ingrédient principal",
+          "note": "",
+          "display": "Ingrédient principal",
+          "title": null,
+          "originalText": "Ingrédient principal",
+          "referenceId": "322d375b-593f-48ee-9143-562c821d8124",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 0.0,
+          "unit": "",
+          "food": "Accomplement 1",
+          "note": "",
+          "display": "Accomplement 1",
+          "title": null,
+          "originalText": "Accomplement 1",
+          "referenceId": "7202e5bf-1408-44b7-a02b-a4e569acf10c",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 0.0,
+          "unit": "",
+          "food": "Accomplement 2",
+          "note": "",
+          "display": "Accomplement 2",
+          "title": null,
+          "originalText": "Accomplement 2",
+          "referenceId": "50b9f093-5cfc-4c5d-b4ea-80ab8120cf7b",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 0.0,
+          "unit": "",
+          "food": "Assaisonnements variés",
+          "note": "",
+          "display": "Assaisonnements variés",
+          "title": null,
+          "originalText": "Assaisonnements variés",
+          "referenceId": "85c99d81-793e-44a0-88d2-c0279208ff56",
+          "referencedRecipe": null
+        }
+      ],
+      "recipeInstructions": [
+        {
+          "id": "e913de0e-8c83-423c-8179-54e339eaa272",
+          "title": "Étape 1",
+          "summary": "",
+          "text": "Préparer les ingrédients",
+          "ingredientReferences": []
+        },
+        {
+          "id": "8d232d01-256a-4efa-8871-1b14885fb985",
+          "title": "Étape 2",
+          "summary": "",
+          "text": "Cuire selon les instructions",
+          "ingredientReferences": []
+        },
+        {
+          "id": "08309719-2c33-4786-a518-fad9f2306407",
+          "title": "Étape 3",
+          "summary": "",
+          "text": "Servir chaud",
+          "ingredientReferences": []
+        }
+      ],
+      "recipeCategory": [
+        "Plat Principal"
+      ],
+      "tags": [
+        "fait_maison",
+        "recette"
+      ],
+      "orgURL": "https://www.cuisineactuelle.fr/recettes/ratatouille.htm",
+      "dateAdded": "2026-04-02",
+      "dateUpdated": "2026-04-02T11:07:53.615107",
+      "nutrition": {
+        "calories": 50,
+        "carbohydrateContent": "0g",
+        "cholesterolContent": null,
+        "fatContent": "0g",
+        "fiberContent": null,
+        "proteinContent": "0g",
+        "saturatedFatContent": "0g",
+        "sodiumContent": null,
+        "sugarContent": "0g",
+        "transFatContent": null,
+        "unsaturatedFatContent": null
+      },
+      "settings": {
+        "public": false,
+        "showNutrition": true,
+        "showAssets": true,
+        "landscapeView": false,
+        "disableComments": false,
+        "locked": false
+      },
+      "language": "fr",
+      "cuisine": "Française",
+      "difficulty": "Facile",
+      "cost": "Économique",
+      "scraped_at": "2026-04-02T11:07:51.608301",
+      "image_path": "scraped_images/recette_exemple.jpg"
+    }
+  ],
+  "statistics": {
+    "total_categories": 1,
+    "total_tags": 2,
+    "difficulty_distribution": {
+      "facile": 1,
+      "moyen": 0,
+      "difficile": 0
+    },
+    "cost_distribution": {
+      "économique": 1,
+      "moyen": 0,
+      "élevé": 0
+    },
+    "average_calories": 50.0,
+    "most_common_categories": [
+      "Plat Principal"
+    ],
+    "most_common_tags": [
+      "fait_maison",
+      "recette"
+    ]
+  }
+}

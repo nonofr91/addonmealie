@@ -1,0 +1,100 @@
+{
+  "properties": {
+    "quantity": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Quantity",
+      "default": 0
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "$ref": "#/components/schemas/IngredientUnit-Output"
+        },
+        {
+          "$ref": "#/components/schemas/CreateIngredientUnit"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Unit"
+    },
+    "food": {
+      "anyOf": [
+        {
+          "$ref": "#/components/schemas/IngredientFood-Output"
+        },
+        {
+          "$ref": "#/components/schemas/CreateIngredientFood"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Food"
+    },
+    "referencedRecipe": {
+      "anyOf": [
+        {
+          "$ref": "#/components/schemas/Recipe-Output"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Note",
+      "default": ""
+    },
+    "display": {
+      "type": "string",
+      "title": "Display",
+      "default": ""
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Title"
+    },
+    "originalText": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Originaltext"
+    },
+    "referenceId": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Referenceid"
+    }
+  },
+  "type": "object",
+  "title": "RecipeIngredient"
+}

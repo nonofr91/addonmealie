@@ -1,0 +1,26 @@
+services:
+  mealie:
+    image: ${MEALIE_IMAGE:-ghcr.io/mealie-recipes/mealie:latest}
+    container_name: ${MEALIE_CONTAINER_NAME:-mealie-local-dev}
+    restart: unless-stopped
+    ports:
+      - "${MEALIE_HOST_PORT:-9925}:9000"
+    environment:
+      - 'ALLOW_SIGNUP=${ALLOW_SIGNUP:-true}'
+      - 'PUID=${PUID:-1000}'
+      - 'PGID=${PGID:-1000}'
+      - 'TZ=${TZ:-Europe/Paris}'
+      - 'MAX_WORKERS=${MAX_WORKERS:-10}'
+      - 'WEB_CONCURRENCY=${WEB_CONCURRENCY:-1}'
+      - 'BASE_URL=${BASE_URL:-http://127.0.0.1:9925}'
+      - 'SERVICE_URL_MEALIE_9000=${SERVICE_URL_MEALIE_9000:-http://127.0.0.1:9925}'
+    volumes:
+      - mealie-dev-data:/app/data
+    networks:
+      - mealie-dev
+
+volumes:
+  mealie-dev-data:
+
+networks:
+  mealie-dev:

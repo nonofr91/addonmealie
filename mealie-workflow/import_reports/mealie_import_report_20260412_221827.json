@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "import_date": "2026-04-12T22:18:27.784210",
+    "total_imported": 1,
+    "importer": "mealie_importer_mcp",
+    "config": {
+      "batch_size": 5,
+      "delay_between_imports": 3,
+      "verify_imports": true
+    }
+  },
+  "recipes": [
+    {
+      "name": "Test Boeuf Bourguignon OpenAI",
+      "slug": "test-boeuf-bourguignon-openai",
+      "id": "test-boeuf-bourguignon-openai",
+      "imported_at": "2026-04-12T22:18:27.784007",
+      "servings": 4.0,
+      "ingredients_count": 5,
+      "instructions_count": 4,
+      "categories": [
+        "Plat Principal"
+      ],
+      "tags": [
+        "test",
+        "openai"
+      ],
+      "nutrition": {
+        "calories": 450,
+        "carbohydrateContent": "15g",
+        "fatContent": "25g",
+        "proteinContent": "35g",
+        "sugarContent": "5g",
+        "saturatedFatContent": "10g"
+      },
+      "difficulty": "Moyen",
+      "cost": "Moyen"
+    }
+  ],
+  "statistics": {
+    "total_categories": 1,
+    "total_tags": 2,
+    "difficulty_distribution": {
+      "facile": 0,
+      "moyen": 1,
+      "difficile": 0
+    },
+    "cost_distribution": {
+      "économique": 0,
+      "moyen": 1,
+      "élevé": 0
+    },
+    "avg_ingredients_per_recipe": 5.0,
+    "avg_instructions_per_recipe": 4.0,
+    "avg_calories_per_recipe": 450.0,
+    "most_common_categories": [
+      "Plat Principal"
+    ],
+    "most_common_tags": [
+      "test",
+      "openai"
+    ]
+  }
+}

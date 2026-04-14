@@ -1,0 +1,356 @@
+{
+  "properties": {
+    "id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid4"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id"
+    },
+    "userId": {
+      "type": "string",
+      "format": "uuid4",
+      "title": "Userid"
+    },
+    "householdId": {
+      "type": "string",
+      "format": "uuid4",
+      "title": "Householdid"
+    },
+    "groupId": {
+      "type": "string",
+      "format": "uuid4",
+      "title": "Groupid"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug",
+      "default": ""
+    },
+    "image": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Image"
+    },
+    "recipeServings": {
+      "type": "number",
+      "title": "Recipeservings",
+      "default": 0
+    },
+    "recipeYieldQuantity": {
+      "type": "number",
+      "title": "Recipeyieldquantity",
+      "default": 0
+    },
+    "recipeYield": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recipeyield"
+    },
+    "totalTime": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Totaltime"
+    },
+    "prepTime": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Preptime"
+    },
+    "cookTime": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Cooktime"
+    },
+    "performTime": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Performtime"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Description",
+      "default": ""
+    },
+    "recipeCategory": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/components/schemas/RecipeCategory"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recipecategory",
+      "default": []
+    },
+    "tags": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/components/schemas/RecipeTag"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Tags",
+      "default": []
+    },
+    "tools": {
+      "items": {
+        "$ref": "#/components/schemas/RecipeTool"
+      },
+      "type": "array",
+      "title": "Tools",
+      "default": []
+    },
+    "rating": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Rating"
+    },
+    "orgURL": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Orgurl"
+    },
+    "dateAdded": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dateadded"
+    },
+    "dateUpdated": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dateupdated"
+    },
+    "createdAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Createdat"
+    },
+    "updatedAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Updatedat"
+    },
+    "lastMade": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Lastmade"
+    },
+    "recipeIngredient": {
+      "items": {
+        "$ref": "#/components/schemas/RecipeIngredient-Output"
+      },
+      "type": "array",
+      "title": "Recipeingredient",
+      "default": []
+    },
+    "recipeInstructions": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/components/schemas/RecipeStep"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recipeinstructions",
+      "default": []
+    },
+    "nutrition": {
+      "anyOf": [
+        {
+          "$ref": "#/components/schemas/Nutrition"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "settings": {
+      "anyOf": [
+        {
+          "$ref": "#/components/schemas/RecipeSettings"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "assets": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/components/schemas/RecipeAsset"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Assets",
+      "default": []
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/components/schemas/RecipeNote"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Notes",
+      "default": []
+    },
+    "extras": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Extras",
+      "default": {}
+    },
+    "comments": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/components/schemas/RecipeCommentOut-Output"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Comments",
+      "default": []
+    }
+  },
+  "type": "object",
+  "title": "Recipe"
+}

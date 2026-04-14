@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created_at": "2026-04-12T15:00:00",
+    "total_recipes": 1,
+    "format": "mealie_compatible",
+    "language": "fr",
+    "cuisine": "Française"
+  },
+  "recipes": [
+    {
+      "name": "Recette Test Addon",
+      "slug": "recette-test-addon",
+      "description": "Recette de test pour valider le scénario d'import local de l'addon.",
+      "prepTime": "PT10M",
+      "cookTime": "PT20M",
+      "totalTime": "PT30M",
+      "recipeServings": 2.0,
+      "recipeYieldQuantity": 2.0,
+      "recipeYield": "2 servings",
+      "recipeIngredient": [
+        {
+          "quantity": 2.0,
+          "unit": "",
+          "food": "Tomate",
+          "note": "",
+          "display": "2 Tomates",
+          "title": null,
+          "originalText": "2 tomates",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-111111111111",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 1.0,
+          "unit": "",
+          "food": "Oignon",
+          "note": "",
+          "display": "1 oignon",
+          "title": null,
+          "originalText": "1 oignon",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-222222222222",
+          "referencedRecipe": null
+        }
+      ],
+      "recipeInstructions": [
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000001",
+          "title": "Étape 1",
+          "summary": "",
+          "text": "Préparer les ingrédients.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000002",
+          "title": "Étape 2",
+          "summary": "",
+          "text": "Cuire puis servir.",
+          "ingredientReferences": []
+        }
+      ],
+      "recipeCategory": [
+        "Test"
+      ],
+      "tags": [
+        "local",
+        "addon"
+      ],
+      "orgURL": "https://example.com/recette-test-addon",
+      "dateAdded": "2026-04-12",
+      "dateUpdated": "2026-04-12T15:00:00",
+      "nutrition": {
+        "calories": 120,
+        "carbohydrateContent": "10g",
+        "fatContent": "4g",
+        "proteinContent": "3g",
+        "sugarContent": "4g",
+        "saturatedFatContent": "1g"
+      },
+      "settings": {
+        "public": false,
+        "showNutrition": true,
+        "showAssets": true,
+        "landscapeView": false,
+        "disableComments": false,
+        "locked": false
+      },
+      "language": "fr",
+      "cuisine": "Française",
+      "difficulty": "Facile",
+      "cost": "Économique",
+      "scraped_at": "2026-04-12T15:00:00",
+      "image_path": ""
+    }
+  ],
+  "statistics": {
+    "total_categories": 1,
+    "total_tags": 2,
+    "average_calories": 120.0
+  }
+}

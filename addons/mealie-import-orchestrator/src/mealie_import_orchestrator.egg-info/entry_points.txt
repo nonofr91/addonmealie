@@ -1,0 +1,3 @@
+[console_scripts]
+mealie-import-orchestrator = mealie_import_orchestrator.cli:main
+smoke-test = mealie_import_orchestrator.smoke_test:main

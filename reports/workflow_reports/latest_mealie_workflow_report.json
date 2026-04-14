@@ -1,0 +1,45 @@
+{
+  "report_date": "2026-04-02T11:58:13.294618",
+  "workflow_results": {
+    "success": false,
+    "error": "Scraping échoué",
+    "message": "Le scraping a échoué, workflow arrêté",
+    "step": "scraping",
+    "details": {
+      "success": false,
+      "error": "'RecipeScraperMCP' object has no attribute 'run_scraping_workflow'",
+      "message": "Erreur lors du scraping: 'RecipeScraperMCP' object has no attribute 'run_scraping_workflow'"
+    }
+  },
+  "statistics": {
+    "scraping": {},
+    "structuring": {},
+    "importing": {},
+    "conversion_rates": {}
+  },
+  "status": {
+    "success": true,
+    "status": {
+      "completed_steps": [],
+      "step_status": {},
+      "overall_progress": 0.0
+    },
+    "message": "Workflow: 0/3 étapes complétées (0.0%)"
+  },
+  "summary": {
+    "workflow_completed": false,
+    "total_processing_time": 0,
+    "recipes_processed": {
+      "scraped": 0,
+      "structured": 0,
+      "imported": 0
+    },
+    "success_rate": 0,
+    "files_generated": [],
+    "next_steps": [
+      "Exécuter le scraping des recettes",
+      "Structurer les données scrapées",
+      "Importer les recettes dans Mealie"
+    ]
+  }
+}

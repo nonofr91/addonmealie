@@ -1,0 +1,58 @@
+{
+  "sources": {
+    "marmiton": {
+      "base_url": "https://www.marmiton.org",
+      "search_patterns": [
+        "/recettes/recette_{recipe_name}_{id}.aspx"
+      ],
+      "priority": 1,
+      "language": "fr"
+    },
+    "750g": {
+      "base_url": "https://www.750g.com",
+      "search_patterns": [
+        "/recettes/{recipe_name}.htm"
+      ],
+      "priority": 2,
+      "language": "fr"
+    },
+    "cuisineactuelle": {
+      "base_url": "https://www.cuisineactuelle.fr",
+      "search_patterns": [
+        "/recettes/{recipe_name}.htm"
+      ],
+      "priority": 3,
+      "language": "fr"
+    },
+    "meilleurduchef": {
+      "base_url": "https://www.meilleurduchef.com",
+      "search_patterns": [
+        "/fr/recette/{recipe_name}.html"
+      ],
+      "priority": 4,
+      "language": "fr"
+    }
+  },
+  "target_recipes": [
+    {
+      "name": "boeuf-bourguignon",
+      "category": "plat_principal",
+      "sources": ["meilleurduchef", "marmiton"]
+    },
+    {
+      "name": "tarte-tatin",
+      "category": "dessert",
+      "sources": ["meilleurduchef", "marmiton"]
+    },
+    {
+      "name": "quiche-lorraine",
+      "category": "plat_principal",
+      "sources": ["meilleurduchef", "750g"]
+    },
+    {
+      "name": "ratatouille",
+      "category": "accompagnement",
+      "sources": ["cuisineactuelle", "marmiton"]
+    }
+  ]
+}

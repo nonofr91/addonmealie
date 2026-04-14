@@ -1,0 +1,28 @@
+{
+  "mealie_api": {
+    "url": "",
+    "token": ""
+  },
+  "scraping": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "delay_between_requests": 2,
+    "timeout": 30,
+    "max_retries": 3
+  },
+  "structuring": {
+    "language": "fr",
+    "cuisine": "Française",
+    "default_servings": 4,
+    "max_instructions": 15
+  },
+  "importing": {
+    "batch_size": 5,
+    "delay_between_imports": 3,
+    "verify_imports": true
+  },
+  "mcp_servers": {
+    "jina": "jina-mcp-server",
+    "mealie": "mealie-mcp-server",
+    "images": "mcp2_search_images"
+  }
+}

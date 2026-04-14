@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "import_date": "2026-04-02T11:08:01.638107",
+    "total_imported": 1,
+    "importer": "mealie_importer_mcp",
+    "config": {
+      "batch_size": 5,
+      "delay_between_imports": 3,
+      "verify_imports": true
+    }
+  },
+  "recipes": [
+    {
+      "name": "Recette Exemple",
+      "slug": "recette-exemple",
+      "id": "fc018124-a3c9-4a02-a202-fc5d8777d5e3",
+      "imported_at": "2026-04-02T11:08:01.637994",
+      "servings": 4.0,
+      "ingredients_count": 4,
+      "instructions_count": 3,
+      "categories": [
+        "Plat Principal"
+      ],
+      "tags": [
+        "fait_maison",
+        "recette"
+      ],
+      "nutrition": {
+        "calories": 50,
+        "carbohydrateContent": "0g",
+        "cholesterolContent": null,
+        "fatContent": "0g",
+        "fiberContent": null,
+        "proteinContent": "0g",
+        "saturatedFatContent": "0g",
+        "sodiumContent": null,
+        "sugarContent": "0g",
+        "transFatContent": null,
+        "unsaturatedFatContent": null
+      },
+      "difficulty": "Facile",
+      "cost": "Économique"
+    }
+  ],
+  "statistics": {
+    "total_categories": 1,
+    "total_tags": 2,
+    "difficulty_distribution": {
+      "facile": 1,
+      "moyen": 0,
+      "difficile": 0
+    },
+    "cost_distribution": {
+      "économique": 1,
+      "moyen": 0,
+      "élevé": 0
+    },
+    "avg_ingredients_per_recipe": 4.0,
+    "avg_instructions_per_recipe": 3.0,
+    "avg_calories_per_recipe": 50.0,
+    "most_common_categories": [
+      "Plat Principal"
+    ],
+    "most_common_tags": [
+      "fait_maison",
+      "recette"
+    ]
+  }
+}

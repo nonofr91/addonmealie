@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "scraped_at": "2026-04-02T11:08:01.627968",
+    "total_recipes": 4,
+    "sources": [
+      "marmiton",
+      "750g",
+      "cuisineactuelle",
+      "meilleurduchef"
+    ],
+    "scraper": "recipe_scraper_mcp"
+  },
+  "recipes": [
+    {
+      "source_url": "https://www.meilleurduchef.com/fr/recette/boeuf-bourguignon.html",
+      "scraped_at": "2026-04-02T11:07:53.624884",
+      "raw_content": "\n        # Boeuf Bourguignon\n        \n        ## Description\n        Découvrez LA véritable recette du boeuf Bourguignon. Recette illustrée pas à pas avec des photos... préparez-vous à vous envoler vers cette chère Bourgogne !\n        \n        ## Ingrédients\n        - 1 kg de sauté de boeuf paré\n        - 2 cuillères à soupe d'huile d'olive\n        - 2 carottes\n        - 1 oignon\n        - 1 bouquet garni\n        - 30g de farine\n        - 75cl de vin rouge de Bourgogne\n        - 2 gousses d'ail\n        - Sel et poivre\n        \n        ## Instructions\n        1. Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes, puis couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles.\n        2. Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces.\n        3. Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes. Singer avec 30g de farine et torréfier quelques minutes.\n        4. Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni. Saler et poivrer.\n        5. Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures en remuant délicatement.\n        6. Sortir du four, retirer le bouquet garni et faire réduire la sauce. Servir chaud avec des pommes de terre.\n        \n        ## Temps\n        - Préparation: 30 minutes\n        - Cuisson: 2 heures\n        - Total: 2h30\n        \n        ## Portions\n        4 personnes\n        \n        ## Difficulté\n        Moyen\n        \n        ## Coût\n        Moyen\n        ",
+      "name": "Boeuf Bourguignon",
+      "description": "Découvrez LA véritable recette du boeuf Bourguignon. Recette illustrée pas à pas avec des photos... préparez-vous à vous envoler vers cette chère Bourgogne !",
+      "ingredients": [
+        "1 kg de sauté de boeuf paré",
+        "2 cuillères à soupe d'huile d'olive",
+        "2 carottes",
+        "1 oignon",
+        "1 bouquet garni",
+        "30g de farine",
+        "75cl de vin rouge de Bourgogne",
+        "2 gousses d'ail",
+        "Sel et poivre"
+      ],
+      "instructions": [
+        "Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes, puis couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles.",
+        "Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces.",
+        "Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes. Singer avec 30g de farine et torréfier quelques minutes.",
+        "Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni. Saler et poivrer.",
+        "Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures en remuant délicatement.",
+        "Sortir du four, retirer le bouquet garni et faire réduire la sauce. Servir chaud avec des pommes de terre."
+      ],
+      "prep_time": "30",
+      "servings": "4",
+      "cook_time": "20",
+      "total_time": "35",
+      "image": "scraped_images/boeuf_bourguignon.jpg"
+    },
+    {
+      "source_url": "https://www.meilleurduchef.com/fr/recette/tarte-tatin.html",
+      "scraped_at": "2026-04-02T11:07:55.625220",
+      "raw_content": "\n        # Boeuf Bourguignon\n        \n        ## Description\n        Découvrez LA véritable recette du boeuf Bourguignon. Recette illustrée pas à pas avec des photos... préparez-vous à vous envoler vers cette chère Bourgogne !\n        \n        ## Ingrédients\n        - 1 kg de sauté de boeuf paré\n        - 2 cuillères à soupe d'huile d'olive\n        - 2 carottes\n        - 1 oignon\n        - 1 bouquet garni\n        - 30g de farine\n        - 75cl de vin rouge de Bourgogne\n        - 2 gousses d'ail\n        - Sel et poivre\n        \n        ## Instructions\n        1. Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes, puis couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles.\n        2. Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces.\n        3. Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes. Singer avec 30g de farine et torréfier quelques minutes.\n        4. Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni. Saler et poivrer.\n        5. Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures en remuant délicatement.\n        6. Sortir du four, retirer le bouquet garni et faire réduire la sauce. Servir chaud avec des pommes de terre.\n        \n        ## Temps\n        - Préparation: 30 minutes\n        - Cuisson: 2 heures\n        - Total: 2h30\n        \n        ## Portions\n        4 personnes\n        \n        ## Difficulté\n        Moyen\n        \n        ## Coût\n        Moyen\n        ",
+      "name": "Boeuf Bourguignon",
+      "description": "Découvrez LA véritable recette du boeuf Bourguignon. Recette illustrée pas à pas avec des photos... préparez-vous à vous envoler vers cette chère Bourgogne !",
+      "ingredients": [
+        "1 kg de sauté de boeuf paré",
+        "2 cuillères à soupe d'huile d'olive",
+        "2 carottes",
+        "1 oignon",
+        "1 bouquet garni",
+        "30g de farine",
+        "75cl de vin rouge de Bourgogne",
+        "2 gousses d'ail",
+        "Sel et poivre"
+      ],
+      "instructions": [
+        "Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes, puis couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles.",
+        "Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces.",
+        "Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes. Singer avec 30g de farine et torréfier quelques minutes.",
+        "Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni. Saler et poivrer.",
+        "Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures en remuant délicatement.",
+        "Sortir du four, retirer le bouquet garni et faire réduire la sauce. Servir chaud avec des pommes de terre."
+      ],
+      "prep_time": "30",
+      "servings": "4",
+      "cook_time": "20",
+      "total_time": "35",
+      "image": "scraped_images/boeuf_bourguignon.jpg"
+    },
+    {
+      "source_url": "https://www.meilleurduchef.com/fr/recette/quiche-lorraine.html",
+      "scraped_at": "2026-04-02T11:07:57.625965",
+      "raw_content": "\n        # Boeuf Bourguignon\n        \n        ## Description\n        Découvrez LA véritable recette du boeuf Bourguignon. Recette illustrée pas à pas avec des photos... préparez-vous à vous envoler vers cette chère Bourgogne !\n        \n        ## Ingrédients\n        - 1 kg de sauté de boeuf paré\n        - 2 cuillères à soupe d'huile d'olive\n        - 2 carottes\n        - 1 oignon\n        - 1 bouquet garni\n        - 30g de farine\n        - 75cl de vin rouge de Bourgogne\n        - 2 gousses d'ail\n        - Sel et poivre\n        \n        ## Instructions\n        1. Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes, puis couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles.\n        2. Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces.\n        3. Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes. Singer avec 30g de farine et torréfier quelques minutes.\n        4. Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni. Saler et poivrer.\n        5. Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures en remuant délicatement.\n        6. Sortir du four, retirer le bouquet garni et faire réduire la sauce. Servir chaud avec des pommes de terre.\n        \n        ## Temps\n        - Préparation: 30 minutes\n        - Cuisson: 2 heures\n        - Total: 2h30\n        \n        ## Portions\n        4 personnes\n        \n        ## Difficulté\n        Moyen\n        \n        ## Coût\n        Moyen\n        ",
+      "name": "Boeuf Bourguignon",
+      "description": "Découvrez LA véritable recette du boeuf Bourguignon. Recette illustrée pas à pas avec des photos... préparez-vous à vous envoler vers cette chère Bourgogne !",
+      "ingredients": [
+        "1 kg de sauté de boeuf paré",
+        "2 cuillères à soupe d'huile d'olive",
+        "2 carottes",
+        "1 oignon",
+        "1 bouquet garni",
+        "30g de farine",
+        "75cl de vin rouge de Bourgogne",
+        "2 gousses d'ail",
+        "Sel et poivre"
+      ],
+      "instructions": [
+        "Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes, puis couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles.",
+        "Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces.",
+        "Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes. Singer avec 30g de farine et torréfier quelques minutes.",
+        "Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni. Saler et poivrer.",
+        "Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures en remuant délicatement.",
+        "Sortir du four, retirer le bouquet garni et faire réduire la sauce. Servir chaud avec des pommes de terre."
+      ],
+      "prep_time": "30",
+      "servings": "4",
+      "cook_time": "20",
+      "total_time": "35",
+      "image": "scraped_images/boeuf_bourguignon.jpg"
+    },
+    {
+      "source_url": "https://www.cuisineactuelle.fr/recettes/ratatouille.htm",
+      "scraped_at": "2026-04-02T11:07:59.626322",
+      "raw_content": "\n        # Recette Exemple\n        \n        ## Description\n        Recette délicieuse et facile à réaliser\n        \n        ## Ingrédients\n        - Ingrédient principal\n        - Accomplement 1\n        - Accomplement 2\n        - Assaisonnements variés\n        \n        ## Instructions\n        1. Préparer les ingrédients\n        2. Cuire selon les instructions\n        3. Servir chaud\n        \n        ## Temps\n        - Préparation: 15 minutes\n        - Cuisson: 20 minutes\n        - Total: 35 minutes\n        \n        ## Portions\n        4 personnes\n        ",
+      "name": "Recette Exemple",
+      "description": "Recette délicieuse et facile à réaliser",
+      "ingredients": [
+        "Ingrédient principal",
+        "Accomplement 1",
+        "Accomplement 2",
+        "Assaisonnements variés"
+      ],
+      "instructions": [
+        "Préparer les ingrédients",
+        "Cuire selon les instructions",
+        "Servir chaud"
+      ],
+      "prep_time": "15",
+      "cook_time": "20",
+      "total_time": "35",
+      "servings": "4",
+      "image": "scraped_images/recette_exemple.jpg"
+    }
+  ],
+  "statistics": {
+    "total_instructions": 21,
+    "total_ingredients": 31,
+    "avg_instructions_per_recipe": 5.25,
+    "avg_ingredients_per_recipe": 7.75,
+    "sources_used": [
+      "www.cuisineactuelle.fr",
+      "www.meilleurduchef.com"
+    ]
+  }
+}

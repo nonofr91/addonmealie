@@ -1,0 +1,57 @@
+{
+  "properties": {
+    "id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Id"
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Title",
+      "default": ""
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Summary",
+      "default": ""
+    },
+    "text": {
+      "type": "string",
+      "title": "Text"
+    },
+    "ingredientReferences": {
+      "items": {
+        "$ref": "#/components/schemas/IngredientReferences"
+      },
+      "type": "array",
+      "title": "Ingredientreferences",
+      "default": []
+    }
+  },
+  "type": "object",
+  "required": [
+    "text"
+  ],
+  "title": "RecipeStep"
+}

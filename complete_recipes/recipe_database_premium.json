@@ -1,0 +1,588 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "created_at": "2026-04-01T14:44:52.808101",
+    "total_recipes": 8,
+    "description": "Base de données complète de recettes françaises pour agents MCP",
+    "quality": "premium",
+    "language": "fr"
+  },
+  "recipes": [
+    {
+      "id": "tarte-tatin-pommes",
+      "name": "Tarte Tatin aux Pommes",
+      "slug": "tarte-tatin-pommes",
+      "description": "Dessert classique français renversé avec pommes caramélisées et cannelle",
+      "prep_time": 30,
+      "cook_time": 50,
+      "total_time": 80,
+      "servings": 8,
+      "difficulty": "Moyen",
+      "cost": "Moyen",
+      "ingredients": [
+        "1kg de pommes fermes (Golden ou Reinette)",
+        "200g de sucre semoule",
+        "100g de beurre doux",
+        "1 pâte brisée de bonne qualité",
+        "1 cuillère à café de cannelle en poudre",
+        "1 gousse de vanille fendue",
+        "Crème glacée vanille pour accompagner",
+        "Quelques feuilles de menthe pour la décoration"
+      ],
+      "instructions": [
+        "Préchauffer le four à 180°C (Thermostat 6-7)",
+        "Peler les pommes, les couper en quartiers et retirer le cœur",
+        "Dans une poêle allant au four, faire fondre 150g de sucre jusqu'à obtention d'un caramel blond",
+        "Ajouter 50g de beurre en morceaux, mélanger délicatement",
+        "Ajouter les quartiers de pommes, la cannelle et la gousse de vanille",
+        "Cuire sur feu moyen 10 minutes en remuant doucement pour que les pommes s'imprègnent de caramel",
+        "Retirer la gousse de vanille",
+        "Disposer les quartiers de pommes en rosace dans la poêle",
+        "Recouvrir avec la pâte brisée en rentrant les bords à l'intérieur",
+        "Faire quelques trous dans la pâte avec une fourchette pour laisser la vapeur s'échapper",
+        "Enfourner pour 45 minutes jusqu'à ce que la pâte soit dorée et croustillante",
+        "Laisser reposer 5 minutes puis retourner délicatement sur un plat de service",
+        "Servir tiède avec une boule de crème glacée vanille et décorer de menthe"
+      ],
+      "categories": [
+        "Dessert",
+        "Recettes Françaises",
+        "Pâtisserie"
+      ],
+      "tags": [
+        "dessert",
+        "pommes",
+        "tarte",
+        "caramel",
+        "cannelle",
+        "four",
+        "traditionnel",
+        "renversé"
+      ],
+      "nutrition_info": {
+        "score": 45,
+        "calories": 320,
+        "proteins": "4g",
+        "carbs": "42g",
+        "fats": "16g",
+        "fiber": "3g",
+        "sugar": "28g"
+      },
+      "allergens": [
+        "gluten",
+        "lactose"
+      ],
+      "seasonal": "automne",
+      "image_url": "https://images.unsplash.com/photo-1606313562753-b1910469c3a7?w=800"
+    },
+    {
+      "id": "quiche-lorraine",
+      "name": "Quiche Lorraine Traditionnelle",
+      "slug": "quiche-lorraine",
+      "description": "Classique de la cuisine française, parfaite pour un repas léger avec salade verte",
+      "prep_time": 20,
+      "cook_time": 40,
+      "total_time": 60,
+      "servings": 6,
+      "difficulty": "Facile",
+      "cost": "Économique",
+      "ingredients": [
+        "250g de farine T55",
+        "125g de beurre très froid et coupé en dés",
+        "1 pincée de sel fin",
+        "5cl d'eau très froide",
+        "3 œufs frais de qualité",
+        "40cl de crème liquide entière 15%",
+        "200g de lardons fumés de qualité",
+        "100g de fromage râpé (emmental ou comté)",
+        "Noix de muscade râpée fraîchement",
+        "Poivre noir fraîchement moulu",
+        "Salade verte pour accompagner"
+      ],
+      "instructions": [
+        "Préparer la pâte brisée : dans un saladier, mélanger la farine et le sel",
+        "Ajouter le beurre froid en dés et sabler la pâte du bout des doigts jusqu'à obtenir une texture sableuse",
+        "Ajouter l'eau froide et mélanger rapidement pour former une boule homogène",
+        "Laisser reposer la pâte 30 minutes au réfrigérateur filmée",
+        "Pendant ce temps, faire cuire les lardons à la poêle à feu vif 5 minutes jusqu'à ce qu'ils soient dorés",
+        "Égoutter les lardons sur du papier absorbant",
+        "Préchauffer le four à 180°C (Thermostat 6)",
+        "Étaler la pâte et foncer un moule à quiche de 24cm de diamètre",
+        "Piquer le fond de pâte avec une fourchette",
+        "Disposer les lardons égouttés sur le fond de pâte",
+        "Dans un saladier, battre les œufs en omelette",
+        "Ajouter la crème, une pincée de sel, poivre et une généreuse pincée de muscade",
+        "Verser l'appareil à quiche sur les lardons",
+        "Parsemer le fromage râpé sur le dessus",
+        "Cuire à 180°C pendant 35-40 minutes jusqu'à ce que la quiche soit dorée et l'appareil pris",
+        "Servir chaud ou tiède avec une salade verte vinaigrette"
+      ],
+      "categories": [
+        "Plat Principal",
+        "Recettes Françaises",
+        "Tarte Salée"
+      ],
+      "tags": [
+        "plat principal",
+        "quiche",
+        "lardons",
+        "œufs",
+        "crème",
+        "fromage",
+        "four",
+        "traditionnel",
+        "fait maison"
+      ],
+      "nutrition_info": {
+        "score": 55,
+        "calories": 380,
+        "proteins": "18g",
+        "carbs": "25g",
+        "fats": "28g",
+        "fiber": "2g",
+        "sugar": "3g"
+      },
+      "allergens": [
+        "gluten",
+        "lactose",
+        "œufs"
+      ],
+      "seasonal": "toutes saisons",
+      "image_url": "https://images.unsplash.com/photo-1595498304675-926a3098926c?w=800"
+    },
+    {
+      "id": "ratatouille-mediterranee",
+      "name": "Ratatouille Méditerranéenne",
+      "slug": "ratatouille-mediterranee",
+      "description": "Classique provençal avec légumes du soleil et herbes aromatiques, parfait pour l'été",
+      "prep_time": 30,
+      "cook_time": 60,
+      "total_time": 90,
+      "servings": 6,
+      "difficulty": "Facile",
+      "cost": "Économique",
+      "ingredients": [
+        "2 belles courgettes bien fermes",
+        "1 grosse aubergine brillante",
+        "2 poivrons (1 rouge, 1 vert)",
+        "4 tomates bien mûres et parfumées",
+        "2 oignons moyens",
+        "4 gousses d'ail frais",
+        "1 bouquet garni (thym, laurier, romarin)",
+        "6 cuillères à soupe d'huile d'olive vierge extra",
+        "Sel fin de mer et poivre noir du moulin",
+        "Quelques feuilles de basilic frais",
+        "Pain grillé ou riz complet pour accompagner"
+      ],
+      "instructions": [
+        "Laver soigneusement tous les légumes",
+        "Couper les courgettes et l'aubergine en dés de 2cm sans peler",
+        "Couper les poivrons en lanières, épépiner les tomates et les couper en quartiers",
+        "Émincer finement les oignons et hacher les gousses d'ail",
+        "Dans une grande cocotte en fonte, faire chauffer 4 cuillères d'huile d'olive",
+        "Faire revenir les oignons 5 minutes à feu moyen jusqu'à ce qu'ils soient translucides",
+        "Ajouter l'ail haché et cuire 2 minutes en remuant",
+        "Ajouter les courgettes et aubergines, cuire 10 minutes en remuant régulièrement",
+        "Ajouter les poivrons et cuire 5 minutes supplémentaires",
+        "Ajouter les tomates et le bouquet garni",
+        "Saler, poivrer généreusement et couvrir",
+        "Laisser mijoter à feu doux 45 minutes en remuant de temps en temps",
+        "Goûter et rectifier l'assaisonnement si nécessaire",
+        "Retirer le bouquet garni",
+        "Garnir de basilic ciselé juste avant de servir",
+        "Servir tiède ou froid avec du pain frais grillé ou du riz complet"
+      ],
+      "categories": [
+        "Accompagnement",
+        "Recettes Méditerranéennes",
+        "Légumes"
+      ],
+      "tags": [
+        "légumes",
+        "ratatouille",
+        "méditerranéen",
+        "saison été",
+        "healthy",
+        "vegan",
+        "provence",
+        "herbes"
+      ],
+      "nutrition_info": {
+        "score": 95,
+        "calories": 120,
+        "proteins": "3g",
+        "carbs": "15g",
+        "fats": "6g",
+        "fiber": "4g",
+        "sugar": "8g"
+      },
+      "allergens": [],
+      "seasonal": "été",
+      "image_url": "https://images.unsplash.com/photo-1546548970-7e85390e5dc0?w=800"
+    },
+    {
+      "id": "saumon-grille-asperges",
+      "name": "Saumon Grillé aux Asperges Vertes",
+      "slug": "saumon-grille-asperges",
+      "description": "Plat sain et élégant riche en oméga-3, parfait pour un repas équilibré et léger",
+      "prep_time": 15,
+      "cook_time": 15,
+      "total_time": 30,
+      "servings": 4,
+      "difficulty": "Facile",
+      "cost": "Moyen",
+      "ingredients": [
+        "4 beaux pavés de saumon frais (environ 180g chacun)",
+        "500g d'asperges vertes fraîches et fermes",
+        "4 cuillères à soupe d'huile d'olive vierge extra",
+        "2 citrons jaunes non traités",
+        "1 bouquet d'aneth frais",
+        "Sel marin et poivre noir fraîchement moulu",
+        "1 cuillère à café de paprika fumé",
+        "Quinoa complet ou riz basmati pour accompagner",
+        "Quelques tomates cerises pour la décoration"
+      ],
+      "instructions": [
+        "Préchauffer le four à 200°C (Thermostat 6-7)",
+        "Laver soigneusement les asperges et couper la base dure",
+        "Dans un plat, mélanger les asperges avec 2 cuillères d'huile d'olive, sel et poivre",
+        "Disposer les asperges sur une plaque de cuisson recouverte de papier sulfurisé",
+        "Cuire les asperges 12-15 minutes au four jusqu'à ce qu'elles soient tendres mais encore croquantes",
+        "Pendant ce temps, assaisonner les pavés de saumon avec sel, poivre et paprika fumé",
+        "Faire chauffer une poêle antiadhésive avec le reste d'huile d'olive",
+        "Cuire le saumon 4-5 minutes de chaque côté selon l'épaisseur",
+        "Le saumon doit être doré à l'extérieur et rosé à l'intérieur",
+        "Presser le jus d'un citron sur le saumon dès la fin de la cuisson",
+        "Ciseler l'aneth frais et le répartir sur le saumon",
+        "Disposer harmonieusement les asperges sur les assiettes",
+        "Poser le pavé de saumon dessus",
+        "Décorer avec des quartiers de citron et des tomates cerises",
+        "Servir immédiatement avec quinoa ou riz complet"
+      ],
+      "categories": [
+        "Plat Principal",
+        "Recettes Healthy",
+        "Poissons"
+      ],
+      "tags": [
+        "poissons",
+        "saumon",
+        "asperges",
+        "healthy",
+        "omega-3",
+        "rapide",
+        "élégant",
+        "four",
+        "poêle"
+      ],
+      "nutrition_info": {
+        "score": 92,
+        "calories": 280,
+        "proteins": "32g",
+        "carbs": "8g",
+        "fats": "16g",
+        "fiber": "3g",
+        "sugar": "2g"
+      },
+      "allergens": [
+        "poisson"
+      ],
+      "seasonal": "printemps",
+      "image_url": "https://images.unsplash.com/photo-1467003909585-7a8e8db06465?w=800"
+    },
+    {
+      "id": "soupe-oignon-gratinee",
+      "name": "Soupe à l'Oignon Gratinée",
+      "slug": "soupe-oignon-gratinee",
+      "description": "Soupe typique française réconfortante avec croûtons au fromage doré et croustillant",
+      "prep_time": 20,
+      "cook_time": 45,
+      "total_time": 65,
+      "servings": 6,
+      "difficulty": "Facile",
+      "cost": "Économique",
+      "ingredients": [
+        "1.5kg d'oignons jaunes bien parfumés",
+        "60g de beurre doux de qualité",
+        "2.5L de bouillon de bœuf de préférence maison",
+        "150g de gruyère râpé de bonne qualité",
+        "8 tranches épaisses de pain de campagne ou pain de mie",
+        "1 verre de vin blanc sec de type Sauvignon",
+        "Sel fin et poivre noir fraîchement moulu",
+        "Noix de muscade râpée fraîchement",
+        "Persil frais pour la décoration"
+      ],
+      "instructions": [
+        "Émincer finement tous les oignons en demi-rondelles",
+        "Dans une grande marmite, faire fondre le beurre à feu très doux",
+        "Ajouter les oignons émincés et cuire 30 minutes à feu doux en remuant souvent",
+        "Les oignons doivent devenir translucides, dorés et légèrement caramélisés",
+        "Ajouter le vin blanc et laisser réduire 3 minutes en remuant",
+        "Couvrir de bouillon chaud, porter à ébullition puis réduire le feu",
+        "Laisser mijoter 30 minutes à couvert à feu doux",
+        "Saler, poivrer généreusement et ajouter une pincée de muscade",
+        "Pendant ce temps, griller les tranches de pain au four ou au grille-pain",
+        "Préchauffer le grill du four",
+        "Verser la soupe chaude dans des bols individuels résistants au four",
+        "Déposer une tranche de pain grillé sur chaque bol",
+        "Parsemer généreusement de gruyère râpé",
+        "Glisser sous le grill 3-4 minutes jusqu'à ce que le fromage soit doré et bouillonnant",
+        "Servir très chaud avec du persil frais ciselé"
+      ],
+      "categories": [
+        "Soupe",
+        "Recettes Françaises",
+        "Plat Réconfort"
+      ],
+      "tags": [
+        "soupe",
+        "oignon",
+        "gratinée",
+        "fromage",
+        "traditionnel",
+        "réconfort",
+        "hiver",
+        "grill"
+      ],
+      "nutrition_info": {
+        "score": 68,
+        "calories": 220,
+        "proteins": "12g",
+        "carbs": "18g",
+        "fats": "12g",
+        "fiber": "2g",
+        "sugar": "6g"
+      },
+      "allergens": [
+        "gluten",
+        "lactose"
+      ],
+      "seasonal": "hiver",
+      "image_url": "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800"
+    },
+    {
+      "id": "boeuf-bourguignon",
+      "name": "Boeuf Bourguignon",
+      "slug": "boeuf-bourguignon",
+      "description": "Plat traditionnel français mijoté au vin rouge de Bourgogne, parfumé aux herbes aromatiques",
+      "prep_time": 30,
+      "cook_time": 180,
+      "total_time": 210,
+      "servings": 8,
+      "difficulty": "Moyen",
+      "cost": "Moyen",
+      "ingredients": [
+        "1.5kg de bœuf (gîte, paleron, joue) coupé en cubes de 4cm",
+        "750ml de vin rouge de Bourgogne de préférence",
+        "200g de lardons fumés coupés en dés",
+        "3 grosses carottes",
+        "2 oignons moyens",
+        "3 gousses d'ail",
+        "2 cuillères à soupe de farine",
+        "1 bouquet garni (thym, laurier, persil)",
+        "50g de beurre demi-sel",
+        "Huile d'olive",
+        "Sel et poivre noir du moulin",
+        "Pommes de terre pour accompagner"
+      ],
+      "instructions": [
+        "Couper la viande en cubes réguliers de 4cm",
+        "Dans une cocotte, faire revenir les lardons à feu vif, les réserver",
+        "Faire dorer les morceaux de bœuf dans la graisse des lardons par lots",
+        "Réserver la viande, jeter l'excès de graisse",
+        "Faire revenir les oignons émincés dans la cocotte",
+        "Ajouter l'ail haché et cuire 2 minutes",
+        "Saupoudrer de farine et mélanger bien",
+        "Remettre la viande et les lardons",
+        "Déglacer avec le vin rouge en grattant le fond de la cocotte",
+        "Ajouter les carottes en rondelles et le bouquet garni",
+        "Couvrir et laisser mijoter 3h à feu très doux",
+        "La viande doit être tendre et la sauce onctueuse",
+        "Servir chaud avec des pommes de terre vapeur ou des nouilles fraîches"
+      ],
+      "categories": [
+        "Plat Principal",
+        "Recettes Françaises",
+        "Mijoté"
+      ],
+      "tags": [
+        "viande",
+        "bœuf",
+        "vin rouge",
+        "mijoté",
+        "traditionnel",
+        "festif",
+        "hiver",
+        "carottes"
+      ],
+      "nutrition_info": {
+        "score": 62,
+        "calories": 420,
+        "proteins": "35g",
+        "carbs": "12g",
+        "fats": "28g",
+        "fiber": "3g",
+        "sugar": "4g"
+      },
+      "allergens": [],
+      "seasonal": "hiver",
+      "image_url": "https://images.unsplash.com/photo-1594222689277-4a582a4b5c0e?w=800"
+    },
+    {
+      "id": "creme-brulee",
+      "name": "Crème Brûlée",
+      "slug": "creme-brulee",
+      "description": "Dessert classique français avec crème onctueuse et caramel croustillant",
+      "prep_time": 15,
+      "cook_time": 40,
+      "total_time": 55,
+      "servings": 6,
+      "difficulty": "Moyen",
+      "cost": "Moyen",
+      "ingredients": [
+        "50cl de crème liquide entière",
+        "6 jaunes d'œufs frais",
+        "60g de sucre semoule",
+        "1 gousse de vanille bourbon",
+        "Sucre cassonade pour le dessus",
+        "Quelques framboises pour la décoration"
+      ],
+      "instructions": [
+        "Préchauffer le four à 150°C (Thermostat 5)",
+        "Faire chauffer la crème avec la gousse de vanille fendue",
+        "Pendant ce temps, battre les jaunes avec le sucre jusqu'à blanchissement",
+        "Verser la crème chaude sur les jaunes en fouettant vivement",
+        "Répartir dans des ramequins individuels",
+        "Cuire au bain-marie 30-35 minutes à 150°C",
+        "La crème doit être prise mais encore tremblotante au centre",
+        "Laisser refroidir complètement puis réfrigérer 4h",
+        "Juste avant de servir, saupoudrer de sucre cassonade",
+        "Brûler au chalumeau jusqu'à obtenir un caramel ambré",
+        "Décorer de quelques framboises fraîches"
+      ],
+      "categories": [
+        "Dessert",
+        "Recettes Françaises",
+        "Pâtisserie"
+      ],
+      "tags": [
+        "dessert",
+        "crème",
+        "caramel",
+        "œufs",
+        "vanille",
+        "four",
+        "chalumeau",
+        "festif"
+      ],
+      "nutrition_info": {
+        "score": 38,
+        "calories": 290,
+        "proteins": "6g",
+        "carbs": "24g",
+        "fats": "20g",
+        "fiber": "0g",
+        "sugar": "22g"
+      },
+      "allergens": [
+        "lactose",
+        "œufs"
+      ],
+      "seasonal": "toutes saisons",
+      "image_url": "https://images.unsplash.com/photo-1504388292299-f783c6a73b34?w=800"
+    },
+    {
+      "id": "salade-nicoise",
+      "name": "Salade Niçoise Complète",
+      "slug": "salade-nicoise",
+      "description": "Salade complète et colorée de la région de Nice, riche et satisfaisante",
+      "prep_time": 30,
+      "cook_time": 15,
+      "total_time": 45,
+      "servings": 4,
+      "difficulty": "Facile",
+      "cost": "Moyen",
+      "ingredients": [
+        "4 belles tomates mûres",
+        "2 poivrons rouges",
+        "1 concombre bien ferme",
+        "1 boîte de thon au naturel de qualité",
+        "4 œufs frais",
+        "200g de haricots verts fins",
+        "12 anchois à l'huile",
+        "24 olives noires de Nice",
+        "Huile d'olive vierge extra",
+        "Vinaigre de vin rouge",
+        "Sel et poivre"
+      ],
+      "instructions": [
+        "Faire cuire les œufs durs 10 minutes, les refroidir et les couper en quartiers",
+        "Faire cuire les haricots verts 10 minutes dans l'eau bouillante salée",
+        "Griller les poivrons sous le gril, peler la peau et les couper en lanières",
+        "Couper les tomates en quartiers et le concombre en rondelles",
+        "Disposer harmonieusement tous les légumes dans un grand plat",
+        "Ajouter le thon émietté et les quartiers d'œufs durs",
+        "Décorer avec les anchois et les olives",
+        "Préparer une vinaigrette avec huile d'olive, vinaigre, sel et poivre",
+        "Arroser la salade juste avant de servir"
+      ],
+      "categories": [
+        "Salade",
+        "Recettes Régionales",
+        "Plat Principal"
+      ],
+      "tags": [
+        "salade",
+        "légumes",
+        "thon",
+        "œufs",
+        "niçoise",
+        "méditerranéen",
+        "été",
+        "healthy"
+      ],
+      "nutrition_info": {
+        "score": 85,
+        "calories": 320,
+        "proteins": "28g",
+        "carbs": "15g",
+        "fats": "18g",
+        "fiber": "6g",
+        "sugar": "8g"
+      },
+      "allergens": [
+        "poisson",
+        "œufs"
+      ],
+      "seasonal": "été",
+      "image_url": "https://images.unsplash.com/photo-1540420773420-33667708fdee?w=800"
+    }
+  ],
+  "statistics": {
+    "categories": [
+      "Dessert",
+      "Plat Principal",
+      "Accompagnement",
+      "Soupe",
+      "Salade"
+    ],
+    "difficulties": [
+      "Facile",
+      "Moyen"
+    ],
+    "costs": [
+      "Économique",
+      "Moyen"
+    ],
+    "seasonal": [
+      "été",
+      "hiver",
+      "printemps",
+      "automne",
+      "toutes saisons"
+    ],
+    "average_nutrition_score": 68.5,
+    "total_prep_time_range": "15-30 minutes",
+    "total_cook_time_range": "15-180 minutes"
+  }
+}

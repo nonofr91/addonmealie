@@ -1,0 +1,1 @@
+scripts/mealie_mcp_complete.py

@@ -1,0 +1,18 @@
+{
+  "name": "@bruno/mealie-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Mealie recipe management",
+  "main": "index.js",
+  "bin": {
+    "mealie-mcp": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["mcp", "mealie", "recipe", "management"],
+  "author": "bruno",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

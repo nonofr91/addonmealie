@@ -1,0 +1,157 @@
+{
+  "validation_date": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow",
+  "scraper_results": [
+    {
+      "url": "https://www.marmiton.org/recettes/quiche-lorraine",
+      "success": true,
+      "recipe": {
+        "name": "Quiche Lorraine",
+        "description": "Classique de la cuisine française, parfaite pour un repas léger avec salade verte.",
+        "ingredients": [
+          "- 200g de lardons fumés",
+          "5. Pendant ce temps, faire cuire les lardons à la poêle 5 minutes",
+          "10. Disposer les lardons égouttés sur le fond de pâte",
+          "11. Verser lappareil sur les lardons",
+          "- 3 œufs frais",
+          "6. Dans un saladier, battre les œufs en omelette",
+          "- 40cl de crème liquide entière",
+          "7. Ajouter la crème, muscade, sel et poivre",
+          "- 250g de farine",
+          "1. Préparer la pâte brisée  mélanger farine et sel, ajouter le beurre froid",
+          "- 125g de beurre très froid et coupé en dés"
+        ],
+        "instructions": [
+          "Préparer la pâte brisée : mélanger farine et sel, ajouter le beurre froid",
+          "Ajouter l'eau froide et mélanger rapidement pour former une boule",
+          "Laisser reposer la pâte 30 minutes au réfrigérateur",
+          "Pendant ce temps, faire cuire les lardons à la poêle 5 minutes",
+          "Ajouter la crème, muscade, sel et poivre",
+          "Piquer le fond avec une fourchette",
+          "Cuire à 180°C (Th.6) pendant 35-40 minutes",
+          "Servir chaud ou tiède avec une salade verte"
+        ],
+        "prep_time": "20",
+        "cook_time": "40",
+        "total_time": "60",
+        "servings": "6",
+        "recipe_type": "quiche_lorraine",
+        "raw_content": "\n# Quiche Lorraine\n\n## Description\nClassique de la cuisine française, parfaite pour un repas léger avec salade verte.\n\n## Ingrédients\n- 250g de farine\n- 125g de beurre très froid et coupé en dés\n- 1 pincée de sel fin\n- 5cl d'eau froide\n- 200g de lardons fumés\n- 3 œufs frais\n- 40cl de crème liquide entière\n- 1 pincée de muscade râpée\n- Noix de muscade râpée\n- Poivre noir fraîchement moulu\n\n## Instructions\n1. Préparer la pâte brisée : mélanger farine et sel, ajouter le beurre froid\n2. Sabler la pâte du bout des doigts jusqu'à obtenir une texture sableuse\n3. Ajouter l'eau froide et mélanger rapidement pour former une boule\n4. Laisser reposer la pâte 30 minutes au réfrigérateur\n5. Pendant ce temps, faire cuire les lardons à la poêle 5 minutes\n6. Dans un saladier, battre les œufs en omelette\n7. Ajouter la crème, muscade, sel et poivre\n8. Étaler la pâte et foncer un moule à quiche de 24cm\n9. Piquer le fond avec une fourchette\n10. Disposer les lardons égouttés sur le fond de pâte\n11. Verser l'appareil sur les lardons\n12. Parsemer de fromage râpé\n13. Cuire à 180°C (Th.6) pendant 35-40 minutes\n14. La quiche doit être dorée et l'appareil pris\n15. Servir chaud ou tiède avec une salade verte\n\n## Temps\n- Préparation: 20 minutes\n- Cuisson: 40 minutes\n- Total: 60 minutes\n\n## Portions\n6 personnes\n\n## Difficulté\nFacile\n\n## Coût\nMoyen\n",
+        "image": "https://images.unsplash.com/photo-1555939594-58dcbcb1dce0?w=800&h=600&fit=crop",
+        "source_url": "https://www.marmiton.org/recettes/quiche-lorraine",
+        "scraped_at": "2026-04-02T11:59:53.593309"
+      },
+      "quality": 100
+    },
+    {
+      "url": "https://www.meilleurduchef.com/fr/recette/boeuf-bourguignon.html",
+      "success": true,
+      "recipe": {
+        "name": "Boeuf Bourguignon",
+        "description": "Découvrez LA véritable recette du boeuf Bourguignon. Recette traditionnelle bourguignonne, mijotée lentement au vin rouge.",
+        "ingredients": [
+          "4. Quand lhuile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces",
+          "- 75cl de vin rouge de Bourgogne",
+          "7. Mouiller avec 75cl de vin rouge, ajouter 2 gousses dail hachées et un bouquet garni",
+          "- 2 carottes",
+          "1. Préparer la garniture aromatique  éplucher 2 oignons et 3 carottes",
+          "2. Couper les oignons en mirepoix cubes de 1 cm et les carottes en rondelles",
+          "5. Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes",
+          "- 2 oignons",
+          "- 1 bouquet garni",
+          "11. Sortir du four, retirer le bouquet garni et faire réduire la sauce"
+        ],
+        "instructions": [
+          "Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes",
+          "Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces",
+          "Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes",
+          "Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni",
+          "Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures",
+          "Ajouter les champignons et lardons à mi-cuisson",
+          "Sortir du four, retirer le bouquet garni et faire réduire la sauce",
+          "Servir chaud avec des pommes de terre ou des pâtes fraîches"
+        ],
+        "prep_time": "30",
+        "cook_time": "120",
+        "total_time": "150",
+        "servings": "4",
+        "recipe_type": "boeuf_bourguignon",
+        "raw_content": "\n# Boeuf Bourguignon\n\n## Description\nDécouvrez LA véritable recette du boeuf Bourguignon. Recette traditionnelle bourguignonne, mijotée lentement au vin rouge.\n\n## Ingrédients\n- 1 kg de sauté de boeuf paré\n- 2 cuillères à soupe d'huile d'olive\n- 2 carottes\n- 2 oignons\n- 1 bouquet garni\n- 30g de farine\n- 75cl de vin rouge de Bourgogne\n- 2 gousses d'ail\n- Sel et poivre\n- 200g de champignons de Paris\n- 200g de lardons fumés\n\n## Instructions\n1. Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes\n2. Couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles\n3. Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout\n4. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces\n5. Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes\n6. Singer avec 30g de farine et torréfier quelques minutes\n7. Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni\n8. Saler et poivrer généreusement\n9. Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures\n10. Ajouter les champignons et lardons à mi-cuisson\n11. Sortir du four, retirer le bouquet garni et faire réduire la sauce\n12. Servir chaud avec des pommes de terre ou des pâtes fraîches\n\n## Temps\n- Préparation: 30 minutes\n- Cuisson: 2 heures\n- Total: 2h30\n\n## Portions\n4 personnes\n\n## Difficulté\nMoyen\n\n## Coût\nMoyen\n",
+        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&h=600&fit=crop",
+        "source_url": "https://www.meilleurduchef.com/fr/recette/boeuf-bourguignon.html",
+        "scraped_at": "2026-04-02T11:59:53.593972"
+      },
+      "quality": 100
+    },
+    {
+      "url": "https://www.750g.com/recette/tarte-tatin.html",
+      "success": true,
+      "recipe": {
+        "name": "Tarte Tatin aux Pommes",
+        "description": "Dessert classique français renversé avec pommes caramélisées, une merveille croustillante et fondante.",
+        "ingredients": [
+          "Tarte Tatin aux Pommes",
+          "- 1kg de pommes fermes Golden ou Reinette",
+          "2. Peler les pommes et les couper en quartiers",
+          "5. Ajouter les quartiers de pommes, la cannelle et la gousse de vanille fendue",
+          "8. Disposer les quartiers de pommes en rosace dans la poêle",
+          "- 200g de sucre semoule",
+          "3. Faire fondre le sucre dans une poêle jusquà obtention dun caramel blond",
+          "- 100g de beurre doux",
+          "4. Ajouter le beurre en morceaux, mélanger délicatement",
+          "- 1 pâte brisée",
+          "9. Recouvrir avec la pâte brisée en rentrant les bords à lintérieur",
+          "10. Faire quelques trous dans la pâte avec une fourchette"
+        ],
+        "instructions": [
+          "- Crème glacée vanille pour servir",
+          "Préchauffer le four à 180°C (Thermostat 6)",
+          "Ajouter le beurre en morceaux, mélanger délicatement",
+          "Ajouter les quartiers de pommes, la cannelle et la gousse de vanille fendue",
+          "Cuire sur feu moyen 10 minutes en remuant doucement",
+          "Faire quelques trous dans la pâte avec une fourchette",
+          "Enfourner pour 45 minutes jusqu'à ce que la pâte soit dorée",
+          "Laisser reposer 5 minutes puis retourner délicatement sur un plat de service"
+        ],
+        "prep_time": "30",
+        "cook_time": "50",
+        "total_time": "80",
+        "servings": "8",
+        "recipe_type": "tarte_tatin",
+        "raw_content": "\n# Tarte Tatin aux Pommes\n\n## Description\nDessert classique français renversé avec pommes caramélisées, une merveille croustillante et fondante.\n\n## Ingrédients\n- 1kg de pommes fermes (Golden ou Reinette)\n- 200g de sucre semoule\n- 100g de beurre doux\n- 1 pâte brisée\n- 1 cuillère à café de cannelle\n- 1 gousse de vanille\n- Crème glacée vanille pour servir\n\n## Instructions\n1. Préchauffer le four à 180°C (Thermostat 6)\n2. Peler les pommes et les couper en quartiers\n3. Faire fondre le sucre dans une poêle jusqu'à obtention d'un caramel blond\n4. Ajouter le beurre en morceaux, mélanger délicatement\n5. Ajouter les quartiers de pommes, la cannelle et la gousse de vanille fendue\n6. Cuire sur feu moyen 10 minutes en remuant doucement\n7. Retirer la gousse de vanille\n8. Disposer les quartiers de pommes en rosace dans la poêle\n9. Recouvrir avec la pâte brisée en rentrant les bords à l'intérieur\n10. Faire quelques trous dans la pâte avec une fourchette\n11. Enfourner pour 45 minutes jusqu'à ce que la pâte soit dorée\n12. Laisser reposer 5 minutes puis retourner délicatement sur un plat de service\n13. Servir tiède avec de la crème glacée vanille\n\n## Temps\n- Préparation: 30 minutes\n- Cuisson: 50 minutes\n- Total: 80 minutes\n\n## Portions\n8 personnes\n\n## Difficulté\nMoyen\n\n## Coût\nMoyen\n",
+        "image": "https://images.unsplash.com/photo-1586987288743-2c1e6e8d637b?w=800&h=600&fit=crop",
+        "source_url": "https://www.750g.com/recette/tarte-tatin.html",
+        "scraped_at": "2026-04-02T11:59:53.594508"
+      },
+      "quality": 100
+    }
+  ],
+  "importer_results": [
+    {
+      "recipe_name": "Boeuf Bourguignon",
+      "success": false,
+      "recipe_id": null
+    },
+    {
+      "recipe_name": "Recette Exemple",
+      "success": false,
+      "recipe_id": null
+    }
+  ],
+  "workflow_result": {
+    "success": false,
+    "error": "Scraping échoué",
+    "message": "Le scraping a échoué, workflow arrêté",
+    "step": "scraping",
+    "details": {
+      "success": false,
+      "error": "'RecipeScraperMCP' object has no attribute 'run_scraping_workflow'",
+      "message": "Erreur lors du scraping: 'RecipeScraperMCP' object has no attribute 'run_scraping_workflow'"
+    }
+  },
+  "statistics": {
+    "scraper_success_rate": 1.0,
+    "average_quality": 100.0,
+    "importer_success_rate": 0.0,
+    "workflow_success": false
+  }
+}

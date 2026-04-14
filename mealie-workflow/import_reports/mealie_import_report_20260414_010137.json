@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "import_date": "2026-04-14T01:01:37.341352",
+    "total_imported": 1,
+    "importer": "mealie_importer_mcp",
+    "config": {
+      "batch_size": 5,
+      "delay_between_imports": 3,
+      "verify_imports": true
+    }
+  },
+  "recipes": [
+    {
+      "name": "Recette Test Addon",
+      "slug": "recette-test-addon",
+      "id": "recette-test-addon",
+      "imported_at": "2026-04-14T01:01:37.341165",
+      "servings": 2.0,
+      "ingredients_count": 2,
+      "instructions_count": 2,
+      "categories": [
+        "Test"
+      ],
+      "tags": [
+        "local",
+        "addon"
+      ],
+      "nutrition": {
+        "calories": 120,
+        "carbohydrateContent": "10g",
+        "fatContent": "4g",
+        "proteinContent": "3g",
+        "sugarContent": "4g",
+        "saturatedFatContent": "1g"
+      },
+      "difficulty": "Facile",
+      "cost": "Économique"
+    }
+  ],
+  "statistics": {
+    "total_categories": 1,
+    "total_tags": 2,
+    "difficulty_distribution": {
+      "facile": 1,
+      "moyen": 0,
+      "difficile": 0
+    },
+    "cost_distribution": {
+      "économique": 1,
+      "moyen": 0,
+      "élevé": 0
+    },
+    "avg_ingredients_per_recipe": 2.0,
+    "avg_instructions_per_recipe": 2.0,
+    "avg_calories_per_recipe": 120.0,
+    "most_common_categories": [
+      "Test"
+    ],
+    "most_common_tags": [
+      "local",
+      "addon"
+    ]
+  }
+}

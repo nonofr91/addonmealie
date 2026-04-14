@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: mealie-import-orchestrator
+Version: 0.1.0
+Summary: External addon orchestrating the canonical Mealie import workflow
+Requires-Python: >=3.12
+Requires-Dist: python-dotenv>=0.20.0
+Requires-Dist: requests>=2.32.0

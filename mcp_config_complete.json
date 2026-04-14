@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "mealie-mcp-server": {
+      "command": "python3",
+      "args": [
+        "/home/bruno/CascadeProjects/windsurf-project-7/mealie-mcp-server/src/server.py"
+      ],
+      "env": {
+        "MEALIE_BASE_URL": "https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr",
+        "MEALIE_API_KEY": ""
+      },
+      "disabled": false
+    },
+    "jina-mcp-server": {
+      "args": [
+        "mcp-remote",
+        "https://mcp.jina.ai/v1",
+        "--header",
+        "Authorization: Bearer jina_f60c13e1dbf04fe5b54be0a9a2b08cef771BF4nkLe7aN2_Ej9RKiAFXnzn1"
+      ],
+      "command": "npx",
+      "disabled": false,
+      "env": {
+        "JINA_API_KEY": "jina_f60c13e1dbf04fe5b54be0a9a2b08cef771BF4nkLe7aN2_Ej9RKiAFXnzn1"
+      }
+    }
+  }
+}

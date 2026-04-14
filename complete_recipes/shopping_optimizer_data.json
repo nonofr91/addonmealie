@@ -1,0 +1,191 @@
+[
+  {
+    "id": "tarte-tatin-pommes",
+    "name": "Tarte Tatin aux Pommes",
+    "servings": 8,
+    "ingredients": [
+      "1kg de pommes fermes (Golden ou Reinette)",
+      "200g de sucre semoule",
+      "100g de beurre doux",
+      "1 pâte brisée de bonne qualité",
+      "1 cuillère à café de cannelle en poudre",
+      "1 gousse de vanille fendue",
+      "Crème glacée vanille pour accompagner",
+      "Quelques feuilles de menthe pour la décoration"
+    ],
+    "cost": "Moyen",
+    "seasonal": "automne",
+    "categories": [
+      "Dessert",
+      "Recettes Françaises",
+      "Pâtisserie"
+    ]
+  },
+  {
+    "id": "quiche-lorraine",
+    "name": "Quiche Lorraine Traditionnelle",
+    "servings": 6,
+    "ingredients": [
+      "250g de farine T55",
+      "125g de beurre très froid et coupé en dés",
+      "1 pincée de sel fin",
+      "5cl d'eau très froide",
+      "3 œufs frais de qualité",
+      "40cl de crème liquide entière 15%",
+      "200g de lardons fumés de qualité",
+      "100g de fromage râpé (emmental ou comté)",
+      "Noix de muscade râpée fraîchement",
+      "Poivre noir fraîchement moulu",
+      "Salade verte pour accompagner"
+    ],
+    "cost": "Économique",
+    "seasonal": "toutes saisons",
+    "categories": [
+      "Plat Principal",
+      "Recettes Françaises",
+      "Tarte Salée"
+    ]
+  },
+  {
+    "id": "ratatouille-mediterranee",
+    "name": "Ratatouille Méditerranéenne",
+    "servings": 6,
+    "ingredients": [
+      "2 belles courgettes bien fermes",
+      "1 grosse aubergine brillante",
+      "2 poivrons (1 rouge, 1 vert)",
+      "4 tomates bien mûres et parfumées",
+      "2 oignons moyens",
+      "4 gousses d'ail frais",
+      "1 bouquet garni (thym, laurier, romarin)",
+      "6 cuillères à soupe d'huile d'olive vierge extra",
+      "Sel fin de mer et poivre noir du moulin",
+      "Quelques feuilles de basilic frais",
+      "Pain grillé ou riz complet pour accompagner"
+    ],
+    "cost": "Économique",
+    "seasonal": "été",
+    "categories": [
+      "Accompagnement",
+      "Recettes Méditerranéennes",
+      "Légumes"
+    ]
+  },
+  {
+    "id": "saumon-grille-asperges",
+    "name": "Saumon Grillé aux Asperges Vertes",
+    "servings": 4,
+    "ingredients": [
+      "4 beaux pavés de saumon frais (environ 180g chacun)",
+      "500g d'asperges vertes fraîches et fermes",
+      "4 cuillères à soupe d'huile d'olive vierge extra",
+      "2 citrons jaunes non traités",
+      "1 bouquet d'aneth frais",
+      "Sel marin et poivre noir fraîchement moulu",
+      "1 cuillère à café de paprika fumé",
+      "Quinoa complet ou riz basmati pour accompagner",
+      "Quelques tomates cerises pour la décoration"
+    ],
+    "cost": "Moyen",
+    "seasonal": "printemps",
+    "categories": [
+      "Plat Principal",
+      "Recettes Healthy",
+      "Poissons"
+    ]
+  },
+  {
+    "id": "soupe-oignon-gratinee",
+    "name": "Soupe à l'Oignon Gratinée",
+    "servings": 6,
+    "ingredients": [
+      "1.5kg d'oignons jaunes bien parfumés",
+      "60g de beurre doux de qualité",
+      "2.5L de bouillon de bœuf de préférence maison",
+      "150g de gruyère râpé de bonne qualité",
+      "8 tranches épaisses de pain de campagne ou pain de mie",
+      "1 verre de vin blanc sec de type Sauvignon",
+      "Sel fin et poivre noir fraîchement moulu",
+      "Noix de muscade râpée fraîchement",
+      "Persil frais pour la décoration"
+    ],
+    "cost": "Économique",
+    "seasonal": "hiver",
+    "categories": [
+      "Soupe",
+      "Recettes Françaises",
+      "Plat Réconfort"
+    ]
+  },
+  {
+    "id": "boeuf-bourguignon",
+    "name": "Boeuf Bourguignon",
+    "servings": 8,
+    "ingredients": [
+      "1.5kg de bœuf (gîte, paleron, joue) coupé en cubes de 4cm",
+      "750ml de vin rouge de Bourgogne de préférence",
+      "200g de lardons fumés coupés en dés",
+      "3 grosses carottes",
+      "2 oignons moyens",
+      "3 gousses d'ail",
+      "2 cuillères à soupe de farine",
+      "1 bouquet garni (thym, laurier, persil)",
+      "50g de beurre demi-sel",
+      "Huile d'olive",
+      "Sel et poivre noir du moulin",
+      "Pommes de terre pour accompagner"
+    ],
+    "cost": "Moyen",
+    "seasonal": "hiver",
+    "categories": [
+      "Plat Principal",
+      "Recettes Françaises",
+      "Mijoté"
+    ]
+  },
+  {
+    "id": "creme-brulee",
+    "name": "Crème Brûlée",
+    "servings": 6,
+    "ingredients": [
+      "50cl de crème liquide entière",
+      "6 jaunes d'œufs frais",
+      "60g de sucre semoule",
+      "1 gousse de vanille bourbon",
+      "Sucre cassonade pour le dessus",
+      "Quelques framboises pour la décoration"
+    ],
+    "cost": "Moyen",
+    "seasonal": "toutes saisons",
+    "categories": [
+      "Dessert",
+      "Recettes Françaises",
+      "Pâtisserie"
+    ]
+  },
+  {
+    "id": "salade-nicoise",
+    "name": "Salade Niçoise Complète",
+    "servings": 4,
+    "ingredients": [
+      "4 belles tomates mûres",
+      "2 poivrons rouges",
+      "1 concombre bien ferme",
+      "1 boîte de thon au naturel de qualité",
+      "4 œufs frais",
+      "200g de haricots verts fins",
+      "12 anchois à l'huile",
+      "24 olives noires de Nice",
+      "Huile d'olive vierge extra",
+      "Vinaigre de vin rouge",
+      "Sel et poivre"
+    ],
+    "cost": "Moyen",
+    "seasonal": "été",
+    "categories": [
+      "Salade",
+      "Recettes Régionales",
+      "Plat Principal"
+    ]
+  }
+]

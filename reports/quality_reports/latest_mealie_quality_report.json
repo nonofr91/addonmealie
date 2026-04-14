@@ -1,0 +1,170 @@
+{
+  "generated_at": "2026-04-02T11:39:45.339754",
+  "global_score": 86.8,
+  "status": "BON",
+  "level_scores": {
+    "structural": 100.0,
+    "content": 52.0,
+    "business": 120.0
+  },
+  "detailed_results": {
+    "structural": {
+      "scraped_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "statistics_present": true,
+        "recipe_fields": [
+          "100%",
+          "100%"
+        ],
+        "issues": [],
+        "score": 100.0
+      },
+      "structured_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "mealie_format": true,
+        "uuids_valid": true,
+        "time_format_valid": true,
+        "issues": [],
+        "score": 100.0
+      },
+      "import_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "statistics_present": true,
+        "recipe_ids_valid": true,
+        "issues": [],
+        "score": 100.0
+      },
+      "overall_score": 100.0
+    },
+    "content": {
+      "duplicates": {
+        "total_recipes": 2,
+        "unique_names": 2,
+        "unique_content": 2,
+        "duplicate_groups": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "time_consistency": {
+        "total_recipes": 2,
+        "consistent_times": 2,
+        "inconsistent_times": [],
+        "parsing_errors": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "ingredient_quality": {
+        "total_recipes": 1,
+        "total_ingredients": 4,
+        "specific_ingredients": 0,
+        "generic_ingredients": 4,
+        "parsed_correctly": 4,
+        "generic_examples": [
+          "ingrédient principal",
+          "accomplement 1",
+          "accomplement 2",
+          "assaisonnements variés"
+        ],
+        "issues": [
+          "Taux d'ingrédients génériques élevé: 100.0%"
+        ],
+        "score": 30.0
+      },
+      "instruction_quality": {
+        "total_recipes": 1,
+        "total_instructions": 3,
+        "detailed_instructions": 0,
+        "vague_instructions": 3,
+        "valid_format": 3,
+        "vague_examples": [
+          "préparer les ingrédients...",
+          "cuire selon les instructions...",
+          "servir chaud..."
+        ],
+        "issues": [
+          "Taux d'instructions vagues élevé: 100.0%"
+        ],
+        "score": 30.0
+      },
+      "image_quality": {
+        "total_recipes": 2,
+        "recipes_with_images": 2,
+        "valid_urls": 0,
+        "local_paths": 2,
+        "missing_images": 0,
+        "image_sources": [
+          "local",
+          "local"
+        ],
+        "issues": [
+          "2 chemins locaux (non fonctionnels)"
+        ],
+        "score": 0.0
+      },
+      "overall_score": 52.0
+    },
+    "business": {
+      "nutrition_quality": {
+        "total_recipes": 1,
+        "with_nutrition": 1,
+        "valid_calories": 1,
+        "valid_macros": 1,
+        "calorie_ranges": {
+          "low": 1,
+          "medium": 0,
+          "high": 0
+        },
+        "issues": [],
+        "score": 100.0
+      },
+      "category_quality": {
+        "total_recipes": 1,
+        "with_categories": 1,
+        "with_tags": 1,
+        "unique_categories": [
+          "Plat Principal"
+        ],
+        "unique_tags": [
+          "recette",
+          "fait_maison"
+        ],
+        "avg_categories_per_recipe": 1.0,
+        "avg_tags_per_recipe": 2.0,
+        "issues": [],
+        "score": 160.0
+      },
+      "usability_quality": {
+        "total_structured": 1,
+        "total_imported": 1,
+        "import_success_rate": 1.0,
+        "complete_recipes": 1,
+        "agent_ready": 1,
+        "issues": [],
+        "score": 100.0
+      },
+      "overall_score": 120.0
+    }
+  },
+  "total_issues": 3,
+  "critical_issues": [],
+  "recommendations": [
+    "📝 Améliorer la qualité du contenu (réduire les doublons, corriger les temps)"
+  ],
+  "next_steps": [
+    "2. Améliorer la qualité du contenu",
+    "4. Relancer la vérification complète",
+    "5. Valider pour la production"
+  ],
+  "duration": 0.001981,
+  "files_analyzed": {
+    "scraped": "scraped_data/latest_scraped_recipes_mcp.json",
+    "structured": "structured_data/latest_mealie_structured_recipes.json",
+    "import": "import_reports/latest_mealie_import_report.json"
+  }
+}
