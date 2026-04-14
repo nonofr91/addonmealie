@@ -26,3 +26,5 @@ scraped_data/latest_*.json
 structured_data/latest_*.json
 scraped_images/
 .DS_Store
+# MCP config files with sensitive credentials
+mcp_config*.json
