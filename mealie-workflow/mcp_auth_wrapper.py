@@ -156,6 +156,47 @@ def mcp3_get_recipe_details(slug):
         print(f"❌ Erreur connexion get_recipe_details: {e}")
         return {"name": "Erreur connexion", "ingredients": [], "instructions": []}
 
+UNIT_NORMALIZATION = {
+    # Masse
+    "g": "gramme", "gr": "gramme", "grs": "gramme", "grammes": "gramme",
+    "kg": "kilogramme", "kilogrammes": "kilogramme",
+    "mg": "milligramme", "milligrammes": "milligramme",
+    "lb": "livre", "lbs": "livre",
+    "oz": "once",
+    # Volume
+    "l": "litre", "litres": "litre",
+    "cl": "centilitre", "cls": "centilitre", "centilitres": "centilitre",
+    "ml": "millilitre", "millilitres": "millilitre",
+    "dl": "d\u00e9cilitre", "d\u00e9cilitres": "d\u00e9cilitre",
+    "gal": "gallon", "pt": "pinte", "qt": "quart",
+    # Cuill\u00e8res
+    "c\u00e0c": "cuill\u00e8re \u00e0 caf\u00e9", "cac": "cuill\u00e8re \u00e0 caf\u00e9",
+    "c. \u00e0 c.": "cuill\u00e8re \u00e0 caf\u00e9", "c.\u00e0.c.": "cuill\u00e8re \u00e0 caf\u00e9",
+    "c\u00e0s": "cuill\u00e8re \u00e0 soupe", "cas": "cuill\u00e8re \u00e0 soupe",
+    "c. \u00e0 s.": "cuill\u00e8re \u00e0 soupe", "c.\u00e0.s.": "cuill\u00e8re \u00e0 soupe",
+    "cuill\u00e8re \u00e0 caf\u00e9 rase": "cuill\u00e8re \u00e0 caf\u00e9",
+    "cuill\u00e8res \u00e0 caf\u00e9": "cuill\u00e8re \u00e0 caf\u00e9",
+    "cuill\u00e8res \u00e0 soupe": "cuill\u00e8re \u00e0 soupe",
+    # Contenants
+    "boites": "bo\u00eete", "boite": "bo\u00eete",
+    "paquets": "paquet",
+    # Divers
+    "gousses": "gousse",
+    "pinc\u00e9es": "pinc\u00e9e",
+    "brins": "brin",
+    "bottes": "botte",
+    "portions": "portion",
+    "tasses": "tasse",
+    "personnes": "personne",
+    "gouttes": "goutte",
+}
+
+UNIT_NOISE = {
+    "bonnes", "bon", "bonne", "gros", "grosse", "petit", "petite",
+    "grands", "grande", "moyen", "moyenne", "clous", "beau", "belle",
+}
+
+
 def _build_mealie_cache(api_url, headers):
     """Charge tous les foods et units de Mealie dans un dict {nom_lower: objet}."""
     foods, units = {}, {}
@@ -177,6 +218,10 @@ def _build_mealie_cache(api_url, headers):
                 abbr = item.get("abbreviation", "")
                 if abbr:
                     units[abbr.lower()] = item
+            # Indexer aussi via les alias de normalisation
+            for alias, canonical in UNIT_NORMALIZATION.items():
+                if canonical.lower() in units and alias not in units:
+                    units[alias] = units[canonical.lower()]
     except Exception:
         pass
     return foods, units
@@ -210,6 +255,12 @@ def _get_or_create_food(api_url, headers, food_name, cache):
 
 def _get_or_create_unit(api_url, headers, unit_name, cache):
     """Retourne un objet unit Mealie {id, name} — utilise le cache ou crée si absent."""
+    unit_name = unit_name.strip().lower()
+    # Ignorer les adjectifs parasites du parsing LLM
+    if unit_name in UNIT_NOISE:
+        return None
+    # Normaliser vers le nom canonique
+    unit_name = UNIT_NORMALIZATION.get(unit_name, unit_name)
     key = unit_name.lower().strip()
     if key in cache:
         item = cache[key]
