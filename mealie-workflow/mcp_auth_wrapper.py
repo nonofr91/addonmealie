@@ -319,6 +319,63 @@ def _resolve_items(api_url, headers, endpoint, items_as_strings):
     return resolved
 
 
+def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
+    """Télécharge l'image depuis image_url et l'uploade dans Mealie via PUT multipart.
+    Fallback sur POST url si le téléchargement échoue."""
+    import tempfile, os as _os
+    BROWSER_UA = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Referer": image_url,
+        "Accept": "image/avif,image/webp,image/apng,image/jpeg,*/*",
+    }
+    img_ok = False
+    try:
+        dl = requests.get(image_url, headers=BROWSER_UA, timeout=12)
+        content_type = dl.headers.get("content-type", "image/jpeg")
+        if dl.status_code == 200 and len(dl.content) > 5000 and "image" in content_type:
+            ext = "jpg" if "jpeg" in content_type else content_type.split("/")[-1].split(";")[0]
+            with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as f:
+                f.write(dl.content)
+                tmp = f.name
+            try:
+                with open(tmp, "rb") as f:
+                    put_headers = {k: v for k, v in headers.items() if k != "Content-Type"}
+                    resp = requests.put(
+                        f"{api_url}/recipes/{slug}/image",
+                        headers=put_headers,
+                        files={"image": (f"image.{ext}", f, content_type), "extension": (None, ext)},
+                        timeout=20,
+                    )
+                if resp.status_code == 200:
+                    img_ok = True
+                    print(f"✅ Recette créée et peuplée avec image: {recipe_name} (slug: {slug})")
+            finally:
+                _os.unlink(tmp)
+    except Exception as e:
+        print(f"   ⚠️ Téléchargement image échoué: {e}")
+
+    if not img_ok:
+        try:
+            post_headers = {**headers, "Content-Type": "application/json"}
+            resp2 = requests.post(
+                f"{api_url}/recipes/{slug}/image",
+                headers=post_headers,
+                json={"url": image_url},
+                timeout=12,
+            )
+            if resp2.status_code == 200 and resp2.text not in ["null", ""]:
+                img_ok = True
+                print(f"✅ Recette créée et peuplée avec image (scrape): {recipe_name} (slug: {slug})")
+        except Exception:
+            pass
+
+    if not img_ok:
+        print(f"✅ Recette créée (slug: {slug}), image non récupérable depuis: {image_url[:60]}")
+
+
 def mcp3_create_recipe(payload=None, **kwargs):
     """Crée une recette avec authentification"""
     if not api_url or not token:
@@ -419,22 +476,10 @@ def mcp3_create_recipe(payload=None, **kwargs):
         )
         
         if patch_response.status_code in [200, 201]:
-            # Étape 3 : Scraper l'image si une URL est disponible
+            # Étape 3 : Uploader l'image si une URL est disponible
             image_url = final_payload.get("image") or final_payload.get("image_path") or kwargs.get("image")
             if image_url and isinstance(image_url, str) and image_url.startswith("http"):
-                try:
-                    img_response = requests.post(
-                        f"{api_url}/recipes/{slug}/image",
-                        headers=headers,
-                        json={"url": image_url},
-                        timeout=15
-                    )
-                    if img_response.status_code == 200:
-                        print(f"✅ Recette créée et peuplée avec image: {recipe_name} (slug: {slug})")
-                    else:
-                        print(f"✅ Recette créée (slug: {slug}), image non définie: {img_response.status_code}")
-                except Exception as e:
-                    print(f"✅ Recette créée (slug: {slug}), erreur image: {e}")
+                _upload_recipe_image(api_url, headers, slug, image_url, recipe_name)
             else:
                 print(f"✅ Recette créée et peuplée: {recipe_name} (slug: {slug})")
             return {"success": True, "recipe_id": slug, "id": slug}
