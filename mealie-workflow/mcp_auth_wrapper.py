@@ -248,6 +248,16 @@ def _get_or_create_food(api_url, headers, food_name, cache):
             item = r.json()
             cache[item["name"].lower()] = item
             return {"id": item["id"], "name": item["name"]}
+        # 400/409 = déjà existant → chercher via GET search
+        if r.status_code in [400, 409, 422]:
+            sr = requests.get(f"{api_url}/foods?search={requests.utils.quote(food_name)}&perPage=5",
+                              headers=headers, timeout=5)
+            if sr.status_code == 200:
+                items = sr.json().get("items", [])
+                for item in items:
+                    if item["name"].lower() == key:
+                        cache[key] = item
+                        return {"id": item["id"], "name": item["name"]}
     except Exception:
         pass
     return None
@@ -271,6 +281,16 @@ def _get_or_create_unit(api_url, headers, unit_name, cache):
             item = r.json()
             cache[item["name"].lower()] = item
             return {"id": item["id"], "name": item["name"]}
+        # 400/409 = déjà existant → chercher via GET search
+        if r.status_code in [400, 409, 422]:
+            sr = requests.get(f"{api_url}/units?search={requests.utils.quote(unit_name)}&perPage=5",
+                              headers=headers, timeout=5)
+            if sr.status_code == 200:
+                items = sr.json().get("items", [])
+                for item in items:
+                    if item["name"].lower() == key:
+                        cache[key] = item
+                        return {"id": item["id"], "name": item["name"]}
     except Exception:
         pass
     return None
@@ -368,10 +388,14 @@ def mcp3_create_recipe(payload=None, **kwargs):
             ing = dict(ing)
             unit_val = ing.get("unit")
             food_val = ing.get("food")
-            if unit_val and isinstance(unit_val, str):
-                ing["unit"] = _get_or_create_unit(api_url, headers, unit_val, units_cache)
-            if food_val and isinstance(food_val, str):
-                ing["food"] = _get_or_create_food(api_url, headers, food_val, foods_cache)
+            if unit_val and isinstance(unit_val, str) and unit_val.strip():
+                ing["unit"] = _get_or_create_unit(api_url, headers, unit_val.strip(), units_cache)
+            else:
+                ing["unit"] = None  # Mealie rejette les strings vides avec ValueError
+            if food_val and isinstance(food_val, str) and food_val.strip():
+                ing["food"] = _get_or_create_food(api_url, headers, food_val.strip(), foods_cache)
+            else:
+                ing["food"] = None
             resolved_ingredients.append(ing)
         if resolved_ingredients:
             patch_payload["recipeIngredient"] = resolved_ingredients
