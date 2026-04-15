@@ -489,3 +489,41 @@ Le workflow canonique et le payload applicatif sont corrects. La corruption ou s
 2. Documenter le workflow IA validé pour la production
 3. Mettre à jour l'instance locale quand une version plus stable sera disponible
 4. Documenter les limitations de l'instance locale pour les futurs développements
+
+---
+
+## Résolution — 2026-04-15
+
+### Migration vers Mealie v3.15.1
+
+L'instance locale a été migrée vers `ghcr.io/mealie-recipes/mealie:v3.15.1`. Le problème de perte de données persiste sur `POST /api/recipes` avec un payload complet, car **l'API v3.x ne supporte que `{"name": "..."}` en POST**.
+
+### Cause racine réelle
+
+L'API `POST /api/recipes` de Mealie v3.x :
+- Accepte uniquement le nom de la recette
+- Retourne un slug (string) sans stocker les autres données
+- Requiert un second appel `PATCH /api/recipes/{slug}` pour peupler le reste
+
+Ce n'est pas un bug mais un **comportement intentionnel de l'API**.
+
+### Solution implémentée : Two-step POST + PATCH
+
+Dans `mealie-workflow/mcp_auth_wrapper.py`, `mcp3_create_recipe` suit désormais :
+
+1. `POST /api/recipes` → `{"name": "..."}` → retourne le slug
+2. `GET /api/recipes/{slug}` → récupère le vrai nom assigné (peut avoir suffixe -2, -3...)
+3. `PATCH /api/recipes/{slug}` → payload complet (ingrédients, instructions, catégories, temps...)
+4. `POST /api/recipes/{slug}/image` → scraping image depuis URL
+
+### Résolution foods/units
+
+Les foods et units dans les ingrédients sont résolus via un cache Mealie :
+- `_build_mealie_cache` : charge tous les foods/units en une requête
+- `_get_or_create_food` : lookup cache → réutilise ou crée
+- `_get_or_create_unit` : idem pour les unités
+- `_clean_food_name` : nettoie les prépositions françaises (`de `, `d'`, `des `...)
+
+**Résultat** : recettes importées avec ingrédients structurés `{quantity, unit:{id,name}, food:{id,name}}`, catégories, tags, et image.
+
+**Fichier de décision associé** : `docs/decisions/mealie-api-two-step-create.md`

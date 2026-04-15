@@ -17,6 +17,10 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from mcp_auth_wrapper import *
 
+# Importer la factory de providers de scraping
+sys.path.insert(0, str(Path(__file__).parent))
+from factory import create_scraping_provider
+
 # Importer AIRecipeAnalyzer pour l'architecture IA
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ai.recipe_analyzer import AIRecipeAnalyzer
@@ -36,6 +40,11 @@ class RecipeScraperMCP:
         self.sources_config = self.load_sources_config()
         self.scraped_recipes = []
         self.ai_analyzer = AIRecipeAnalyzer()
+        self.scraping_provider = create_scraping_provider()
+        self.recipe_types = self.load_recipe_types()
+        self.source_adapters = self.load_source_adapters()
+        self.scraping_config = self.load_scraping_config()
+        self.mcp_available = MCP_AVAILABLE
         
     def load_config(self) -> Dict:
         """Charge la configuration Mealie"""
@@ -55,6 +64,18 @@ class RecipeScraperMCP:
             print(f"❌ Erreur chargement sources: {e}")
             return {}
     
+    def load_recipe_types(self) -> Dict:
+        """Charge les types de recettes"""
+        return {}
+    
+    def load_source_adapters(self) -> Dict:
+        """Charge les adaptateurs de sources"""
+        return {}
+    
+    def load_scraping_config(self) -> Dict:
+        """Charge la configuration de scraping"""
+        return {}
+    
     def extract_recipe_content(self, url: str) -> Optional[Dict]:
         """
         Extrait le contenu d'une recette depuis une URL
@@ -71,14 +92,27 @@ class RecipeScraperMCP:
                 content = self.ai_analyzer.analyze_and_parse("", url)
             
             if content:
-                # Analyse intelligente du contenu
-                recipe_data = self.ai_analyzer.analyze_and_parse(content, url)
-                if recipe_data:
-                    # Extraire l'image avec MCP
-                    recipe_data['image'] = self.extract_recipe_image_intelligent(recipe_data['name'], url)
-                    recipe_data['source_url'] = url
-                    recipe_data['scraped_at'] = datetime.now().isoformat()
+                # Si le provider a retourné des données structurées, les utiliser directement
+                if isinstance(content, dict) and 'name' in content:
+                    recipe_data = {
+                        'name': content.get('name', 'Recette'),
+                        'description': content.get('description', ''),
+                        'recipeIngredient': content.get('ingredients', []),
+                        'recipeInstructions': content.get('instructions', []),
+                        'image': content.get('image', ''),
+                        'source_url': url,
+                        'scraped_at': datetime.now().isoformat()
+                    }
                     return recipe_data
+                # Sinon, analyse intelligente du contenu
+                else:
+                    recipe_data = self.ai_analyzer.analyze_and_parse(content, url)
+                    if recipe_data:
+                        # Extraire l'image avec MCP
+                        recipe_data['image'] = self.extract_recipe_image_intelligent(recipe_data['name'], url)
+                        recipe_data['source_url'] = url
+                        recipe_data['scraped_at'] = datetime.now().isoformat()
+                        return recipe_data
             
             return None
             
@@ -86,48 +120,45 @@ class RecipeScraperMCP:
             print(f"❌ Erreur extraction {url}: {e}")
             return None
     
-    def extract_with_real_mcp(self, url: str) -> str:
-        """Extrait le contenu avec les vrais MCP Jina"""
+    def extract_with_real_mcp(self, url: str) -> Optional[Union[str, Dict]]:
+        """Extrait le contenu avec le provider de scraping configuré"""
         try:
-            print(f"   🌐 Extraction via MCP: {url}")
+            print(f"   🌐 Provider: {self.scraping_provider.get_provider_name()}")
+            result = self.scraping_provider.extract_url(url)
             
-            # Utiliser directement mcp2_read_url sans import
-            result = mcp2_read_url(url)
-            
-            if result and len(result) > 100:
-                print(f"   ✅ Contenu extrait: {len(result)} caractères")
-                return result
+            if result:
+                # Si le provider retourne un dict structuré, le retourner directement
+                if isinstance(result, dict):
+                    print(f"   ✅ Données structurées extraites")
+                    return result
+                # Sinon, vérifier si c'est une chaîne de caractères valide
+                elif isinstance(result, str) and len(result) > 100:
+                    print(f"   ✅ Contenu extrait: {len(result)} caractères")
+                    return result
+                else:
+                    print(f"   ⚠️ Contenu trop court: {len(result) if isinstance(result, str) else 0} caractères")
+                    return None
             else:
-                print(f"   ⚠️ Contenu trop court: {len(result) if result else 0} caractères")
                 return None
                 
         except Exception as e:
-            print(f"   ❌ Erreur MCP: {e}")
+            print(f"   ❌ Erreur extraction: {e}")
             return None
-        return None
     
     def extract_recipe_image_intelligent(self, recipe_name: str, source_url: str) -> str:
-        """Extrait une image intelligente avec MCP"""
+        """Extrait une image intelligente avec le provider de scraping"""
         try:
-            if MCP_AVAILABLE:
-                # Rechercher une image spécifique à la recette
-                search_query = f"{recipe_name} recette cuisine"
-                images = mcp2_search_images(search_query, return_url=True, num=3)
-                
-                if images and len(images) > 0:
-                    image_url = images[0]
-                    print(f"   🖼️ Image trouvée: {image_url}")
-                    return image_url
-                else:
-                    print(f"   ⚠️ Pas d'image trouvée pour: {search_query}")
-                    return self.generate_realistic_image_url(recipe_name)
+            search_query = f"{recipe_name} recette cuisine"
+            images = self.scraping_provider.search_images(search_query, num=3)
+            if images:
+                print(f"   🖼️ Image trouvée: {images[0]}")
+                return images[0]
             else:
-                return self.generate_realistic_image_url(recipe_name)
-                
+                print(f"   ⚠️ Aucune image trouvée")
+                return ""
         except Exception as e:
             print(f"   ❌ Erreur recherche image: {e}")
-        
-        # Image par défaut
+            return ""
         return "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=600&fit=crop"
     
     def generate_realistic_image_url(self, recipe_name: str) -> str:

@@ -50,11 +50,13 @@ class MealieDataStructurer:
             # Créer le slug
             slug = self.create_slug(scraped_recipe['name'])
             
-            # Formater les ingrédients pour Mealie
-            formatted_ingredients = self.format_ingredients(scraped_recipe.get('ingredients', []))
+            # Formater les ingrédients pour Mealie (supporter les deux noms de champs)
+            ingredients = scraped_recipe.get('recipeIngredient', []) or scraped_recipe.get('ingredients', [])
+            formatted_ingredients = self.format_ingredients(ingredients)
             
-            # Formater les instructions pour Mealie (avec UUID)
-            formatted_instructions = self.format_instructions(scraped_recipe.get('instructions', []))
+            # Formater les instructions pour Mealie (avec UUID) (supporter les deux noms de champs)
+            instructions = scraped_recipe.get('recipeInstructions', []) or scraped_recipe.get('instructions', [])
+            formatted_instructions = self.format_instructions(instructions)
             
             # Créer la recette Mealie
             mealie_recipe = {
@@ -175,8 +177,8 @@ class MealieDataStructurer:
                     quantity, unit, food = groups
                     return {
                         'quantity': float(quantity.replace(',', '.')),
-                        'unit': unit.lower(),
-                        'food': food.strip(),
+                        'unit': unit.lower() if unit else '',
+                        'food': food.strip() if food else '',
                         'note': ''
                     }
                 elif len(groups) == 2:
@@ -184,21 +186,21 @@ class MealieDataStructurer:
                     return {
                         'quantity': float(quantity),
                         'unit': '',
-                        'food': food.strip(),
+                        'food': food.strip() if food else '',
                         'note': ''
                     }
                 elif len(groups) == 1:
                     return {
                         'quantity': 0.0,
                         'unit': '',
-                        'food': groups[0].strip(),
+                        'food': groups[0].strip() if groups[0] else '',
                         'note': ''
                     }
         
         return {
             'quantity': 0.0,
             'unit': '',
-            'food': ingredient,
+            'food': ingredient if ingredient else '',
             'note': ''
         }
     

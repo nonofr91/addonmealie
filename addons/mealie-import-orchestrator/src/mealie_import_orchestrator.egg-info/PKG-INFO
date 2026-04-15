@@ -5,3 +5,4 @@ Summary: External addon orchestrating the canonical Mealie import workflow
 Requires-Python: >=3.12
 Requires-Dist: python-dotenv>=0.20.0
 Requires-Dist: requests>=2.32.0
+Requires-Dist: beautifulsoup4>=4.12.0

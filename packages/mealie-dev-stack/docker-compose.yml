@@ -1,6 +1,6 @@
 services:
   mealie:
-    image: ${MEALIE_IMAGE:-ghcr.io/mealie-recipes/mealie:latest}
+    image: ${MEALIE_IMAGE:-ghcr.io/mealie-recipes/mealie:v3.15.1}
     container_name: ${MEALIE_CONTAINER_NAME:-mealie-local-dev}
     restart: unless-stopped
     ports:

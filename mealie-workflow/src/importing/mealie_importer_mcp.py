@@ -74,25 +74,28 @@ class MealieImporterMCP:
             return None
     
     def import_with_real_mcp(self, payload: Dict, recipe_name: str) -> Optional[str]:
-        """Importe avec de vrais MCP mealie-test"""
+        """Importe avec les MCP Cascade directement"""
         try:
-            # Passer le payload complet pour préserver toutes les données de la fixture
+            print(f"   📦 Payload envoyé: {len(payload)} champs")
+            print(f"   📦 Nom: {payload.get('name', 'N/A')}")
+            print(f"   📦 Ingrédients: {len(payload.get('recipeIngredient', []))}")
+            print(f"   📦 Instructions: {len(payload.get('recipeInstructions', []))}")
+            print(f"   📦 Image: {payload.get('image', 'N/A')[:50] if payload.get('image') else 'N/A'}")
+            
+            # Utiliser les MCP Cascade directement avec le payload complet
             result = mcp3_create_recipe(payload=payload)
             
-            if result and result.get('success'):
-                recipe_id = result.get('recipe_id')
-                if recipe_id:
-                    return recipe_id
-                else:
-                    print(f"   ⚠️ Succès mais pas d'ID retourné")
-                    return str(uuid.uuid4())  # Générer un ID temporaire
+            print(f"   📦 Réponse API: {result}")
+            
+            if result and result.get('id'):
+                return result.get('id')
+            elif result and result.get('success'):
+                return result.get('recipe_id', result.get('id'))
             else:
-                error_msg = result.get('error', 'Erreur inconnue') if result else 'Pas de réponse'
-                print(f"   ❌ Erreur MCP: {error_msg}")
                 return None
                 
         except Exception as e:
-            print(f"   ❌ Exception MCP: {e}")
+            print(f"   ❌ Erreur MCP import: {e}")
             return None
     
     def load_structured_data(self, filename: str) -> List[Dict]:
@@ -164,23 +167,26 @@ class MealieImporterMCP:
                         food = ingredient.get('food', '')
                         display_note = note
 
+                    # Texte complet pour le champ note (fallback si unit/food non résolus)
+                    display_text = ingredient.get('display') or ingredient.get('originalText') or display_note or ''
+                    # unit/food transmis comme strings → résolus en objets Mealie dans mcp_auth_wrapper
                     formatted_ingredients.append({
                         "quantity": quantity,
-                        "unit": unit,
-                        "food": food,
-                        "note": display_note if isinstance(display_note, str) else '',
-                        "display": ingredient.get('display', display_note),
+                        "unit": unit if unit else None,
+                        "food": food if food else None,
+                        "note": display_text if isinstance(display_text, str) else '',
+                        "display": display_text,
                         "title": ingredient.get('title'),
-                        "originalText": ingredient.get('originalText', ''),
+                        "originalText": display_text,
                         "referenceId": ingredient.get('referenceId', str(uuid.uuid4())),
-                        "referencedRecipe": ingredient.get('referencedRecipe')
+                        "referencedRecipe": None
                     })
                 else:
                     # Si c'est une chaîne, la formater
                     formatted_ingredients.append({
                         "quantity": 0.0,
-                        "unit": '',
-                        "food": str(ingredient),
+                        "unit": None,
+                        "food": None,
                         "note": str(ingredient),
                         "display": str(ingredient),
                         "title": None,
@@ -214,6 +220,9 @@ class MealieImporterMCP:
                 "recipeCategory": structured_recipe.get("recipeCategory", []),
                 "tags": structured_recipe.get("tags", []),
                 
+                # Image (prendre la première image si disponible)
+                "image": self._get_image_url(structured_recipe),
+                
                 # Autres champs optionnels
                 "orgURL": structured_recipe.get("orgURL", ""),
                 "slug": structured_recipe.get("slug", "")
@@ -224,6 +233,30 @@ class MealieImporterMCP:
         except Exception as e:
             print(f"❌ Erreur création payload: {e}")
             return None
+    
+    def _get_image_url(self, structured_recipe: Dict) -> str:
+        """Extrait l'URL de l'image des données structurées"""
+        try:
+            # Vérifier image_path (liste d'URLs)
+            image_path = structured_recipe.get('image_path', [])
+            if image_path and isinstance(image_path, list) and len(image_path) > 0:
+                # Prendre la première image (format .jpg ou .webp)
+                for url in image_path:
+                    if url and isinstance(url, str) and (url.endswith('.jpg') or url.endswith('.jpeg')):
+                        return url
+                # Fallback: prendre la première image
+                if image_path[0]:
+                    return image_path[0]
+            
+            # Vérifier image (URL simple)
+            image = structured_recipe.get('image', '')
+            if image:
+                return image
+            
+            return ""
+        except Exception as e:
+            print(f"   ⚠️ Erreur extraction image: {e}")
+            return ""
     
     def import_recipe_to_mealie(self, structured_recipe: Dict) -> bool:
         """

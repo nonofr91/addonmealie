@@ -39,17 +39,52 @@ def load_mealie_config():
     return config
 
 import os
+import json
 
-# Priorité absolue aux variables d'environnement
-env_api_url = os.getenv("MEALIE_BASE_URL")
-env_token = os.getenv("MEALIE_API_KEY")
+# Charger le système de profils si disponible
+def load_mealie_profile():
+    """Charge le profil Mealie actif depuis le fichier de configuration"""
+    # Le fichier est dans mealie-workflow/config/, __file__ est dans mealie-workflow/
+    profile_path = Path(__file__).parent / "config" / "mealie-profiles.json"
+    try:
+        if profile_path.exists():
+            with open(profile_path, 'r') as f:
+                config = json.load(f)
+                active_profile = config.get('active_profile', 'local')
+                profile_data = config['profiles'][active_profile]
+                return profile_data
+    except Exception as e:
+        print(f"⚠️ Erreur chargement profil: {e}")
+    return None
+
+# Charger le profil
+profile = load_mealie_profile()
+if profile:
+    profile_url = profile.get('url')
+    profile_name = profile.get('name')
+    profile_token_env = profile.get('token_env')
+    print(f"📍 Profil Mealie: {profile_name}")
+    print(f"🌐 URL: {profile_url}")
+    print(f"🔑 Token depuis: {profile_token_env}")
+    
+    # Utiliser les valeurs du profil
+    env_api_url = profile_url
+    env_token = os.getenv(profile_token_env) or os.getenv("MEALIE_API_KEY")
+else:
+    # Fallback sur variables d'environnement directes
+    env_api_url = os.getenv("MEALIE_BASE_URL")
+    env_token = os.getenv("MEALIE_API_KEY") or os.getenv("MEALIE_LOCAL_API_KEY")
+    print("⚠️ Utilisation variables d'environnement directes (pas de profil)")
 
 if env_api_url and env_token:
     # Variables d'environnement présentes : les utiliser directement
     api_url = env_api_url
+    # Ajouter /api si non présent (comme le client Mealie)
+    if not api_url.endswith("/api"):
+        api_url = f"{api_url.rstrip('/')}/api"
     token = env_token
-    print(f"🔧 MCP Mealie authentifiés vers: {api_url} (via variables d'environnement)")
-    print("🔑 Token configuré (via variables d'environnement)")
+    print(f"🔧 MCP Mealie authentifiés vers: {api_url}")
+    print("🔑 Token configuré")
 else:
     # Pas de variables d'environnement : utiliser le fichier config
     config = load_mealie_config()
@@ -121,6 +156,98 @@ def mcp3_get_recipe_details(slug):
         print(f"❌ Erreur connexion get_recipe_details: {e}")
         return {"name": "Erreur connexion", "ingredients": [], "instructions": []}
 
+def _build_mealie_cache(api_url, headers):
+    """Charge tous les foods et units de Mealie dans un dict {nom_lower: objet}."""
+    foods, units = {}, {}
+    try:
+        r = requests.get(f"{api_url}/foods?page=1&perPage=500", headers=headers, timeout=10)
+        if r.status_code == 200:
+            for item in r.json().get("items", []):
+                foods[item["name"].lower()] = item
+                abbr = item.get("abbreviation", "")
+                if abbr:
+                    foods[abbr.lower()] = item
+    except Exception:
+        pass
+    try:
+        r2 = requests.get(f"{api_url}/units?page=1&perPage=500", headers=headers, timeout=10)
+        if r2.status_code == 200:
+            for item in r2.json().get("items", []):
+                units[item["name"].lower()] = item
+                abbr = item.get("abbreviation", "")
+                if abbr:
+                    units[abbr.lower()] = item
+    except Exception:
+        pass
+    return foods, units
+
+
+def _clean_food_name(name: str) -> str:
+    """Supprime les prépositions/articles français en début de nom de food."""
+    import re
+    name = name.strip()
+    name = re.sub(r"^(de |d'|des |du |l'|la |le |les )", "", name, flags=re.IGNORECASE)
+    return name.strip()
+
+
+def _get_or_create_food(api_url, headers, food_name, cache):
+    """Retourne un objet food Mealie {id, name} — utilise le cache ou crée si absent."""
+    food_name = _clean_food_name(food_name)
+    key = food_name.lower().strip()
+    if key in cache:
+        item = cache[key]
+        return {"id": item["id"], "name": item["name"]}
+    try:
+        r = requests.post(f"{api_url}/foods", headers=headers, json={"name": food_name}, timeout=5)
+        if r.status_code in [200, 201]:
+            item = r.json()
+            cache[item["name"].lower()] = item
+            return {"id": item["id"], "name": item["name"]}
+    except Exception:
+        pass
+    return None
+
+
+def _get_or_create_unit(api_url, headers, unit_name, cache):
+    """Retourne un objet unit Mealie {id, name} — utilise le cache ou crée si absent."""
+    key = unit_name.lower().strip()
+    if key in cache:
+        item = cache[key]
+        return {"id": item["id"], "name": item["name"]}
+    try:
+        r = requests.post(f"{api_url}/units", headers=headers, json={"name": unit_name}, timeout=5)
+        if r.status_code in [200, 201]:
+            item = r.json()
+            cache[item["name"].lower()] = item
+            return {"id": item["id"], "name": item["name"]}
+    except Exception:
+        pass
+    return None
+
+
+def _resolve_items(api_url, headers, endpoint, items_as_strings):
+    """Résout une liste de strings en objets {id, name, slug} via la liste complète ou POST création."""
+    try:
+        r = requests.get(f"{api_url}/{endpoint}?page=1&perPage=200", headers=headers, timeout=5)
+        existing = {i["slug"]: i for i in r.json().get("items", [])} if r.status_code == 200 else {}
+    except Exception:
+        existing = {}
+    
+    resolved = []
+    for name in items_as_strings:
+        slug = name.lower().replace(" ", "-").replace("'", "").replace("\u00e9", "e").replace("\u00e8", "e").replace("\u00ea", "e").replace("\u00e0", "a")
+        if slug in existing:
+            resolved.append(existing[slug])
+            continue
+        try:
+            r2 = requests.post(f"{api_url}/{endpoint}", headers=headers, json={"name": name}, timeout=5)
+            if r2.status_code in [200, 201]:
+                resolved.append(r2.json())
+        except Exception:
+            pass
+    return resolved
+
+
 def mcp3_create_recipe(payload=None, **kwargs):
     """Crée une recette avec authentification"""
     if not api_url or not token:
@@ -135,15 +262,6 @@ def mcp3_create_recipe(payload=None, **kwargs):
     # Utiliser le payload complet si fourni, sinon reconstruire depuis kwargs
     if payload:
         final_payload = payload
-        # Debug: afficher le payload
-        print(f"🔍 Payload envoyé à l'API:")
-        print(f"  recipeServings: {final_payload.get('recipeServings')}")
-        print(f"  recipeYield: {final_payload.get('recipeYield')}")
-        print(f"  prepTime: {final_payload.get('prepTime')}")
-        print(f"  cookTime: {final_payload.get('cookTime')}")
-        print(f"  totalTime: {final_payload.get('totalTime')}")
-        print(f"  recipeIngredient: {len(final_payload.get('recipeIngredient', []))} ingrédients")
-        print(f"  recipeInstructions: {len(final_payload.get('recipeInstructions', []))} instructions")
     else:
         final_payload = {
             "name": kwargs.get("name", "Recette sans nom"),
@@ -160,26 +278,96 @@ def mcp3_create_recipe(payload=None, **kwargs):
         }
     
     try:
-        response = requests.post(f"{api_url}/recipes", headers=headers, json=final_payload, timeout=10)
+        recipe_name = final_payload.get("name", kwargs.get("name", "Recette sans nom"))
         
-        if response.status_code in [200, 201]:
-            result = response.json()
-            if isinstance(result, dict):
-                recipe_id = result.get("id", result.get("slug", "unknown"))
-                recipe_name = final_payload.get("name", kwargs.get("name", "N/A"))
-                print(f"✅ Recette créée: {recipe_name} (ID: {recipe_id})")
-                return {"success": True, "recipe_id": recipe_id}
-            elif isinstance(result, str):
-                # Mealie renvoie parfois le slug directement
-                recipe_name = final_payload.get("name", kwargs.get("name", "N/A"))
-                print(f"✅ Recette créée: {recipe_name} (Slug: {result})")
-                return {"success": True, "recipe_id": result}
+        # Étape 1 : POST avec seulement le nom → retourne le slug
+        create_response = requests.post(
+            f"{api_url}/recipes",
+            headers=headers,
+            json={"name": recipe_name},
+            timeout=10
+        )
+        
+        if create_response.status_code not in [200, 201]:
+            print(f"❌ Erreur création: {create_response.status_code} - {create_response.text}")
+            return {"success": False, "error": f"HTTP {create_response.status_code}"}
+        
+        # Le résultat est le slug sous forme de string
+        slug = create_response.json()
+        if not isinstance(slug, str):
+            slug = slug.get("slug") if isinstance(slug, dict) else None
+        if not slug:
+            print(f"❌ Pas de slug dans la réponse API")
+            return {"success": False, "error": "Pas de slug retourné"}
+        
+        # Étape 1.5 : GET pour récupérer le vrai nom assigné par Mealie (peut avoir un suffixe -2, -3...)
+        get_response = requests.get(f"{api_url}/recipes/{slug}", headers=headers, timeout=10)
+        real_name = recipe_name
+        if get_response.status_code == 200:
+            real_name = get_response.json().get("name", recipe_name)
+        
+        # Étape 2 : PATCH avec le payload complet → peuple la recette
+        # Utiliser le vrai nom et slug assignés par Mealie, supprimer l'image (gérée séparément)
+        patch_payload = {**final_payload, "name": real_name, "slug": slug, "image": None}
+        
+        # Résoudre foods et units des ingrédients → objets {id, name} Mealie
+        foods_cache, units_cache = _build_mealie_cache(api_url, headers)
+        resolved_ingredients = []
+        for ing in patch_payload.get("recipeIngredient", []):
+            ing = dict(ing)
+            unit_val = ing.get("unit")
+            food_val = ing.get("food")
+            if unit_val and isinstance(unit_val, str):
+                ing["unit"] = _get_or_create_unit(api_url, headers, unit_val, units_cache)
+            if food_val and isinstance(food_val, str):
+                ing["food"] = _get_or_create_food(api_url, headers, food_val, foods_cache)
+            resolved_ingredients.append(ing)
+        if resolved_ingredients:
+            patch_payload["recipeIngredient"] = resolved_ingredients
+        
+        # Résoudre recipeCategory et tags → objets avec vrais IDs Mealie
+        categories = patch_payload.get("recipeCategory", [])
+        if categories and isinstance(categories[0], str):
+            patch_payload["recipeCategory"] = _resolve_items(api_url, headers, "organizers/categories", categories)
+        elif categories and isinstance(categories[0], dict) and not categories[0].get("id"):
+            patch_payload["recipeCategory"] = _resolve_items(api_url, headers, "organizers/categories", [c["name"] for c in categories])
+        tags = patch_payload.get("tags", [])
+        if tags and isinstance(tags[0], str):
+            patch_payload["tags"] = _resolve_items(api_url, headers, "organizers/tags", tags)
+        elif tags and isinstance(tags[0], dict) and not tags[0].get("id"):
+            patch_payload["tags"] = _resolve_items(api_url, headers, "organizers/tags", [t["name"] for t in tags])
+        patch_response = requests.patch(
+            f"{api_url}/recipes/{slug}",
+            headers=headers,
+            json=patch_payload,
+            timeout=15
+        )
+        
+        if patch_response.status_code in [200, 201]:
+            # Étape 3 : Scraper l'image si une URL est disponible
+            image_url = final_payload.get("image") or kwargs.get("image")
+            if image_url and isinstance(image_url, str) and image_url.startswith("http"):
+                try:
+                    img_response = requests.post(
+                        f"{api_url}/recipes/{slug}/image",
+                        headers=headers,
+                        json={"url": image_url},
+                        timeout=15
+                    )
+                    if img_response.status_code == 200:
+                        print(f"✅ Recette créée et peuplée avec image: {recipe_name} (slug: {slug})")
+                    else:
+                        print(f"✅ Recette créée (slug: {slug}), image non définie: {img_response.status_code}")
+                except Exception as e:
+                    print(f"✅ Recette créée (slug: {slug}), erreur image: {e}")
             else:
-                print(f"❌ Réponse API invalide: {type(result).__name__}")
-                return {"success": False, "error": "Réponse API invalide"}
+                print(f"✅ Recette créée et peuplée: {recipe_name} (slug: {slug})")
+            return {"success": True, "recipe_id": slug, "id": slug}
         else:
-            print(f"❌ Erreur création: {response.status_code} - {response.text}")
-            return {"success": False, "error": f"HTTP {response.status_code}"}
+            print(f"❌ Recette créée (slug: {slug}) mais PATCH échoué: {patch_response.status_code} - {patch_response.text[:200]}")
+            # La recette existe quand même, retourner succès partiel
+            return {"success": True, "recipe_id": slug, "id": slug, "warning": f"PATCH échoué: {patch_response.status_code}"}
+            
     except Exception as e:
         print(f"❌ Erreur connexion create_recipe: {e}")
         return {"success": False, "error": str(e)}

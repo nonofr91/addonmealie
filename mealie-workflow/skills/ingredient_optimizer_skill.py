@@ -254,6 +254,64 @@ class IngredientOptimizerSkill:
                 "message": f"Erreur lors des corrections: {str(e)}"
             }
 
+    def optimize_ingredients_in_file(self, structured_filename: str) -> Dict:
+        """
+        Optimise les ingrédients dans un fichier structuré
+
+        Args:
+            structured_filename: Chemin du fichier structuré
+
+        Returns:
+            Dict avec le résultat de l'optimisation
+        """
+        try:
+            print("🔧 SKILL: Ingredient Optimizer - Optimisation fichier")
+
+            # Charger le fichier structuré
+            with open(structured_filename, 'r', encoding='utf-8') as f:
+                structured_data = json.load(f)
+
+            recipes = structured_data.get('recipes', [])
+            optimized_count = 0
+
+            for recipe in recipes:
+                # Valider la structure des ingrédients
+                validation_result = self.validate_ingredients_structure(recipe)
+
+                if not validation_result.get('valid'):
+                    # Structurer les ingrédients si nécessaire
+                    structure_result = self.intelligent_ingredient_structurer(recipe)
+                    if structure_result.get('success'):
+                        # Mettre à jour les ingrédients dans la recette
+                        recipe['recipeIngredient'] = structure_result.get('structured_ingredients', recipe.get('recipeIngredient', []))
+                        optimized_count += 1
+
+            # Sauvegarder le fichier optimisé
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_dir = Path(structured_filename).parent
+            optimized_filename = output_dir / f"optimized_structured_recipes_{timestamp}.json"
+
+            with open(optimized_filename, 'w', encoding='utf-8') as f:
+                json.dump(structured_data, f, ensure_ascii=False, indent=2)
+
+            result = {
+                "success": True,
+                "optimized_count": optimized_count,
+                "total_recipes": len(recipes),
+                "filename": str(optimized_filename),
+                "message": f"Optimisation terminée: {optimized_count}/{len(recipes)} recettes optimisées"
+            }
+
+            self.last_optimization_results = result
+            return result
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": f"Erreur lors de l'optimisation: {str(e)}"
+            }
+
 
 # Fonctions principales pour le skill MCP
 def validate_ingredients(recipe_data: Dict) -> Dict:

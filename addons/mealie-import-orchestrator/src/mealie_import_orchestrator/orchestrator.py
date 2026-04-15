@@ -30,6 +30,7 @@ class MealieImportOrchestrator:
         sources: list[str] | None = None,
         scraped_filename: str | None = None,
         structured_filename: str | None = None,
+        scrape_url: str | None = None,
     ) -> dict[str, Any]:
         workflow_orchestrator = self._get_workflow_orchestrator()
         arguments: dict[str, Any] = {}
@@ -40,8 +41,10 @@ class MealieImportOrchestrator:
             arguments["scraped_filename"] = scraped_filename
         if structured_filename is not None:
             arguments["structured_filename"] = structured_filename
+        if scrape_url is not None:
+            arguments["scrape_url"] = scrape_url
 
-        if step == "scraping":
+        if step == "scraping" or step == "scrape":
             self._ensure_scraping_allowed()
 
         return self._ensure_result(workflow_orchestrator.run_step_by_step(step, **arguments))

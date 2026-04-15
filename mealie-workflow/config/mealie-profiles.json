@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "local": {
+      "name": "D\u00e9veloppement local",
+      "url": "http://127.0.0.1:9925",
+      "description": "Instance locale Docker pour d\u00e9veloppement rapide",
+      "token_env": "MEALIE_LOCAL_API_KEY"
+    },
+    "coolify": {
+      "name": "Production Coolify",
+      "url": "https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr",
+      "description": "Instance Coolify pour validation et packaging",
+      "token_env": "MEALIE_API_KEY"
+    }
+  },
+  "active_profile": "local"
+}

@@ -162,13 +162,19 @@ structured = orchestrator.ingredient_optimizer.intelligent_ingredient_structurer
 ## État actuel
 
 ### Complété
-- ✅ Implémentation des 4 capacités composées
+- ✅ Implémentation des 4 capacités composées dans `ingredient_optimizer_skill.py`
 - ✅ Intégration dans le workflow orchestrator
 - ✅ Documentation de l'implémentation
+- ✅ **Résolution foods/units en temps réel dans `mcp_auth_wrapper.py`** (2026-04-15)
+  - `_build_mealie_cache` : cache des foods/units existants
+  - `_get_or_create_food` : lookup cache + création si absent
+  - `_get_or_create_unit` : idem pour unités
+  - `_clean_food_name` : nettoyage prépositions françaises
+  - Ingrédients transmis avec `{id, name}` objets Mealie (plus de strings nullifiés)
 
 ### À améliorer
-- **Parsing IA** : L'implémentation actuelle du parsing d'ingrédients texte est basique. Une intégration avec un provider IA permettrait une structuration plus intelligente.
-- **Intégration MCP réelle** : Les fonctions `complete_ingredient_migration` et `correct_existing_foods` génèrent actuellement des plans. Elles doivent être connectées aux tools MCP restaurés (`create_food_ingredient`, `create_measurement_unit`, etc.).
+- **Parsing LLM** : Le structureur LLM parse parfois mal unit/food (ex: `unit="bonnes"` pour "2 bonnes pincées"). Améliorer le prompt de structuration.
+- **Normalisation des unités** : "g" et "gramme" devraient pointer vers le même objet unit. Ajouter une table de normalisation d'abréviations.
 - **Tests** : Ajouter des tests unitaires et d'intégration complets.
 
 ## Architecture

@@ -18,6 +18,10 @@ from data_structurer_skill import DataStructurerSkill
 from recipe_importer_skill import RecipeImporterSkill
 from ingredient_optimizer_skill import IngredientOptimizerSkill
 
+# Import des modules de qualité
+sys.path.insert(0, str(Path(__file__).parent))
+from quality_checker import WorkflowQualityChecker
+
 class MealieWorkflowOrchestrator:
     """Orchestrateur du workflow complet Mealie"""
     
@@ -26,6 +30,7 @@ class MealieWorkflowOrchestrator:
         self.structurer_skill = DataStructurerSkill()
         self.importer_skill = RecipeImporterSkill()
         self.ingredient_optimizer = IngredientOptimizerSkill()
+        self.quality_checker = WorkflowQualityChecker()
         self.workflow_results = {}
     
     def run_complete_workflow(self, sources: List[str] = None) -> Dict:
@@ -101,6 +106,29 @@ class MealieWorkflowOrchestrator:
             
             print(f"✅ Structuration terminée: {structure_result.get('total_recipes', 0)} recettes en {structure_time:.1f}s")
             
+            # ÉTAPE 2.5: Optimisation des ingrédients
+            print("\n🧪 ÉTAPE 2.5: OPTIMISATION DES INGRÉDIENTS")
+            print("-" * 40)
+            
+            optimize_start = time.time()
+            optimize_result = self.ingredient_optimizer.optimize_ingredients_in_file(structured_filename)
+            optimize_time = time.time() - optimize_start
+            
+            if optimize_result.get('success'):
+                print(f"✅ Optimisation terminée: {optimize_result.get('optimized_count', 0)} recettes optimisées en {optimize_time:.1f}s")
+                # Mettre à jour le fichier structuré avec les ingrédients optimisés
+                structured_filename = optimize_result.get('filename', structured_filename)
+            else:
+                print(f"⚠️ Optimisation échouée ou non nécessaire, continuation...")
+            
+            self.workflow_results['optimization'] = {
+                "success": optimize_result.get('success', False),
+                "filename": optimize_result.get('filename'),
+                "optimized_count": optimize_result.get('optimized_count', 0),
+                "time": optimize_time,
+                "result": optimize_result
+            }
+            
             # ÉTAPE 3: Import
             print("\n📥 ÉTAPE 3: IMPORT MEALIE")
             print("-" * 40)
@@ -129,6 +157,34 @@ class MealieWorkflowOrchestrator:
             
             print(f"✅ Import terminé: {import_result.get('total_imported', 0)} recettes en {import_time:.1f}s")
             
+            # ÉTAPE 4: Vérification qualité
+            print("\n🎯 ÉTAPE 4: VÉRIFICATION QUALITÉ")
+            print("-" * 40)
+            
+            quality_start = time.time()
+            quality_result = self.quality_checker.run_complete_quality_check(
+                scraped_filename,
+                structured_filename,
+                import_filename
+            )
+            quality_time = time.time() - quality_start
+            
+            if quality_result.get('success'):
+                print(f"✅ Vérification qualité terminée: Score global {quality_result.get('global_score', 0)}/100 en {quality_time:.1f}s")
+            else:
+                print(f"⚠️ Vérification qualité échouée, continuation...")
+            
+            # Sauvegarder le rapport de qualité
+            quality_report_file = self.quality_checker.save_quality_report(quality_result)
+            
+            self.workflow_results['quality'] = {
+                "success": quality_result.get('success', False),
+                "filename": quality_report_file,
+                "global_score": quality_result.get('global_score', 0),
+                "time": quality_time,
+                "result": quality_result
+            }
+            
             # Calculer les statistiques finales
             workflow_end = datetime.now()
             total_time = (workflow_end - workflow_start).total_seconds()
@@ -141,7 +197,9 @@ class MealieWorkflowOrchestrator:
                     "total_time": total_time,
                     "scraping_time": scrape_time,
                     "structuring_time": structure_time,
-                    "importing_time": import_time
+                    "optimization_time": optimize_time,
+                    "importing_time": import_time,
+                    "quality_time": quality_time
                 },
                 "results": self.workflow_results,
                 "statistics": self.calculate_workflow_statistics(),
@@ -172,7 +230,7 @@ class MealieWorkflowOrchestrator:
         Exécute une étape spécifique du workflow
         
         Args:
-            step: 'scraping', 'structuring', 'importing'
+            step: 'scraping', 'structuring', 'optimization', 'importing', 'quality'
             **kwargs: Paramètres spécifiques à l'étape
         
         Returns:
@@ -202,9 +260,27 @@ class MealieWorkflowOrchestrator:
                 result = self.structurer_skill.structure_scraped_data(scraped_filename)
                 self.workflow_results['structuring'] = result
                 
-            elif step == 'importing':
+            elif step == 'optimization':
                 structured_filename = kwargs.get('structured_filename')
                 if not structured_filename and 'structuring' in self.workflow_results:
+                    structured_filename = self.workflow_results['structuring'].get('filename')
+                
+                if not structured_filename:
+                    return {
+                        "success": False,
+                        "error": "Fichier structuré manquant",
+                        "message": "Spécifiez structured_filename ou exécutez la structuration d'abord"
+                    }
+                
+                result = self.ingredient_optimizer.optimize_ingredients_in_file(structured_filename)
+                self.workflow_results['optimization'] = result
+                
+            elif step == 'importing':
+                structured_filename = kwargs.get('structured_filename')
+                # Si l'optimisation a été effectuée, utiliser le fichier optimisé
+                if 'optimization' in self.workflow_results and self.workflow_results['optimization'].get('filename'):
+                    structured_filename = self.workflow_results['optimization'].get('filename')
+                elif not structured_filename and 'structuring' in self.workflow_results:
                     structured_filename = self.workflow_results['structuring'].get('filename')
                 
                 if not structured_filename:
@@ -217,11 +293,36 @@ class MealieWorkflowOrchestrator:
                 result = self.importer_skill.import_structured_recipes(structured_filename)
                 self.workflow_results['importing'] = result
                 
+            elif step == 'quality':
+                scraped_filename = kwargs.get('scraped_filename')
+                structured_filename = kwargs.get('structured_filename')
+                import_filename = kwargs.get('import_filename')
+                
+                # Récupérer les fichiers depuis les résultats précédents si non spécifiés
+                if not scraped_filename and 'scraping' in self.workflow_results:
+                    scraped_filename = self.workflow_results['scraping'].get('filename')
+                if not structured_filename and 'structuring' in self.workflow_results:
+                    structured_filename = self.workflow_results['structuring'].get('filename')
+                if not import_filename and 'importing' in self.workflow_results:
+                    import_filename = self.workflow_results['importing'].get('filename')
+                
+                if not all([scraped_filename, structured_filename, import_filename]):
+                    return {
+                        "success": False,
+                        "error": "Fichiers manquants",
+                        "message": "Spécifiez scraped_filename, structured_filename et import_filename ou exécutez le workflow complet"
+                    }
+                
+                result = self.quality_checker.run_complete_quality_check(scraped_filename, structured_filename, import_filename)
+                quality_report_file = self.quality_checker.save_quality_report(result)
+                result['quality_report_file'] = quality_report_file
+                self.workflow_results['quality'] = result
+                
             else:
                 return {
                     "success": False,
                     "error": "Étape inconnue",
-                    "message": f"Étape '{step}' non reconnue. Utilisez: scraping, structuring, importing"
+                    "message": f"Étape '{step}' non reconnue. Utilisez: scraping, structuring, optimization, importing, quality"
                 }
             
             return result
@@ -247,7 +348,7 @@ class MealieWorkflowOrchestrator:
                 "overall_progress": 0
             }
             
-            total_steps = 3  # scraping, structuring, importing
+            total_steps = 5  # scraping, structuring, optimization, importing, quality
             completed_steps = 0
             
             for step, result in self.workflow_results.items():
@@ -286,7 +387,9 @@ class MealieWorkflowOrchestrator:
             stats = {
                 "scraping": {},
                 "structuring": {},
+                "optimization": {},
                 "importing": {},
+                "quality": {},
                 "conversion_rates": {}
             }
             
@@ -310,6 +413,14 @@ class MealieWorkflowOrchestrator:
                     "avg_calories": structuring_result.get('statistics', {}).get('average_calories', 0)
                 }
             
+            # Statistiques optimisation
+            if 'optimization' in self.workflow_results:
+                optimization_result = self.workflow_results['optimization']
+                stats["optimization"] = {
+                    "optimized_count": optimization_result.get('optimized_count', 0),
+                    "success": optimization_result.get('success', False)
+                }
+            
             # Statistiques import
             if 'importing' in self.workflow_results:
                 importing_result = self.workflow_results['importing']['result']
@@ -319,6 +430,14 @@ class MealieWorkflowOrchestrator:
                     "tags_in_mealie": importing_result.get('statistics', {}).get('total_tags', 0),
                     "avg_ingredients": importing_result.get('statistics', {}).get('avg_ingredients_per_recipe', 0),
                     "avg_instructions": importing_result.get('statistics', {}).get('avg_instructions_per_recipe', 0)
+                }
+            
+            # Statistiques qualité
+            if 'quality' in self.workflow_results:
+                quality_result = self.workflow_results['quality']
+                stats["quality"] = {
+                    "global_score": quality_result.get('global_score', 0),
+                    "success": quality_result.get('success', False)
                 }
             
             # Taux de conversion

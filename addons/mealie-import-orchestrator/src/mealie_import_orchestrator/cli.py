@@ -19,10 +19,11 @@ def build_parser() -> argparse.ArgumentParser:
     full_parser.add_argument("--source", dest="sources", action="append")
 
     step_parser = subparsers.add_parser("step")
-    step_parser.add_argument("step", choices=["scraping", "structuring", "importing"])
+    step_parser.add_argument("step", choices=["scraping", "structuring", "importing", "scrape"])
     step_parser.add_argument("--source", dest="sources", action="append")
-    step_parser.add_argument("--scraped-filename", dest="scraped_filename")
-    step_parser.add_argument("--structured-filename", dest="structured_filename")
+    step_parser.add_argument("--scraped-filename", dest="scraped_filename", type=str, help='Fichier JSON scrapé pour la structuration')
+    step_parser.add_argument("--structured-filename", dest="structured_filename", type=str, help='Fichier JSON structuré pour l\'import')
+    step_parser.add_argument("--scrape-url", dest="scrape_url", type=str, help='URL à scraper avec les MCP Jina via Cascade')
 
     subparsers.add_parser("status")
     return parser

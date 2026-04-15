@@ -27,7 +27,7 @@ class RecipeScraperSkill:
         Scrape des recettes depuis les sources spécifiées
         
         Args:
-            sources: Liste des sources à utiliser (ex: ['marmiton', '750g'])
+            sources: Liste des sources à utiliser (ex: ['https://marmiton.org/...'])
         
         Returns:
             Dict avec les résultats du scraping
@@ -35,29 +35,97 @@ class RecipeScraperSkill:
         try:
             print("🔧 SKILL: Recipe Scraper - Scraping depuis sources")
             
-            # Lancer le workflow de scraping
-            filename = self.scraper.run_scraping_workflow()
+            recipes = []
             
-            if filename:
-                # Charger les résultats pour les retourner
-                with open(filename, 'r', encoding='utf-8') as f:
-                    results = json.load(f)
+            # Initialiser latest_filename
+            latest_filename = None
+            
+            # Si des sources sont fournies, scraper chaque URL individuellement
+            if sources:
+                for source in sources:
+                    print(f"   🌐 Scraping: {source}")
+                    recipe_data = self.scraper.extract_recipe_content(source)
+                    if recipe_data:
+                        recipes.append(recipe_data)
+                        print(f"   ✅ Recette scrapée: {recipe_data.get('name', 'Sans nom')}")
+                    else:
+                        print(f"   ❌ Échec scraping: {source}")
+                
+                # Sauvegarder les données scrapées dans un fichier pour l'étape de structuration
+                if recipes:
+                    output_dir = Path(__file__).parent.parent / "scraped_data"
+                    output_dir.mkdir(exist_ok=True)
+                    
+                    scraped_database = {
+                        "metadata": {
+                            "version": "1.0",
+                            "scraped_at": datetime.now().isoformat(),
+                            "total_recipes": len(recipes),
+                            "sources": sources,
+                            "scraper": "recipe_scraper_mcp"
+                        },
+                        "recipes": recipes,
+                        "statistics": {
+                            "total_recipes": len(recipes),
+                            "avg_ingredients_per_recipe": sum(len(r.get('recipeIngredient', [])) for r in recipes) / len(recipes),
+                            "avg_instructions_per_recipe": sum(len(r.get('recipeInstructions', [])) for r in recipes) / len(recipes)
+                        }
+                    }
+                    
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = output_dir / f"scraped_recipes_mcp_{timestamp}.json"
+                    
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        json.dump(scraped_database, f, ensure_ascii=False, indent=2)
+                    
+                    # Créer aussi un fichier latest
+                    latest_filename = output_dir / "latest_scraped_recipes_mcp.json"
+                    with open(latest_filename, 'w', encoding='utf-8') as f:
+                        json.dump(scraped_database, f, ensure_ascii=False, indent=2)
+                    
+                    print(f"✅ Données sauvegardées: {filename}")
+                    print(f"✅ Fichier latest: {latest_filename}")
+            else:
+                # Sinon, utiliser le workflow de scraping par défaut
+                filename = self.scraper.run_scraping_workflow()
+                if filename:
+                    with open(filename, 'r', encoding='utf-8') as f:
+                        results = json.load(f)
+                    recipes = results.get('recipes', [])
+            
+            if recipes:
+                results = {
+                    "recipes": recipes,
+                    "metadata": {
+                        "scraped_at": datetime.now().isoformat(),
+                        "sources": sources if sources else ["default"],
+                        "total_recipes": len(recipes)
+                    },
+                    "statistics": {
+                        "total_recipes": len(recipes),
+                        "avg_ingredients_per_recipe": sum(len(r.get('ingredients', [])) for r in recipes) / len(recipes),
+                        "avg_instructions_per_recipe": sum(len(r.get('instructions', [])) for r in recipes) / len(recipes)
+                    }
+                }
                 
                 self.last_scrape_results = results
                 
+                # Retourner le nom du fichier si disponible
+                scraped_filename = str(latest_filename) if 'latest_filename' in locals() else None
+                
                 return {
                     "success": True,
-                    "filename": filename,
-                    "total_recipes": len(results.get('recipes', [])),
-                    "recipes": results.get('recipes', []),
+                    "total_recipes": len(recipes),
+                    "recipes": recipes,
                     "statistics": results.get('statistics', {}),
-                    "message": f"Scraping réussi: {len(results.get('recipes', []))} recettes"
+                    "message": f"Scraping réussi: {len(recipes)} recettes",
+                    "filename": scraped_filename
                 }
             else:
                 return {
                     "success": False,
                     "error": "Échec du scraping",
-                    "message": "Le scraping n'a pas pu être complété"
+                    "message": "Aucune recette n'a pu être scrapée"
                 }
                 
         except Exception as e:

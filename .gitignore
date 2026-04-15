@@ -20,10 +20,11 @@ build/
 logs/
 tmp/
 data/generated/
-quality_reports/latest_*.json
-workflow_reports/latest_*.json
-scraped_data/latest_*.json
-structured_data/latest_*.json
+quality_reports/
+workflow_reports/
+import_reports/
+scraped_data/
+structured_data/
 scraped_images/
 .DS_Store
 # MCP config files with sensitive credentials
