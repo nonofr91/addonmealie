@@ -420,7 +420,7 @@ def mcp3_create_recipe(payload=None, **kwargs):
         
         if patch_response.status_code in [200, 201]:
             # Étape 3 : Scraper l'image si une URL est disponible
-            image_url = final_payload.get("image") or kwargs.get("image")
+            image_url = final_payload.get("image") or final_payload.get("image_path") or kwargs.get("image")
             if image_url and isinstance(image_url, str) and image_url.startswith("http"):
                 try:
                     img_response = requests.post(
