@@ -319,6 +319,47 @@ def _resolve_items(api_url, headers, endpoint, items_as_strings):
     return resolved
 
 
+def _fetch_themealsdb_image(recipe_name):
+    """Cherche une image pertinente sur TheMealDB par nom de recette.
+    Gratuit, sans clé API. Essaie plusieurs variantes du nom.
+    Retourne (url, content_type, bytes) ou None si non trouvé."""
+    # Variantes de recherche : nom complet, puis mots-clés principaux
+    name = recipe_name.strip()
+    # Extraire les mots-clés significatifs (>3 lettres, pas d'articles/prépositions)
+    STOP = {"les", "des", "aux", "avec", "pour", "une", "the", "and", "with"}
+    keywords = [w for w in name.split() if len(w) > 3 and w.lower() not in STOP]
+    queries = [name]
+    if keywords:
+        queries.append(" ".join(keywords[:2]))   # 2 premiers mots-clés
+        queries.append(keywords[0])              # premier mot-clé seul
+    UA = {"User-Agent": "MealieImporter/1.0"}
+    for query in queries:
+        try:
+            r = requests.get(
+                "https://www.themealdb.com/api/json/v1/1/search.php",
+                params={"s": query},
+                headers=UA,
+                timeout=8,
+            )
+            if r.status_code != 200:
+                continue
+            meals = r.json().get("meals") or []
+            if not meals:
+                continue
+            img_url = meals[0].get("strMealThumb")
+            if not img_url:
+                continue
+            # Télécharger l'image
+            dl = requests.get(img_url, headers=UA, timeout=12)
+            ct = dl.headers.get("content-type", "image/jpeg")
+            if dl.status_code == 200 and len(dl.content) > 20_000 and "image" in ct:
+                print(f"   📸 Image TheMealDB trouvée pour '{query}': {meals[0].get('strMeal')}")
+                return (img_url, ct, dl.content)
+        except Exception as e:
+            print(f"   ⚠️ TheMealDB fallback échoué pour '{query}': {e}")
+    return None
+
+
 def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
     """Télécharge l'image depuis image_url et l'uploade dans Mealie via PUT multipart.
     Rejette les images trop petites (logos/icônes). Pas de placeholder si échec."""
@@ -375,7 +416,31 @@ def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
             pass
 
     if not img_ok:
-        print(f"✅ Recette créée (slug: {slug}), image non récupérable depuis: {image_url[:60]}")
+        # Fallback TheMealDB : chercher par nom de recette (gratuit, sans clé)
+        themealsdb = _fetch_themealsdb_image(recipe_name)
+        if themealsdb:
+            _, ct, img_bytes = themealsdb
+            ext = "jpg" if "jpeg" in ct else ct.split("/")[-1].split(";")[0]
+            import tempfile, os as _os2
+            with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as f:
+                f.write(img_bytes); tmp2 = f.name
+            try:
+                with open(tmp2, "rb") as f:
+                    put_headers = {k: v for k, v in headers.items() if k != "Content-Type"}
+                    resp3 = requests.put(
+                        f"{api_url}/recipes/{slug}/image",
+                        headers=put_headers,
+                        files={"image": (f"image.{ext}", f, ct), "extension": (None, ext)},
+                        timeout=20,
+                    )
+                if resp3.status_code == 200:
+                    img_ok = True
+                    print(f"✅ Recette créée avec image TheMealDB: {recipe_name} (slug: {slug})")
+            finally:
+                _os2.unlink(tmp2)
+
+    if not img_ok:
+        print(f"✅ Recette créée (slug: {slug}), image non récupérable depuis: {image_url[:60] if image_url else 'aucune URL'}")
 
 
 def mcp3_create_recipe(payload=None, **kwargs):
