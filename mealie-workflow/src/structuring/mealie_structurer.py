@@ -158,49 +158,86 @@ class MealieDataStructurer:
         
         return formatted
     
+    # Unités connues, ordonnées : multi-mots en premier, puis abréviations
+    KNOWN_UNITS = [
+        "cuillère à café rase", "cuillères à café rases",
+        "cuillère à soupe rase", "cuillères à soupe rases",
+        "cuillère à café", "cuillères à café",
+        "cuillère à soupe", "cuillères à soupe",
+        "c. à c.", "c. à s.",
+        "kilogramme", "kilogrammes",
+        "milligramme", "milligrammes",
+        "centilitre", "centilitres",
+        "millilitre", "millilitres",
+        "décilitre", "décilitres",
+        "gramme", "grammes",
+        "litre", "litres",
+        "gallon", "pinte", "quart",
+        "tranche", "tranches",
+        "morceau", "morceaux",
+        "feuille", "feuilles",
+        "sachet", "sachets",
+        "gousse", "gousses",
+        "pincée", "pincées",
+        "botte", "bottes",
+        "boîte", "boîtes", "boite", "boites",
+        "paquet", "paquets",
+        "portion", "portions",
+        "tasse", "tasses",
+        "brin", "brins",
+        "goutte", "gouttes",
+        "filet",
+        "kg", "mg", "cl", "ml", "dl", "lb", "oz", "g",
+    ]
+
     def parse_ingredient(self, ingredient: str) -> Dict:
-        """Parse un ingrédient en quantité/unité/aliment"""
-        # Patterns pour parser les ingrédients
-        patterns = [
-            r'^(\d+(?:,\d+)?)\s*([a-zA-Z°]+)?\s+(.+)$',  # "200g farine"
-            r'^(\d+(?:,\d+)?)\s*([a-zA-Z°]+)\s+de\s+(.+)$',  # "200g de farine"
-            r'^(\d+)\s+(.+)$',  # "3 œufs"
-            r'^(.+)$'  # Juste le nom
-        ]
-        
-        for pattern in patterns:
-            match = re.match(pattern, ingredient.strip())
-            if match:
-                groups = match.groups()
-                
-                if len(groups) == 3:
-                    quantity, unit, food = groups
-                    return {
-                        'quantity': float(quantity.replace(',', '.')),
-                        'unit': unit.lower() if unit else '',
-                        'food': food.strip() if food else '',
-                        'note': ''
-                    }
-                elif len(groups) == 2:
-                    quantity, food = groups
-                    return {
-                        'quantity': float(quantity),
-                        'unit': '',
-                        'food': food.strip() if food else '',
-                        'note': ''
-                    }
-                elif len(groups) == 1:
-                    return {
-                        'quantity': 0.0,
-                        'unit': '',
-                        'food': groups[0].strip() if groups[0] else '',
-                        'note': ''
-                    }
-        
+        """Parse un ingrédient en quantité/unité/aliment via liste d'unités connues."""
+        text = ingredient.strip()
+
+        # Étape 1 : extraire la quantité en début de chaîne (int ou décimal , ou .)
+        qty_match = re.match(r'^(\d+(?:[,\.]\d+)?)\s*', text)
+        qty = 0.0
+        rest = text
+        if qty_match:
+            qty = float(qty_match.group(1).replace(',', '.'))
+            rest = text[qty_match.end():].strip()
+
+        # Étape 2 : chercher une unité connue en début de reste
+        # Si le 1er mot est un adjectif parasite (gros, bonnes…), le sauter une fois
+        ADJECTIVE_NOISE = {
+            'bon', 'bonne', 'bonnes', 'bons',
+            'gros', 'grosse', 'grosses',
+            'petit', 'petite', 'petites', 'petits',
+            'grand', 'grande', 'grandes', 'grands',
+            'beau', 'belle', 'beaux',
+            'moyen', 'moyenne',
+        }
+        unit = ''
+        for attempt_rest in [rest]:
+            first_word = attempt_rest.split()[0].lower() if attempt_rest.split() else ''
+            candidates = [attempt_rest]
+            if first_word in ADJECTIVE_NOISE:
+                # Essayer sans le 1er mot
+                after_adj = attempt_rest[len(first_word):].strip()
+                candidates.append(after_adj)
+            for candidate in candidates:
+                for known in self.KNOWN_UNITS:
+                    pattern = r'^' + re.escape(known) + r'(?:\s|$)'
+                    if re.match(pattern, candidate, re.IGNORECASE):
+                        unit = known
+                        rest = candidate[len(known):].strip()
+                        break
+                if unit:
+                    break
+            break
+
+        # Étape 3 : supprimer les prépositions françaises en tête
+        rest = re.sub(r"^(de |d'|du |des |à )", '', rest, flags=re.IGNORECASE).strip()
+
         return {
-            'quantity': 0.0,
-            'unit': '',
-            'food': ingredient if ingredient else '',
+            'quantity': qty,
+            'unit': unit,
+            'food': rest if rest else ingredient,
             'note': ''
         }
     
