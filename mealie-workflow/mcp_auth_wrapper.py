@@ -321,7 +321,7 @@ def _resolve_items(api_url, headers, endpoint, items_as_strings):
 
 def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
     """Télécharge l'image depuis image_url et l'uploade dans Mealie via PUT multipart.
-    Fallback sur POST url si le téléchargement échoue."""
+    Rejette les images trop petites (logos/icônes). Pas de placeholder si échec."""
     import tempfile, os as _os
     BROWSER_UA = {
         "User-Agent": (
@@ -331,11 +331,13 @@ def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
         "Referer": image_url,
         "Accept": "image/avif,image/webp,image/apng,image/jpeg,*/*",
     }
+    # Seuil minimal : 20 KB — en dessous c'est probablement un logo, icône ou erreur
+    MIN_IMAGE_SIZE = 20_000
     img_ok = False
     try:
         dl = requests.get(image_url, headers=BROWSER_UA, timeout=12)
         content_type = dl.headers.get("content-type", "image/jpeg")
-        if dl.status_code == 200 and len(dl.content) > 5000 and "image" in content_type:
+        if dl.status_code == 200 and len(dl.content) >= MIN_IMAGE_SIZE and "image" in content_type:
             ext = "jpg" if "jpeg" in content_type else content_type.split("/")[-1].split(";")[0]
             with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as f:
                 f.write(dl.content)
