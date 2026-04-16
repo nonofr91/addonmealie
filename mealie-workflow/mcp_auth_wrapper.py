@@ -362,45 +362,47 @@ def _fetch_themealsdb_image(recipe_name):
 
 def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
     """Télécharge l'image depuis image_url et l'uploade dans Mealie via PUT multipart.
-    Rejette les images trop petites (logos/icônes). Pas de placeholder si échec."""
+    Si image_url absent ou inaccessible, essaie TheMealDB par nom de recette.
+    Rejette les images trop petites (logos/icônes). Pas de placeholder si tout échoue."""
     import tempfile, os as _os
-    BROWSER_UA = {
-        "User-Agent": (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        ),
-        "Referer": image_url,
-        "Accept": "image/avif,image/webp,image/apng,image/jpeg,*/*",
-    }
     # Seuil minimal : 20 KB — en dessous c'est probablement un logo, icône ou erreur
     MIN_IMAGE_SIZE = 20_000
     img_ok = False
-    try:
-        dl = requests.get(image_url, headers=BROWSER_UA, timeout=12)
-        content_type = dl.headers.get("content-type", "image/jpeg")
-        if dl.status_code == 200 and len(dl.content) >= MIN_IMAGE_SIZE and "image" in content_type:
-            ext = "jpg" if "jpeg" in content_type else content_type.split("/")[-1].split(";")[0]
-            with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as f:
-                f.write(dl.content)
-                tmp = f.name
-            try:
-                with open(tmp, "rb") as f:
-                    put_headers = {k: v for k, v in headers.items() if k != "Content-Type"}
-                    resp = requests.put(
-                        f"{api_url}/recipes/{slug}/image",
-                        headers=put_headers,
-                        files={"image": (f"image.{ext}", f, content_type), "extension": (None, ext)},
-                        timeout=20,
-                    )
-                if resp.status_code == 200:
-                    img_ok = True
-                    print(f"✅ Recette créée et peuplée avec image: {recipe_name} (slug: {slug})")
-            finally:
-                _os.unlink(tmp)
-    except Exception as e:
-        print(f"   ⚠️ Téléchargement image échoué: {e}")
+    if image_url and isinstance(image_url, str) and image_url.startswith("http"):
+        BROWSER_UA = {
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Referer": image_url,
+            "Accept": "image/avif,image/webp,image/apng,image/jpeg,*/*",
+        }
+        try:
+            dl = requests.get(image_url, headers=BROWSER_UA, timeout=12)
+            content_type = dl.headers.get("content-type", "image/jpeg")
+            if dl.status_code == 200 and len(dl.content) >= MIN_IMAGE_SIZE and "image" in content_type:
+                ext = "jpg" if "jpeg" in content_type else content_type.split("/")[-1].split(";")[0]
+                with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as f:
+                    f.write(dl.content)
+                    tmp = f.name
+                try:
+                    with open(tmp, "rb") as f:
+                        put_headers = {k: v for k, v in headers.items() if k != "Content-Type"}
+                        resp = requests.put(
+                            f"{api_url}/recipes/{slug}/image",
+                            headers=put_headers,
+                            files={"image": (f"image.{ext}", f, content_type), "extension": (None, ext)},
+                            timeout=20,
+                        )
+                    if resp.status_code == 200:
+                        img_ok = True
+                        print(f"✅ Recette créée et peuplée avec image: {recipe_name} (slug: {slug})")
+                finally:
+                    _os.unlink(tmp)
+        except Exception as e:
+            print(f"   ⚠️ Téléchargement image échoué: {e}")
 
-    if not img_ok:
+    if not img_ok and image_url and isinstance(image_url, str) and image_url.startswith("http"):
         try:
             post_headers = {**headers, "Content-Type": "application/json"}
             resp2 = requests.post(
@@ -543,12 +545,9 @@ def mcp3_create_recipe(payload=None, **kwargs):
         )
         
         if patch_response.status_code in [200, 201]:
-            # Étape 3 : Uploader l'image si une URL est disponible
+            # Étape 3 : Uploader l'image (URL recette ou fallback TheMealDB)
             image_url = final_payload.get("image") or final_payload.get("image_path") or kwargs.get("image")
-            if image_url and isinstance(image_url, str) and image_url.startswith("http"):
-                _upload_recipe_image(api_url, headers, slug, image_url, recipe_name)
-            else:
-                print(f"✅ Recette créée et peuplée: {recipe_name} (slug: {slug})")
+            _upload_recipe_image(api_url, headers, slug, image_url, recipe_name)
             return {"success": True, "recipe_id": slug, "id": slug}
         else:
             print(f"❌ Recette créée (slug: {slug}) mais PATCH échoué: {patch_response.status_code} - {patch_response.text[:200]}")
