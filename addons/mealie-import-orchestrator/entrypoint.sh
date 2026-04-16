@@ -10,7 +10,7 @@ API_PORT="${ADDON_API_PORT:-8000}"
 uvicorn mealie_import_orchestrator.api:app \
     --host "${ADDON_API_HOST:-0.0.0.0}" \
     --port "$API_PORT" \
-    --log-level "${LOG_LEVEL:-info}" &
+    --log-level "$(echo "${LOG_LEVEL:-info}" | tr '[:upper:]' '[:lower:]')" &
 
 API_PID=$!
 echo "   API    : PID $API_PID → http://0.0.0.0:$API_PORT"
