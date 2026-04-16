@@ -319,19 +319,45 @@ def _resolve_items(api_url, headers, endpoint, items_as_strings):
     return resolved
 
 
+_FR_EN_CULINARY = {
+    "pâtes": "pasta", "pates": "pasta", "spaghetti": "spaghetti",
+    "soupe": "soup", "potage": "soup", "velouté": "soup", "velout": "soup",
+    "salade": "salad", "gratin": "gratin",
+    "poulet": "chicken", "bœuf": "beef", "boeuf": "beef",
+    "porc": "pork", "agneau": "lamb", "veau": "veal",
+    "saumon": "salmon", "thon": "tuna", "cabillaud": "cod",
+    "tomate": "tomato", "oignon": "onion", "ail": "garlic",
+    "carbonara": "carbonara", "bolognaise": "bolognese", "ratatouille": "ratatouille",
+    "quiche": "quiche", "tarte": "tart", "tartelette": "tart",
+    "crêpe": "crepe", "crepe": "crepe", "gateau": "cake", "gâteau": "cake",
+    "beurre": "butter", "crème": "cream", "fromage": "cheese",
+    "lentilles": "lentils", "lentille": "lentil",
+    "champignon": "mushroom", "champignons": "mushrooms",
+    "épinards": "spinach", "courgette": "zucchini",
+    "pomme": "apple", "pommes": "apples",
+}
+
 def _fetch_themealsdb_image(recipe_name):
     """Cherche une image pertinente sur TheMealDB par nom de recette.
-    Gratuit, sans clé API. Essaie plusieurs variantes du nom.
+    Gratuit, sans clé API. Essaie plusieurs variantes du nom (FR + EN).
     Retourne (url, content_type, bytes) ou None si non trouvé."""
-    # Variantes de recherche : nom complet, puis mots-clés principaux
     name = recipe_name.strip()
-    # Extraire les mots-clés significatifs (>3 lettres, pas d'articles/prépositions)
-    STOP = {"les", "des", "aux", "avec", "pour", "une", "the", "and", "with"}
-    keywords = [w for w in name.split() if len(w) > 3 and w.lower() not in STOP]
-    queries = [name]
-    if keywords:
-        queries.append(" ".join(keywords[:2]))   # 2 premiers mots-clés
-        queries.append(keywords[0])              # premier mot-clé seul
+    STOP = {"les", "des", "aux", "avec", "pour", "une", "the", "and", "with",
+            "sur", "dans", "par", "mais", "très", "plus", "sans", "façon", "facon"}
+    # Mots bruts significatifs (sans strip de "s" qui cause des faux matchs)
+    raw_words = [w for w in name.split() if len(w) > 3 and w.lower().rstrip("s,'") not in STOP]
+    # Traduction FR→EN : mots qui ont une correspondance connue uniquement
+    en_words = [_FR_EN_CULINARY[w.lower()] for w in raw_words if w.lower() in _FR_EN_CULINARY]
+    # Ordre de priorité : EN spécifique d'abord (plus de chances de matcher), puis brut
+    seen = set()
+    queries = []
+    for q in ([" ".join(en_words[:2])] if len(en_words) >= 2 else []) + \
+             ([en_words[0]] if en_words else []) + \
+             [name, " ".join(raw_words[:2]) if raw_words else ""] :
+        q = q.strip()
+        if q and q not in seen:
+            seen.add(q)
+            queries.append(q)
     UA = {"User-Agent": "MealieImporter/1.0"}
     for query in queries:
         try:
@@ -687,6 +713,118 @@ try:
     print("✅ fix_invalid_recipes chargé")
 except Exception as e:
     print(f"⚠️ Import fix_invalid_recipes: {e}")
+
+def audit_recipes(fix: bool = False) -> dict:
+    """Audite toutes les recettes Mealie et détecte les problèmes courants.
+
+    Détecte :
+    - Images manquantes (champ image null/vide)
+    - Images depuis CDN de placeholder connus (picsum, via.placeholder, etc.)
+    - Tags avec nom de type test/debug/tmp
+    - Doublons probables (slug se terminant par -1, -2, ... ou noms très proches)
+
+    Si fix=True :
+    - Supprime les tags "test" détectés
+    - Tente un upload d'image TheMealDB pour les recettes sans image valide
+    """
+    import re as _re
+    from difflib import SequenceMatcher
+
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+    BAD_IMAGE_DOMAINS = ["picsum.photos", "via.placeholder.com", "dummyimage.com",
+                         "lorempixel.com", "placehold.it", "placeimg.com"]
+    TEST_TAG_WORDS = {"test", "debug", "tmp", "temp", "sample", "example", "demo"}
+    DUPE_SLUG_RE = _re.compile(r"-(\d+)$")
+
+    r = requests.get(f"{api_url}/recipes?perPage=200&page=1", headers=headers, timeout=10)
+    if r.status_code != 200:
+        return {"success": False, "error": f"Impossible de lister les recettes: {r.status_code}"}
+
+    recipes = r.json().get("items", [])
+    report = {"total": len(recipes), "issues": [], "fixed": []}
+
+    slug_names = {rec["slug"]: rec.get("name", "") for rec in recipes}
+
+    for rec in recipes:
+        slug = rec["slug"]
+        name = rec.get("name", "")
+        image = rec.get("image")        # None ou nom de fichier si existant
+        tags  = rec.get("tags", [])
+        issues_for_rec = []
+
+        # 1. Image manquante
+        if not image:
+            issues_for_rec.append("no_image")
+
+        # 2. Image depuis CDN placeholder
+        elif any(bad in str(image) for bad in BAD_IMAGE_DOMAINS):
+            issues_for_rec.append(f"bad_image_cdn:{image[:80]}")
+
+        # 3. Tags "test"
+        test_tags = [t for t in tags if t.get("name", "").lower().strip() in TEST_TAG_WORDS]
+        if test_tags:
+            issues_for_rec.append(f"test_tags:{[t['name'] for t in test_tags]}")
+
+        # 4. Doublon probable : slug se termine par -N
+        m = DUPE_SLUG_RE.search(slug)
+        if m:
+            base_slug = slug[:slug.rfind(f"-{m.group(1)}")]
+            if base_slug in slug_names:
+                issues_for_rec.append(f"probable_duplicate_of:{base_slug}")
+
+        if issues_for_rec:
+            entry = {"slug": slug, "name": name, "issues": issues_for_rec}
+            report["issues"].append(entry)
+            print(f"  ⚠️  {name} ({slug})")
+            for iss in issues_for_rec:
+                print(f"       → {iss}")
+
+            if fix:
+                # Fix A : supprimer les tags test
+                if test_tags:
+                    detail_r = requests.get(f"{api_url}/recipes/{slug}", headers=headers, timeout=8)
+                    if detail_r.status_code == 200:
+                        recipe_detail = detail_r.json()
+                        kept_tags = [t for t in recipe_detail.get("tags", [])
+                                     if t.get("name", "").lower().strip() not in TEST_TAG_WORDS]
+                        patch_r = requests.patch(f"{api_url}/recipes/{slug}", headers=headers,
+                                                  json={"tags": kept_tags}, timeout=10)
+                        if patch_r.status_code in [200, 201]:
+                            print(f"       ✅ Tags test supprimés")
+                            report["fixed"].append(f"{slug}: tags test supprimés")
+
+                # Fix B : image manquante ou CDN placeholder → TheMealDB
+                if "no_image" in issues_for_rec or any("bad_image_cdn" in i for i in issues_for_rec):
+                    # Supprimer l'image existante si CDN placeholder
+                    if any("bad_image_cdn" in i for i in issues_for_rec):
+                        requests.delete(f"{api_url}/recipes/{slug}/image", headers=headers, timeout=8)
+                    # Tenter TheMealDB
+                    themealsdb = _fetch_themealsdb_image(name)
+                    if themealsdb:
+                        _, ct, img_bytes = themealsdb
+                        ext = "jpg" if "jpeg" in ct else ct.split("/")[-1].split(";")[0]
+                        import tempfile, os as _os
+                        with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as f:
+                            f.write(img_bytes); tmp = f.name
+                        try:
+                            put_h = {k: v for k, v in headers.items() if k != "Content-Type"}
+                            pr = requests.put(f"{api_url}/recipes/{slug}/image", headers=put_h,
+                                              files={"image": (f"image.{ext}", open(tmp, "rb"), ct),
+                                                     "extension": (None, ext)}, timeout=20)
+                            if pr.status_code == 200:
+                                print(f"       ✅ Image TheMealDB uploadée")
+                                report["fixed"].append(f"{slug}: image TheMealDB ajoutée")
+                        finally:
+                            _os.unlink(tmp)
+                    else:
+                        print(f"       ℹ️  Pas d'image TheMealDB pour '{name}'")
+
+    print(f"\n📊 Audit terminé: {len(report['issues'])}/{report['total']} recettes avec problèmes")
+    if fix:
+        print(f"✅ Corrections appliquées: {len(report['fixed'])}")
+    return report
+
 
 print("\n🎉 MCP WRAPPER AUTHENTIFIÉ INITIALISÉ")
 print("✅ Vrais MCP Mealie avec authentification")
