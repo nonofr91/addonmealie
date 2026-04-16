@@ -1,133 +1,118 @@
-# Mealie Import Orchestrator
+# 🍽️ Mealie Import Addon
 
-Addon externe d'orchestration pour piloter le workflow canonique d'import de recettes vers Mealie.
+An external addon for [Mealie](https://mealie.io) that adds a **Web UI + REST API** to import recipes from any cooking website (Marmiton, 750g, …) and audit recipe quality — without modifying your Mealie instance.
 
-## Usage local recommandé
+## Features
 
-Cet addon est conçu pour être testé d'abord contre la stack locale `packages/mealie-dev-stack/`, puis validé dans Coolify.
+- **📥 Import by URL** — paste any recipe URL, the addon scrapes, structures and imports it into Mealie automatically
+- **🔍 Quality audit** — detects missing images, placeholder CDN images, test tags, and probable duplicates
+- **🔧 Auto-fix** — uploads a relevant fallback image (via TheMealDB), removes unwanted tags
+- **🌐 Web UI** (Streamlit) — simple 3-tab interface: Import / Audit / Status
+- **⚡ REST API** (FastAPI) — `POST /import`, `GET /audit`, `POST /audit/fix`, `GET /status`
+- **🤖 AI optional** — works without OpenAI key (JSON-LD fallback); enable AI for better recipe structuring
+- **🐳 Standalone Docker image** — no dependency on the host filesystem
 
-Consulter aussi `docs/specs/local-addon-dev-flow.md` pour le parcours développeur local complet.
-
-## Préparation
-
-1. Lancer une instance locale Mealie avec `packages/mealie-dev-stack/`
-2. Copier `.env.template` vers `.env`
-3. Renseigner `MEALIE_BASE_URL` et `MEALIE_API_KEY`
-4. Installer l'addon localement si besoin
-
-## Variables d'environnement principales
-
-- `MEALIE_BASE_URL` : URL de l'instance Mealie cible
-- `MEALIE_API_KEY` : clé API Mealie
-- `MEALIE_LOCAL_API_KEY` : clé API pour l'instance locale (alternative)
-- `MEALIE_IMPORT_ORCHESTRATOR_REPO_ROOT` : racine du monorepo si nécessaire
-- `MEALIE_IMPORT_ORCHESTRATOR_WORKFLOW_PATH` : chemin du workflow canonique si différent du défaut
-- `MEALIE_IMPORT_ORCHESTRATOR_ENABLE_SCRAPING` : active explicitement le scraping si un backend réel est prêt
-
-## Exemples
-
-### Smoke test local recommandé
+## Quick start (Docker Compose)
 
 ```bash
-smoke-test
+# 1. Clone and configure
+git clone https://github.com/nonofr91/addonmealie.git
+cd addonmealie/addons/mealie-import-orchestrator
+cp .env.template .env
+# Edit .env with your Mealie URL and API key
+
+# 2. Start
+docker compose up -d
+
+# 3. Open
+#   Web UI  → http://localhost:8501
+#   API     → http://localhost:8000
+#   API docs → http://localhost:8000/docs
 ```
 
-Ce scénario valide que la commande `status` de l'addon renvoie un JSON exploitable dans le contexte local du monorepo.
+## Environment variables
 
-### Vérifier le statut
+```env
+# Required
+MEALIE_BASE_URL=https://your-mealie-instance.example.com
+MEALIE_API_KEY=your-mealie-api-key
+
+# Optional — AI structuring (JSON-LD fallback if absent)
+# OPENAI_API_KEY=sk-...
+# OPENAI_BASE_URL=https://api.openai.com/v1
+# OPENAI_MODEL=gpt-4.1-mini
+
+# Optional — secure the addon API
+# ADDON_SECRET_KEY=change-me-in-production
+
+ADDON_API_PORT=8000
+ADDON_UI_PORT=8501
+LOG_LEVEL=INFO
+```
+
+## Deploy on Coolify / self-hosted
+
+Use the pre-built Docker image:
 
 ```bash
-mealie-import-orchestrator status
+docker pull ghcr.io/nonofr91/mealie-import-addon:latest
+docker run -d \
+  -e MEALIE_BASE_URL=https://your-mealie.example.com \
+  -e MEALIE_API_KEY=your-key \
+  -p 8000:8000 -p 8501:8501 \
+  ghcr.io/nonofr91/mealie-import-addon:latest
 ```
 
-### Lancer un import sur un fichier structuré existant
+## REST API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Liveness check |
+| `GET` | `/status` | Mealie connectivity + AI status |
+| `POST` | `/import` | `{"url": "..."}` → import recipe |
+| `GET` | `/audit` | Scan all recipes, return issues |
+| `POST` | `/audit/fix` | Scan + auto-fix issues |
+
+Optional auth: pass `X-Addon-Key: <ADDON_SECRET_KEY>` header.
+
+## Run locally (dev)
 
 ```bash
-mealie-import-orchestrator step importing --structured-filename path/to/structured.json
+# Install
+pip install -e .
+
+# Start API (port 8002)
+MEALIE_BASE_URL=http://localhost:9925 MEALIE_API_KEY=<key> \
+  python -m uvicorn mealie_import_orchestrator.api:app --port 8002
+
+# Start UI (port 8502)
+ADDON_API_URL=http://localhost:8002 \
+  python -m streamlit run src/mealie_import_orchestrator/ui.py --server.port 8502
 ```
 
-### Lancer une structuration sur un fichier existant
+## Architecture
 
-```bash
-mealie-import-orchestrator step structuring --scraped-filename path/to/scraped.json
+```
+addons/mealie-import-orchestrator/
+├── src/mealie_import_orchestrator/
+│   ├── api.py          ← FastAPI (REST API)
+│   ├── ui.py           ← Streamlit (Web UI)
+│   ├── cli.py          ← CLI
+│   ├── orchestrator.py ← Core logic
+│   └── config.py       ← Env-based config
+├── Dockerfile          ← Standalone image (mealie-workflow embedded)
+├── docker-compose.yml  ← Mealie + addon
+├── entrypoint.sh       ← Starts API + UI
+└── .env.template       ← Config template
 ```
 
-### Premier scénario local utile
+The addon communicates with Mealie **exclusively via its public API** — no modifications to the Mealie image or database.
 
-Une fixture canonique est disponible pour tester l'import local :
+## Supported recipe sources
 
-```bash
-mealie-import-orchestrator step importing --structured-filename addons/mealie-import-orchestrator/tests/fixtures/structured_recipe.json
-```
+Tested: Marmiton, 750g  
+Should work: any site with JSON-LD `Recipe` schema
 
-Ce scénario suppose qu'une instance Mealie locale est démarrée et qu'une clé API locale valide est configurée.
+## License
 
-### Import depuis Marmiton (exemple)
-
-```bash
-# Créer manuellement le fichier structuré
-# Importer avec l'addon
-mealie-import-orchestrator step importing --structured-filename data/carbonara_marmiton.json
-```
-
-## Architecture et Roadmap
-
-### Phase 1 (actuelle) : Addon CLI avec API Mealie ✅
-- Interface CLI pour l'import de recettes
-- Utilisation directe de l'API Mealie via MCP
-- Pas d'UI web dédiée
-- Déploiement comme module Python dans le repo
-- **Statut** : Opérationnel, import de recettes validé
-
-### Phase 2 (court terme) : Service web léger
-- Exposition d'une API REST minimaliste pour les automatisations
-- UI web simple (Streamlit ou FastAPI) pour les opérations manuelles
-- Intégration webhooks Mealie pour les événements
-- Déploiement comme conteneur autonome à côté de Mealie
-- **Statut** : Planifié
-
-### Phase 3 (moyen terme) : Extension MCP
-- Ajout de capacités MCP pour les fonctionnalités avancées
-- Intégration transparente via les outils MCP existants
-- Stockage des profils diététiques dans SQLite local
-- Synchronisation bidirectionnelle avec Mealie
-- **Statut** : Planifié
-
-## Fonctionnalités futures anticipées
-
-**1. Génération de menus diététiques**
-- Algorithme d'optimisation basé sur les profils
-- Contraintes caloriques et nutritionnelles
-- Planification hebdomadaire
-- Synchronisation avec mealplan Mealie
-
-**2. Bilans caloriques**
-- Calcul automatique des calories par recette
-- Agrégation par jour/semaine
-- Comparaison avec les cibles
-- Rapports et visualisations
-
-**3. Scraping des prix**
-- Intégration avec sites e-commerce/drive
-- Historique des prix
-- Optimisation des coûts
-- Alertes sur les promotions
-
-## Stockage des profils diététiques
-
-**Solution proposée** :
-- Stockage principal dans SQLite local (flexibilité maximale)
-- Synchronisation avec Mealie via tags ou catégories sur les recettes
-- Mapping des profils diététiques vers les filtres Mealie existants
-- Utilisation des webhooks pour synchroniser les changements
-
-## Limites actuelles
-
-Le scraping complet est désactivé par défaut dans le runtime addon.
-
-Il ne doit être activé explicitement que si le backend de scraping réellement compatible avec l'environnement d'exécution est disponible.
-
-## Validation cible
-
-- test local contre `packages/mealie-dev-stack/` ✅
-- validation ensuite en runtime conteneurisé dans Coolify
+MIT
