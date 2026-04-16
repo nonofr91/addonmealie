@@ -15,9 +15,10 @@ services:
       test:
         - CMD-SHELL
         - "bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"
-      interval: 5s
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 120s
 
   mealie-addon:
     image: 'ghcr.io/nonofr91/mealie-import-addon:latest'
@@ -30,7 +31,7 @@ services:
       - 'LOG_LEVEL=${LOG_LEVEL:-INFO}'
     depends_on:
       mealie:
-        condition: service_healthy
+        condition: service_started
 
 volumes:
   mealie_data:

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "import_date": "2026-04-15T19:44:49.908137",
+    "import_date": "2026-04-16T16:52:02.068416",
     "total_imported": 1,
     "importer": "mealie_importer_mcp",
     "config": {
@@ -11,15 +11,15 @@
   },
   "recipes": [
     {
-      "name": "Salade de lentilles aux pommes et à l'estragon",
-      "slug": "salade-de-lentilles-aux-pommes-et-a-lestragon",
-      "id": "salade-de-lentilles-aux-pommes-et-a-l-estragon",
-      "imported_at": "2026-04-15T19:44:49.907971",
+      "name": "Filet mignon de porc rôti à la moutarde à l'ancienne",
+      "slug": "filet-mignon-de-porc-roti-a-la-moutarde-a-lancienn",
+      "id": "filet-mignon-de-porc-roti-a-la-moutarde-a-l-ancienne",
+      "imported_at": "2026-04-16T16:52:02.068242",
       "servings": 4.0,
-      "ingredients_count": 8,
-      "instructions_count": 12,
+      "ingredients_count": 9,
+      "instructions_count": 7,
       "categories": [
-        "Salade"
+        "Plat Principal"
       ],
       "tags": [
         "recette",
@@ -55,11 +55,11 @@
       "moyen": 0,
       "élevé": 0
     },
-    "avg_ingredients_per_recipe": 8.0,
-    "avg_instructions_per_recipe": 12.0,
+    "avg_ingredients_per_recipe": 9.0,
+    "avg_instructions_per_recipe": 7.0,
     "avg_calories_per_recipe": 0.0,
     "most_common_categories": [
-      "Salade"
+      "Plat Principal"
     ],
     "most_common_tags": [
       "recette",

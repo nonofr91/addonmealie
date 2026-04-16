@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "1.0",
-    "created_at": "2026-04-15T19:44:49.247621",
+    "created_at": "2026-04-16T16:52:01.087319",
     "total_recipes": 1,
     "format": "mealie_compatible",
     "language": "fr",
@@ -10,8 +10,8 @@
   },
   "recipes": [
     {
-      "name": "Salade de lentilles aux pommes et à l'estragon",
-      "slug": "salade-de-lentilles-aux-pommes-et-a-lestragon",
+      "name": "Filet mignon de porc rôti à la moutarde à l'ancienne",
+      "slug": "filet-mignon-de-porc-roti-a-la-moutarde-a-lancienn",
       "description": "",
       "prepTime": "PT15M",
       "cookTime": "PT20M",
@@ -21,190 +21,166 @@
       "recipeYield": "4 servings",
       "recipeIngredient": [
         {
-          "quantity": 500.0,
+          "quantity": 2.0,
+          "unit": "",
+          "food": "filets mignons de porc",
+          "note": "",
+          "display": "2 filets mignons de porc",
+          "title": null,
+          "originalText": "2 filets mignons de porc",
+          "referenceId": "b9dad2a1-0b96-41ef-a702-d5f48e336c61",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 1.0,
+          "unit": "",
+          "food": "pots de moutarde à l'ancienne Maille",
+          "note": "",
+          "display": "1 pots de moutarde à l'ancienne Maille",
+          "title": null,
+          "originalText": "1 pots de moutarde à l'ancienne Maille",
+          "referenceId": "049bf6f8-b5ea-43a1-99ba-2ea690fa1e70",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 50.0,
           "unit": "g",
-          "food": "de lentilles blondes",
+          "food": "beurre",
           "note": "",
-          "display": "500 g de lentilles blondes",
+          "display": "50 g de beurre",
           "title": null,
-          "originalText": "500 g de lentilles blondes",
-          "referenceId": "ca3656d1-3bfb-4192-af1f-9ed3fceafd9e",
+          "originalText": "50 g de beurre",
+          "referenceId": "d9ca5c6c-4b2d-47af-b01f-f46f1e6fd617",
           "referencedRecipe": null
         },
         {
-          "quantity": 300.0,
-          "unit": "g",
-          "food": "de lard fumé",
-          "note": "",
-          "display": "300 g de lard fumé",
-          "title": null,
-          "originalText": "300 g de lard fumé",
-          "referenceId": "0a80f8e5-b2b0-48ae-8d00-0e245c373395",
-          "referencedRecipe": null
-        },
-        {
-          "quantity": 1.0,
-          "unit": "pommes",
-          "food": "ou 2 petites",
-          "note": "",
-          "display": "1 pommes ou 2 petites",
-          "title": null,
-          "originalText": "1 pommes ou 2 petites",
-          "referenceId": "f9290daa-e47a-450c-b36c-aaef19ada4b1",
-          "referencedRecipe": null
-        },
-        {
-          "quantity": 1.0,
+          "quantity": 4.0,
           "unit": "",
-          "food": "cuillères à soupe de margarine à cuire",
+          "food": "cuillères d'huile d'olive",
           "note": "",
-          "display": "1 cuillères à soupe de margarine à cuire",
+          "display": "4 cuillères d'huile d'olive",
           "title": null,
-          "originalText": "1 cuillères à soupe de margarine à cuire",
-          "referenceId": "8dfcab62-fb1a-4ac4-b466-3e856ffea9fb",
+          "originalText": "4 cuillères d'huile d'olive",
+          "referenceId": "0a416933-4304-468b-9140-f7e35b12703c",
           "referencedRecipe": null
         },
         {
-          "quantity": 1.0,
-          "unit": "",
-          "food": "cuillères à soupe de miel",
+          "quantity": 2.0,
+          "unit": "kg",
+          "food": "pomme de terre (Princesse Amandine ou Primeur)",
           "note": "",
-          "display": "1 cuillères à soupe de miel",
+          "display": "2 kg de pomme de terre (Princesse Amandine ou Primeur)",
           "title": null,
-          "originalText": "1 cuillères à soupe de miel",
-          "referenceId": "113ab294-dacb-4748-92c6-b835741b8ca0",
+          "originalText": "2 kg de pomme de terre (Princesse Amandine ou Primeur)",
+          "referenceId": "f8c4b59a-3d0a-46f7-a489-3b4767608b45",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 2.0,
+          "unit": "",
+          "food": "branches de laurier",
+          "note": "",
+          "display": "2 branches de laurier",
+          "title": null,
+          "originalText": "2 branches de laurier",
+          "referenceId": "e52e4aed-043b-4f41-8e92-1c99211ed22c",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 2.0,
+          "unit": "",
+          "food": "branches de thym",
+          "note": "",
+          "display": "2 branches de thym",
+          "title": null,
+          "originalText": "2 branches de thym",
+          "referenceId": "333643c8-f8df-44ba-ae61-9cb02a66a875",
           "referencedRecipe": null
         },
         {
           "quantity": 0.0,
           "unit": "",
-          "food": "estragon",
+          "food": "sel de guérande",
           "note": "",
-          "display": "estragon",
+          "display": "sel de guérande",
           "title": null,
-          "originalText": "estragon",
-          "referenceId": "9ff83341-efda-4fb1-a3db-b9caa8039cea",
+          "originalText": "sel de guérande",
+          "referenceId": "d46937cb-eb8a-4594-a016-9aa74f522793",
           "referencedRecipe": null
         },
         {
           "quantity": 0.0,
           "unit": "",
-          "food": "poivre",
+          "food": "poivre saveur",
           "note": "",
-          "display": "poivre",
+          "display": "poivre saveur",
           "title": null,
-          "originalText": "poivre",
-          "referenceId": "523eb686-7366-474f-b4f2-601cd3fe6de9",
-          "referencedRecipe": null
-        },
-        {
-          "quantity": 0.0,
-          "unit": "",
-          "food": "vinaigre de cidre",
-          "note": "",
-          "display": "vinaigre de cidre",
-          "title": null,
-          "originalText": "vinaigre de cidre",
-          "referenceId": "13a362f6-425c-4796-9398-25fc9232ba85",
+          "originalText": "poivre saveur",
+          "referenceId": "e4b0adf4-2696-4fe4-a019-c60146efb696",
           "referencedRecipe": null
         }
       ],
       "recipeInstructions": [
         {
-          "id": "8114eb5d-a529-41d4-a1cc-86cc55bb0020",
+          "id": "ffd86dc1-c08f-4857-9df6-305aee5cea2c",
           "title": "Étape 1",
           "summary": "",
-          "text": "Rincer les lentilles.",
+          "text": "Dans un grand plat allant au four, mettre le beurre coupé en morceaux, poser les branches de thym et de laurier.",
           "ingredientReferences": []
         },
         {
-          "id": "c8abbc12-87db-4f34-b356-1de83a251d93",
+          "id": "02159821-8b1f-4492-93c3-4d4d34df08eb",
           "title": "Étape 2",
           "summary": "",
-          "text": "Dans une sauteuse profonde, faire revenir le lard coupé en petits morceaux.",
+          "text": "Tartiner les filets mignons de moutarde (sur tous les côtés), les poser dans le plat sur les branches de thym et laurier.",
           "ingredientReferences": []
         },
         {
-          "id": "89daefec-1b27-4c76-a65f-f83c511669c9",
+          "id": "a924d018-bb95-42b8-aa9b-ed50efbee28e",
           "title": "Étape 3",
           "summary": "",
-          "text": "Une fois que le lard est doré, ajoutez les lentilles, l'estragon et poivrez.",
+          "text": "Saler et poivrer et mettre au four préchauffé à 210°C pendant 45 mn (retourner à mi-cuisson).",
           "ingredientReferences": []
         },
         {
-          "id": "86280ee2-c343-45a5-a2ae-a0072fbada6c",
+          "id": "23be9052-0a12-48b8-b89e-d06dd0e76255",
           "title": "Étape 4",
           "summary": "",
-          "text": "Couvrez d'eau et laissez cuire 1/2 heure.",
+          "text": "Pendant ce temps, éplucher les pommes de terre (les couper si elles sont grosses).",
           "ingredientReferences": []
         },
         {
-          "id": "2f2a015d-d805-4e6b-a270-d04e357ba769",
+          "id": "00021278-6e94-4175-82be-27b18af72faf",
           "title": "Étape 5",
           "summary": "",
-          "text": "5 minutes avant la fin de la cuisson, faites revenir la pomme coupée en petits morceaux dans une poêle avec la cuiller à soupe de margarine et la cuiller à soupe de miel.",
+          "text": "Faire cuire les pommes de terre à la vapeur.",
           "ingredientReferences": []
         },
         {
-          "id": "4080ba12-bb99-4aa1-a126-709cf49d079a",
+          "id": "4e74643b-458f-40f4-8828-33f34e9f72fe",
           "title": "Étape 6",
           "summary": "",
-          "text": "Attendez qu'elle soit dorée.",
+          "text": "Sortir le plat du four, retourner les filets mignons, ajouter 1 grand verre d'eau pour délayer la sauce, mettre les pommes de terre autour des filets mignons. Enfourner de nouveau pour environ 30 mn.",
           "ingredientReferences": []
         },
         {
-          "id": "5da6b4da-dc95-4704-8292-f0ce37793103",
+          "id": "d170dfb4-8033-47fd-b147-b22574b87cbb",
           "title": "Étape 7",
           "summary": "",
-          "text": "Vérifiez les lentilles et éliminez si nécessaire le jus excédentaire.",
-          "ingredientReferences": []
-        },
-        {
-          "id": "b0003752-9542-4e98-8a88-d809c4484ecb",
-          "title": "Étape 8",
-          "summary": "",
-          "text": "Ajoutez la pomme.",
-          "ingredientReferences": []
-        },
-        {
-          "id": "144787d5-689a-4324-93f2-75a993ad2813",
-          "title": "Étape 9",
-          "summary": "",
-          "text": "Parfumez d'un peu de vinaigre de cidre.",
-          "ingredientReferences": []
-        },
-        {
-          "id": "7ac0f4cc-b60a-42fa-8af6-bd195fc9220f",
-          "title": "Étape 10",
-          "summary": "",
-          "text": "Laissez refroidir.",
-          "ingredientReferences": []
-        },
-        {
-          "id": "3a421852-35e7-4bef-b6f1-54a144c11ca9",
-          "title": "Étape 11",
-          "summary": "",
-          "text": "A consommer comme une salade.",
-          "ingredientReferences": []
-        },
-        {
-          "id": "2430cb69-bc94-443a-8ded-7d6f8d5f275b",
-          "title": "Étape 12",
-          "summary": "",
-          "text": "Voilà un plat aux saveurs parfumées, nutritif et équilibré, facile à préparer et peu coûteux!",
+          "text": "Bon appétit !",
           "ingredientReferences": []
         }
       ],
       "recipeCategory": [
-        "Salade"
+        "Plat Principal"
       ],
       "tags": [
         "recette",
         "fait_maison"
       ],
-      "orgURL": "https://www.marmiton.org/recettes/recette_carbonara_40142.aspx",
-      "dateAdded": "2026-04-15",
-      "dateUpdated": "2026-04-15T19:44:49.247484",
+      "orgURL": "https://www.marmiton.org/recettes/recette_filet-mignon-de-porc-roti-a-la-moutarde-a-l-ancienne_165059.aspx",
+      "dateAdded": "2026-04-16",
+      "dateUpdated": "2026-04-16T16:52:01.087101",
       "nutrition": {
         "calories": 0,
         "carbohydrateContent": "0g",
@@ -230,8 +206,15 @@
       "cuisine": "Française",
       "difficulty": "Facile",
       "cost": "Économique",
-      "scraped_at": "2026-04-15T19:44:49.244663",
-      "image_path": "https://static.afcdn.com/relmrtn/Front/Vendor/img/default-recipe-picture_80x80.jpg"
+      "scraped_at": "2026-04-16T16:52:01.079516",
+      "image_path": [
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h576c1cx1944cy2592cxt0cyt0cxb3888cyb5184.jpg",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h1024c1cx1944cy2592cxt0cyt0cxb3888cyb5184.webp",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h768c1cx1944cy2592cxt0cyt0cxb3888cyb5184.webp",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h576c1cx1944cy2592cxt0cyt0cxb3888cyb5184.webp",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h1024c1cx1944cy2592cxt0cyt0cxb3888cyb5184.jpg",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h768c1cx1944cy2592cxt0cyt0cxb3888cyb5184.jpg"
+      ]
     }
   ],
   "statistics": {
@@ -249,7 +232,7 @@
     },
     "average_calories": 0,
     "most_common_categories": [
-      "Salade"
+      "Plat Principal"
     ],
     "most_common_tags": [
       "recette",

@@ -1,49 +1,52 @@
 {
   "metadata": {
     "version": "1.0",
-    "scraped_at": "2026-04-15T19:44:49.244795",
+    "scraped_at": "2026-04-16T16:52:01.079743",
     "total_recipes": 1,
     "sources": [
-      "https://www.marmiton.org/recettes/recette_carbonara_40142.aspx"
+      "https://www.marmiton.org/recettes/recette_filet-mignon-de-porc-roti-a-la-moutarde-a-l-ancienne_165059.aspx"
     ],
     "scraper": "recipe_scraper_mcp"
   },
   "recipes": [
     {
-      "name": "Salade de lentilles aux pommes et à l'estragon",
+      "name": "Filet mignon de porc rôti à la moutarde à l'ancienne",
       "description": "",
       "recipeIngredient": [
-        "500 g de lentilles blondes",
-        "300 g de lard fumé",
-        "1 pommes ou 2 petites",
-        "1 cuillères à soupe de margarine à cuire",
-        "1 cuillères à soupe de miel",
-        "estragon",
-        "poivre",
-        "vinaigre de cidre"
+        "2 filets mignons de porc",
+        "1 pots de moutarde à l'ancienne Maille",
+        "50 g de beurre",
+        "4 cuillères d'huile d'olive",
+        "2 kg de pomme de terre (Princesse Amandine ou Primeur)",
+        "2 branches de laurier",
+        "2 branches de thym",
+        "sel de guérande",
+        "poivre saveur"
       ],
       "recipeInstructions": [
-        "Rincer les lentilles.",
-        "Dans une sauteuse profonde, faire revenir le lard coupé en petits morceaux.",
-        "Une fois que le lard est doré, ajoutez les lentilles, l'estragon et poivrez.",
-        "Couvrez d'eau et laissez cuire 1/2 heure.",
-        "5 minutes avant la fin de la cuisson, faites revenir la pomme coupée en petits morceaux dans une poêle avec la cuiller à soupe de margarine et la cuiller à soupe de miel. ",
-        "Attendez qu'elle soit dorée.",
-        "Vérifiez les lentilles et éliminez si nécessaire le jus excédentaire.",
-        "Ajoutez la pomme.",
-        "Parfumez d'un peu de vinaigre de cidre.",
-        "Laissez refroidir.  ",
-        "A consommer comme une salade.",
-        "Voilà un plat aux saveurs parfumées, nutritif et équilibré, facile à préparer et peu coûteux!"
+        "Dans un grand plat allant au four, mettre le beurre coupé en morceaux, poser les branches de thym et de laurier.",
+        "Tartiner les filets mignons de moutarde (sur tous les côtés), les poser dans le plat sur les branches de thym et laurier.",
+        "Saler et poivrer et mettre au four préchauffé à 210°C pendant 45 mn (retourner à mi-cuisson).",
+        "Pendant ce temps, éplucher les pommes de terre (les couper si elles sont grosses).",
+        "Faire cuire les pommes de terre à la vapeur.",
+        "Sortir le plat du four, retourner les filets mignons, ajouter 1 grand verre d'eau pour délayer la sauce, mettre les pommes de terre autour des filets mignons. Enfourner de nouveau pour environ 30 mn.",
+        "Bon appétit !"
       ],
-      "image": "https://static.afcdn.com/relmrtn/Front/Vendor/img/default-recipe-picture_80x80.jpg",
-      "source_url": "https://www.marmiton.org/recettes/recette_carbonara_40142.aspx",
-      "scraped_at": "2026-04-15T19:44:49.244663"
+      "image": [
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h576c1cx1944cy2592cxt0cyt0cxb3888cyb5184.jpg",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h1024c1cx1944cy2592cxt0cyt0cxb3888cyb5184.webp",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h768c1cx1944cy2592cxt0cyt0cxb3888cyb5184.webp",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h576c1cx1944cy2592cxt0cyt0cxb3888cyb5184.webp",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h1024c1cx1944cy2592cxt0cyt0cxb3888cyb5184.jpg",
+        "https://assets.afcdn.com/recipe/20181017/82781_w1024h768c1cx1944cy2592cxt0cyt0cxb3888cyb5184.jpg"
+      ],
+      "source_url": "https://www.marmiton.org/recettes/recette_filet-mignon-de-porc-roti-a-la-moutarde-a-l-ancienne_165059.aspx",
+      "scraped_at": "2026-04-16T16:52:01.079516"
     }
   ],
   "statistics": {
     "total_recipes": 1,
-    "avg_ingredients_per_recipe": 8.0,
-    "avg_instructions_per_recipe": 12.0
+    "avg_ingredients_per_recipe": 9.0,
+    "avg_instructions_per_recipe": 7.0
   }
 }

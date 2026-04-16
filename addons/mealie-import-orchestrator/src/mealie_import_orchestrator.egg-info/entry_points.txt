@@ -1,3 +1,5 @@
 [console_scripts]
+mealie-addon-api = mealie_import_orchestrator.api:start
+mealie-addon-ui = mealie_import_orchestrator.ui:main
 mealie-import-orchestrator = mealie_import_orchestrator.cli:main
 smoke-test = mealie_import_orchestrator.smoke_test:main
