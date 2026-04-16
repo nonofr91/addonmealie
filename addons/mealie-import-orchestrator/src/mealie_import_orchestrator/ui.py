@@ -55,7 +55,19 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("🍽️ Mealie Import Addon")
+col_title, col_btn = st.columns([6, 1])
+with col_title:
+    st.title("🍽️ Mealie Import Addon")
+with col_btn:
+    if _MEALIE_BASE:
+        st.markdown(
+            f'<div style="padding-top:1.4rem">'
+            f'<a href="{_MEALIE_BASE}" target="_blank" style="'
+            f'display:inline-block;padding:0.4rem 0.8rem;background:#FF4B4B;'
+            f'color:white;border-radius:6px;text-decoration:none;font-size:0.9rem">'
+            f'🏠 Mealie</a></div>',
+            unsafe_allow_html=True,
+        )
 
 tab_import, tab_audit, tab_status = st.tabs(["📥 Import", "🔍 Audit", "📊 Statut"])
 
