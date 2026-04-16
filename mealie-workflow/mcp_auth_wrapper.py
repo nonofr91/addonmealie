@@ -369,12 +369,19 @@ def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
     MIN_IMAGE_SIZE = 20_000
     img_ok = False
     if image_url and isinstance(image_url, str) and image_url.startswith("http"):
+        # Adapter le Referer selon le CDN pour contourner le hotlink protection
+        if "afcdn.com" in image_url:
+            referer = "https://www.marmiton.org/"
+        elif "750g.com" in image_url or "reseaudesmedias.com" in image_url:
+            referer = "https://www.750g.com/"
+        else:
+            referer = image_url
         BROWSER_UA = {
             "User-Agent": (
                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
             ),
-            "Referer": image_url,
+            "Referer": referer,
             "Accept": "image/avif,image/webp,image/apng,image/jpeg,*/*",
         }
         try:
@@ -546,7 +553,13 @@ def mcp3_create_recipe(payload=None, **kwargs):
         
         if patch_response.status_code in [200, 201]:
             # Étape 3 : Uploader l'image (URL recette ou fallback TheMealDB)
-            image_url = final_payload.get("image") or final_payload.get("image_path") or kwargs.get("image")
+            image_raw = final_payload.get("image") or final_payload.get("image_path") or kwargs.get("image")
+            # Marmiton JSON-LD retourne une liste d'URLs → prendre la première .jpg
+            if isinstance(image_raw, list):
+                image_url = next((u for u in image_raw if isinstance(u, str) and u.endswith('.jpg')), None) or \
+                            next((u for u in image_raw if isinstance(u, str) and u.startswith('http')), None)
+            else:
+                image_url = image_raw
             _upload_recipe_image(api_url, headers, slug, image_url, recipe_name)
             return {"success": True, "recipe_id": slug, "id": slug}
         else:
