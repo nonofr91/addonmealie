@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "import_date": "2026-04-14T15:09:23.726840",
+    "import_date": "2026-04-15T19:44:49.908137",
     "total_imported": 1,
     "importer": "mealie_importer_mcp",
     "config": {
@@ -11,27 +11,32 @@
   },
   "recipes": [
     {
-      "name": "Recette Test Addon",
-      "slug": "recette-test-addon",
-      "id": "recette-test-addon",
-      "imported_at": "2026-04-14T15:09:23.726640",
-      "servings": 2.0,
-      "ingredients_count": 2,
-      "instructions_count": 2,
+      "name": "Salade de lentilles aux pommes et à l'estragon",
+      "slug": "salade-de-lentilles-aux-pommes-et-a-lestragon",
+      "id": "salade-de-lentilles-aux-pommes-et-a-l-estragon",
+      "imported_at": "2026-04-15T19:44:49.907971",
+      "servings": 4.0,
+      "ingredients_count": 8,
+      "instructions_count": 12,
       "categories": [
-        "Test"
+        "Salade"
       ],
       "tags": [
-        "local",
-        "addon"
+        "recette",
+        "fait_maison"
       ],
       "nutrition": {
-        "calories": 120,
-        "carbohydrateContent": "10g",
-        "fatContent": "4g",
-        "proteinContent": "3g",
-        "sugarContent": "4g",
-        "saturatedFatContent": "1g"
+        "calories": 0,
+        "carbohydrateContent": "0g",
+        "cholesterolContent": null,
+        "fatContent": "0g",
+        "fiberContent": null,
+        "proteinContent": "0g",
+        "saturatedFatContent": "0g",
+        "sodiumContent": null,
+        "sugarContent": "0g",
+        "transFatContent": null,
+        "unsaturatedFatContent": null
       },
       "difficulty": "Facile",
       "cost": "Économique"
@@ -50,15 +55,15 @@
       "moyen": 0,
       "élevé": 0
     },
-    "avg_ingredients_per_recipe": 2.0,
-    "avg_instructions_per_recipe": 2.0,
-    "avg_calories_per_recipe": 120.0,
+    "avg_ingredients_per_recipe": 8.0,
+    "avg_instructions_per_recipe": 12.0,
+    "avg_calories_per_recipe": 0.0,
     "most_common_categories": [
-      "Test"
+      "Salade"
     ],
     "most_common_tags": [
-      "local",
-      "addon"
+      "recette",
+      "fait_maison"
     ]
   }
 }

@@ -57,24 +57,30 @@ def load_mealie_profile():
         print(f"⚠️ Erreur chargement profil: {e}")
     return None
 
-# Charger le profil
-profile = load_mealie_profile()
-if profile:
-    profile_url = profile.get('url')
-    profile_name = profile.get('name')
-    profile_token_env = profile.get('token_env')
-    print(f"📍 Profil Mealie: {profile_name}")
-    print(f"🌐 URL: {profile_url}")
-    print(f"🔑 Token depuis: {profile_token_env}")
-    
-    # Utiliser les valeurs du profil
-    env_api_url = profile_url
-    env_token = os.getenv(profile_token_env) or os.getenv("MEALIE_API_KEY")
+# Env vars directes priment toujours sur le profil fichier (Docker, CI, …)
+_direct_url = os.getenv("MEALIE_BASE_URL")
+_direct_key = os.getenv("MEALIE_API_KEY")
+
+if _direct_url and _direct_key:
+    env_api_url = _direct_url
+    env_token = _direct_key
+    print("📍 Config: variables d'environnement directes")
 else:
-    # Fallback sur variables d'environnement directes
-    env_api_url = os.getenv("MEALIE_BASE_URL")
-    env_token = os.getenv("MEALIE_API_KEY") or os.getenv("MEALIE_LOCAL_API_KEY")
-    print("⚠️ Utilisation variables d'environnement directes (pas de profil)")
+    # Fallback : charger le profil si pas de vars directes
+    profile = load_mealie_profile()
+    if profile:
+        profile_url = profile.get('url')
+        profile_name = profile.get('name')
+        profile_token_env = profile.get('token_env')
+        print(f"📍 Profil Mealie: {profile_name}")
+        print(f"🌐 URL: {profile_url}")
+        print(f"🔑 Token depuis: {profile_token_env}")
+        env_api_url = profile_url
+        env_token = os.getenv(profile_token_env) or os.getenv("MEALIE_API_KEY")
+    else:
+        env_api_url = _direct_url
+        env_token = _direct_key or os.getenv("MEALIE_LOCAL_API_KEY")
+        print("⚠️ Utilisation variables d'environnement directes (pas de profil)")
 
 if env_api_url and env_token:
     # Variables d'environnement présentes : les utiliser directement

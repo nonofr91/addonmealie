@@ -1,0 +1,201 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created_at": "2026-04-15T16:30:00",
+    "total_recipes": 1,
+    "format": "mealie_compatible",
+    "language": "fr",
+    "cuisine": "Italienne",
+    "source": "Marmiton"
+  },
+  "recipes": [
+    {
+      "name": "Carbonara traditionnelle",
+      "slug": "carbonara-traditionnelle-marmiton",
+      "description": "Recette traditionnelle de pâtes carbonara avec pancetta, parmesan et jaunes d'œufs. Une version authentique italienne sans crème.",
+      "prepTime": "PT15M",
+      "cookTime": "PT20M",
+      "totalTime": "PT35M",
+      "recipeServings": 4.0,
+      "recipeYieldQuantity": 4.0,
+      "recipeYield": "4 servings",
+      "recipeIngredient": [
+        {
+          "quantity": 400.0,
+          "unit": "g",
+          "food": "Pâtes (spaghetti)",
+          "note": "",
+          "display": "400g de pâtes (spaghetti)",
+          "title": null,
+          "originalText": "400g de pâtes (spaghetti)",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-111111111111",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 150.0,
+          "unit": "g",
+          "food": "Pancetta",
+          "note": "",
+          "display": "150g de pancetta",
+          "title": null,
+          "originalText": "150g de pancetta",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-222222222222",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 4.0,
+          "unit": "",
+          "food": "Jaunes d'œufs",
+          "note": "",
+          "display": "4 jaunes d'œufs",
+          "title": null,
+          "originalText": "4 jaunes d'œufs",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-333333333333",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 40.0,
+          "unit": "g",
+          "food": "Parmigiano reggiano râpé",
+          "note": "",
+          "display": "40g de parmigiano reggiano râpé",
+          "title": null,
+          "originalText": "40g de parmigiano reggiano râpé",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-444444444444",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 1.0,
+          "unit": "cs",
+          "food": "Huile d'olive",
+          "note": "",
+          "display": "1 cuillère à soupe d'huile d'olive",
+          "title": null,
+          "originalText": "1 cuillère à soupe d'huile d'olive",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-555555555555",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 2.0,
+          "unit": "pincée",
+          "food": "Sel",
+          "note": "",
+          "display": "2 pincées de sel",
+          "title": null,
+          "originalText": "2 pincées de sel",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-666666666666",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 4.0,
+          "unit": "pincée",
+          "food": "Poivre",
+          "note": "",
+          "display": "4 pincées de poivre",
+          "title": null,
+          "originalText": "4 pincées de poivre",
+          "referenceId": "9e4b90c5-8818-4bb7-9d0e-777777777777",
+          "referencedRecipe": null
+        }
+      ],
+      "recipeInstructions": [
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000001",
+          "title": "Préparation des œufs",
+          "summary": "",
+          "text": "Battre les jaunes d'œufs en y ajoutant 1 pincée de sel, 2 pincées de poivre et 40 g de parmigiano reggiano râpé.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000002",
+          "title": "Cuisson de l'eau",
+          "summary": "",
+          "text": "Remplir une grande casserole d'eau et la faire chauffer avec deux pincées de gros sel.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000003",
+          "title": "Cuisson de la pancetta",
+          "summary": "",
+          "text": "Pendant ce temps, couper la pancetta en lamelles grossières et les faire dorer dans une poêle avec 1 cuillère à soupe d'huile d'olive.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000004",
+          "title": "Cuisson des pâtes",
+          "summary": "",
+          "text": "Quand l'eau dans la casserole commence à bouillir, mettez vos pâtes.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000005",
+          "title": "Préparation de la sauce",
+          "summary": "",
+          "text": "Prendre deux cuillères à soupe d'eau de cuisson des pâtes, les verser dans les jaunes d'œufs puis remuer.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000006",
+          "title": "Mélange pâtes-pancetta",
+          "summary": "",
+          "text": "Réservez la pancetta et laissez la poêle au chaud. Une fois la cuisson des pâtes al dente, les égoutter sommairement et les mettre dans la poêle et remuer.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000007",
+          "title": "Incorporation de la sauce",
+          "summary": "",
+          "text": "Verser le mélange dans un saladier et incorporez la préparation des jaunes d'œufs.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "1b0e3d4e-aaaa-bbbb-cccc-000000000008",
+          "title": "Finition",
+          "summary": "",
+          "text": "Ajouter la pancetta et deux pincées de poivre. Servez.",
+          "ingredientReferences": []
+        }
+      ],
+      "recipeCategory": [
+        "Pâtes",
+        "Plat principal"
+      ],
+      "tags": [
+        "italien",
+        "carbonara",
+        "sans-crème",
+        "traditionnel"
+      ],
+      "orgURL": "https://www.marmiton.org/recettes/recette_carbonara-traditionnelle_340808.aspx",
+      "dateAdded": "2026-04-15",
+      "dateUpdated": "2026-04-15T16:30:00",
+      "nutrition": {
+        "calories": 450,
+        "carbohydrateContent": "55g",
+        "fatContent": "18g",
+        "proteinContent": "16g",
+        "sugarContent": "2g",
+        "saturatedFatContent": "6g"
+      },
+      "settings": {
+        "public": false,
+        "showNutrition": true,
+        "showAssets": true,
+        "landscapeView": false,
+        "disableComments": false,
+        "locked": false
+      },
+      "language": "fr",
+      "cuisine": "Italienne",
+      "difficulty": "Facile",
+      "cost": "Économique",
+      "scraped_at": "2026-04-15T16:30:00",
+      "image_path": ""
+    }
+  ],
+  "statistics": {
+    "total_categories": 2,
+    "total_tags": 4,
+    "average_calories": 450.0
+  }
+}

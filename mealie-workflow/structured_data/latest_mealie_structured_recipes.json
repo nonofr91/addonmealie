@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "1.0",
-    "created_at": "2026-04-02T11:08:01.633204",
+    "created_at": "2026-04-15T19:44:49.247621",
     "total_recipes": 1,
     "format": "mealie_compatible",
     "language": "fr",
@@ -10,9 +10,9 @@
   },
   "recipes": [
     {
-      "name": "Recette Exemple",
-      "slug": "recette-exemple",
-      "description": "Recette délicieuse et facile à réaliser",
+      "name": "Salade de lentilles aux pommes et à l'estragon",
+      "slug": "salade-de-lentilles-aux-pommes-et-a-lestragon",
+      "description": "",
       "prepTime": "PT15M",
       "cookTime": "PT20M",
       "totalTime": "PT35M",
@@ -21,85 +21,192 @@
       "recipeYield": "4 servings",
       "recipeIngredient": [
         {
-          "quantity": 0.0,
-          "unit": "",
-          "food": "Ingrédient principal",
+          "quantity": 500.0,
+          "unit": "g",
+          "food": "de lentilles blondes",
           "note": "",
-          "display": "Ingrédient principal",
+          "display": "500 g de lentilles blondes",
           "title": null,
-          "originalText": "Ingrédient principal",
-          "referenceId": "13d3d72a-fd5d-4881-ad19-dd0c251bc64a",
+          "originalText": "500 g de lentilles blondes",
+          "referenceId": "ca3656d1-3bfb-4192-af1f-9ed3fceafd9e",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 300.0,
+          "unit": "g",
+          "food": "de lard fumé",
+          "note": "",
+          "display": "300 g de lard fumé",
+          "title": null,
+          "originalText": "300 g de lard fumé",
+          "referenceId": "0a80f8e5-b2b0-48ae-8d00-0e245c373395",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 1.0,
+          "unit": "pommes",
+          "food": "ou 2 petites",
+          "note": "",
+          "display": "1 pommes ou 2 petites",
+          "title": null,
+          "originalText": "1 pommes ou 2 petites",
+          "referenceId": "f9290daa-e47a-450c-b36c-aaef19ada4b1",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 1.0,
+          "unit": "",
+          "food": "cuillères à soupe de margarine à cuire",
+          "note": "",
+          "display": "1 cuillères à soupe de margarine à cuire",
+          "title": null,
+          "originalText": "1 cuillères à soupe de margarine à cuire",
+          "referenceId": "8dfcab62-fb1a-4ac4-b466-3e856ffea9fb",
+          "referencedRecipe": null
+        },
+        {
+          "quantity": 1.0,
+          "unit": "",
+          "food": "cuillères à soupe de miel",
+          "note": "",
+          "display": "1 cuillères à soupe de miel",
+          "title": null,
+          "originalText": "1 cuillères à soupe de miel",
+          "referenceId": "113ab294-dacb-4748-92c6-b835741b8ca0",
           "referencedRecipe": null
         },
         {
           "quantity": 0.0,
           "unit": "",
-          "food": "Accomplement 1",
+          "food": "estragon",
           "note": "",
-          "display": "Accomplement 1",
+          "display": "estragon",
           "title": null,
-          "originalText": "Accomplement 1",
-          "referenceId": "f9159d7d-05fc-44d0-a8c8-ef708819b914",
+          "originalText": "estragon",
+          "referenceId": "9ff83341-efda-4fb1-a3db-b9caa8039cea",
           "referencedRecipe": null
         },
         {
           "quantity": 0.0,
           "unit": "",
-          "food": "Accomplement 2",
+          "food": "poivre",
           "note": "",
-          "display": "Accomplement 2",
+          "display": "poivre",
           "title": null,
-          "originalText": "Accomplement 2",
-          "referenceId": "015095ef-02b8-4bf8-80ba-bfcf7c226d40",
+          "originalText": "poivre",
+          "referenceId": "523eb686-7366-474f-b4f2-601cd3fe6de9",
           "referencedRecipe": null
         },
         {
           "quantity": 0.0,
           "unit": "",
-          "food": "Assaisonnements variés",
+          "food": "vinaigre de cidre",
           "note": "",
-          "display": "Assaisonnements variés",
+          "display": "vinaigre de cidre",
           "title": null,
-          "originalText": "Assaisonnements variés",
-          "referenceId": "1423c65a-471d-4748-ab98-fc07c6131c27",
+          "originalText": "vinaigre de cidre",
+          "referenceId": "13a362f6-425c-4796-9398-25fc9232ba85",
           "referencedRecipe": null
         }
       ],
       "recipeInstructions": [
         {
-          "id": "aff12bc6-e83f-4249-96c4-af88dc18f78f",
+          "id": "8114eb5d-a529-41d4-a1cc-86cc55bb0020",
           "title": "Étape 1",
           "summary": "",
-          "text": "Préparer les ingrédients",
+          "text": "Rincer les lentilles.",
           "ingredientReferences": []
         },
         {
-          "id": "2dd95ddc-7ea4-4c6a-ac8d-aa378c0840ed",
+          "id": "c8abbc12-87db-4f34-b356-1de83a251d93",
           "title": "Étape 2",
           "summary": "",
-          "text": "Cuire selon les instructions",
+          "text": "Dans une sauteuse profonde, faire revenir le lard coupé en petits morceaux.",
           "ingredientReferences": []
         },
         {
-          "id": "785b6251-2f80-47f2-867d-b0c1fbf087b8",
+          "id": "89daefec-1b27-4c76-a65f-f83c511669c9",
           "title": "Étape 3",
           "summary": "",
-          "text": "Servir chaud",
+          "text": "Une fois que le lard est doré, ajoutez les lentilles, l'estragon et poivrez.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "86280ee2-c343-45a5-a2ae-a0072fbada6c",
+          "title": "Étape 4",
+          "summary": "",
+          "text": "Couvrez d'eau et laissez cuire 1/2 heure.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "2f2a015d-d805-4e6b-a270-d04e357ba769",
+          "title": "Étape 5",
+          "summary": "",
+          "text": "5 minutes avant la fin de la cuisson, faites revenir la pomme coupée en petits morceaux dans une poêle avec la cuiller à soupe de margarine et la cuiller à soupe de miel.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "4080ba12-bb99-4aa1-a126-709cf49d079a",
+          "title": "Étape 6",
+          "summary": "",
+          "text": "Attendez qu'elle soit dorée.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "5da6b4da-dc95-4704-8292-f0ce37793103",
+          "title": "Étape 7",
+          "summary": "",
+          "text": "Vérifiez les lentilles et éliminez si nécessaire le jus excédentaire.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "b0003752-9542-4e98-8a88-d809c4484ecb",
+          "title": "Étape 8",
+          "summary": "",
+          "text": "Ajoutez la pomme.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "144787d5-689a-4324-93f2-75a993ad2813",
+          "title": "Étape 9",
+          "summary": "",
+          "text": "Parfumez d'un peu de vinaigre de cidre.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "7ac0f4cc-b60a-42fa-8af6-bd195fc9220f",
+          "title": "Étape 10",
+          "summary": "",
+          "text": "Laissez refroidir.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "3a421852-35e7-4bef-b6f1-54a144c11ca9",
+          "title": "Étape 11",
+          "summary": "",
+          "text": "A consommer comme une salade.",
+          "ingredientReferences": []
+        },
+        {
+          "id": "2430cb69-bc94-443a-8ded-7d6f8d5f275b",
+          "title": "Étape 12",
+          "summary": "",
+          "text": "Voilà un plat aux saveurs parfumées, nutritif et équilibré, facile à préparer et peu coûteux!",
           "ingredientReferences": []
         }
       ],
       "recipeCategory": [
-        "Plat Principal"
+        "Salade"
       ],
       "tags": [
-        "fait_maison",
-        "recette"
+        "recette",
+        "fait_maison"
       ],
-      "orgURL": "https://www.cuisineactuelle.fr/recettes/ratatouille.htm",
-      "dateAdded": "2026-04-02",
-      "dateUpdated": "2026-04-02T11:08:01.633020",
+      "orgURL": "https://www.marmiton.org/recettes/recette_carbonara_40142.aspx",
+      "dateAdded": "2026-04-15",
+      "dateUpdated": "2026-04-15T19:44:49.247484",
       "nutrition": {
-        "calories": 50,
+        "calories": 0,
         "carbohydrateContent": "0g",
         "cholesterolContent": null,
         "fatContent": "0g",
@@ -123,8 +230,8 @@
       "cuisine": "Française",
       "difficulty": "Facile",
       "cost": "Économique",
-      "scraped_at": "2026-04-02T11:07:59.626322",
-      "image_path": "scraped_images/recette_exemple.jpg"
+      "scraped_at": "2026-04-15T19:44:49.244663",
+      "image_path": "https://static.afcdn.com/relmrtn/Front/Vendor/img/default-recipe-picture_80x80.jpg"
     }
   ],
   "statistics": {
@@ -140,13 +247,13 @@
       "moyen": 0,
       "élevé": 0
     },
-    "average_calories": 50.0,
+    "average_calories": 0,
     "most_common_categories": [
-      "Plat Principal"
+      "Salade"
     ],
     "most_common_tags": [
-      "fait_maison",
-      "recette"
+      "recette",
+      "fait_maison"
     ]
   }
 }

@@ -16,6 +16,12 @@ class AddonConfig:
     workflow_directory: Path
     workflow_entrypoint: Path
     scraping_enabled: bool
+    mealie_base_url: str
+    openai_api_key: str | None
+    openai_base_url: str
+    openai_model: str
+    ai_enabled: bool
+    addon_secret_key: str | None
 
     @classmethod
     def load(cls, workflow_directory: str | None = None) -> "AddonConfig":
@@ -32,6 +38,7 @@ class AddonConfig:
             configured_path=configured_path,
             repo_root=repo_root,
         )
+        openai_api_key = os.environ.get("OPENAI_API_KEY") or None
         config = cls(
             repo_root=repo_root,
             workflow_directory=resolved_workflow_directory,
@@ -39,6 +46,15 @@ class AddonConfig:
             scraping_enabled=cls._parse_bool(
                 os.environ.get("MEALIE_IMPORT_ORCHESTRATOR_ENABLE_SCRAPING")
             ),
+            mealie_base_url=(
+                os.environ.get("MEALIE_BASE_URL", "")
+                or os.environ.get("MEALIE_IMPORT_ORCHESTRATOR_BASE_URL", "")
+            ).rstrip("/"),
+            openai_api_key=openai_api_key,
+            openai_base_url=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+            openai_model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
+            ai_enabled=bool(openai_api_key),
+            addon_secret_key=os.environ.get("ADDON_SECRET_KEY") or None,
         )
         config.validate()
         return config

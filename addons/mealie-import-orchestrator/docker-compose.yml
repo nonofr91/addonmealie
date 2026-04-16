@@ -1,0 +1,37 @@
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:v3.0.0
+    restart: unless-stopped
+    environment:
+      ALLOW_SIGNUP: "false"
+      BASE_URL: "${MEALIE_BASE_URL:-http://localhost:9925}"
+      DEFAULT_EMAIL: "${MEALIE_ADMIN_EMAIL:-admin@example.com}"
+      DEFAULT_PASSWORD: "${MEALIE_ADMIN_PASSWORD:-changeme}"
+      TOKEN_TIME: 720
+    volumes:
+      - mealie_data:/app/data
+    ports:
+      - "9925:9000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/app/about"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  mealie-addon:
+    build:
+      context: ../..
+      dockerfile: addons/mealie-import-orchestrator/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ADDON_API_URL: "http://localhost:8000"
+    ports:
+      - "${ADDON_API_PORT:-8000}:8000"
+      - "${ADDON_UI_PORT:-8501}:8501"
+    depends_on:
+      mealie:
+        condition: service_healthy
+
+volumes:
+  mealie_data:

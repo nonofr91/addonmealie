@@ -1,102 +1,49 @@
 {
   "metadata": {
     "version": "1.0",
-    "scraped_at": "2026-04-02T11:08:01.627968",
-    "total_recipes": 2,
+    "scraped_at": "2026-04-15T19:44:49.244795",
+    "total_recipes": 1,
     "sources": [
-      "marmiton",
-      "750g",
-      "cuisineactuelle",
-      "meilleurduchef"
+      "https://www.marmiton.org/recettes/recette_carbonara_40142.aspx"
     ],
     "scraper": "recipe_scraper_mcp"
   },
   "recipes": [
     {
-      "source_url": "https://www.meilleurduchef.com/fr/recette/boeuf-bourguignon.html",
-      "scraped_at": "2026-04-02T11:07:53.624884",
-      "raw_content": "\n# Boeuf Bourguignon\n\n## Description\nDécouvrez LA véritable recette du boeuf Bourguignon. Recette traditionnelle bourguignonne, mijotée lentement au vin rouge.\n\n## Ingrédients\n- 1 kg de sauté de boeuf paré\n- 2 cuillères à soupe d'huile d'olive\n- 2 carottes\n- 2 oignons\n- 1 bouquet garni\n- 30g de farine\n- 75cl de vin rouge de Bourgogne\n- 2 gousses d'ail\n- Sel et poivre\n- 200g de champignons de Paris\n- 200g de lardons fumés\n\n## Instructions\n1. Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes\n2. Couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles\n3. Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout\n4. Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces\n5. Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes\n6. Singer avec 30g de farine et torréfier quelques minutes\n7. Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni\n8. Saler et poivrer généreusement\n9. Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures\n10. Ajouter les champignons et lardons à mi-cuisson\n11. Sortir du four, retirer le bouquet garni et faire réduire la sauce\n12. Servir chaud avec des pommes de terre ou des pâtes fraîches\n\n## Temps\n- Préparation: 30 minutes\n- Cuisson: 2 heures\n- Total: 2h30\n\n## Portions\n4 personnes\n",
-      "name": "Boeuf Bourguignon",
-      "description": "Découvrez LA véritable recette du boeuf Bourguignon. Recette traditionnelle bourguignonne, mijotée lentement au vin rouge.",
-      "ingredients": [
-        "1 kg de sauté de boeuf paré",
-        "2 cuillères à soupe d'huile d'olive",
-        "2 carottes",
-        "2 oignons",
-        "1 bouquet garni",
-        "30g de farine",
-        "75cl de vin rouge de Bourgogne",
-        "2 gousses d'ail",
-        "Sel et poivre",
-        "200g de champignons de Paris",
-        "200g de lardons fumés"
+      "name": "Salade de lentilles aux pommes et à l'estragon",
+      "description": "",
+      "recipeIngredient": [
+        "500 g de lentilles blondes",
+        "300 g de lard fumé",
+        "1 pommes ou 2 petites",
+        "1 cuillères à soupe de margarine à cuire",
+        "1 cuillères à soupe de miel",
+        "estragon",
+        "poivre",
+        "vinaigre de cidre"
       ],
-      "instructions": [
-        "Préparer la garniture aromatique : éplucher 2 oignons et 3 carottes",
-        "Couper les oignons en mirepoix (cubes de 1 cm) et les carottes en rondelles",
-        "Faire chauffer 2-3 cuillères à soupe d'huile d'olive dans un faitout",
-        "Quand l'huile est chaude, ajouter les morceaux de bœuf et les faire dorer sur toutes les faces",
-        "Ajouter les oignons et carottes, mélanger et laisser suer quelques minutes",
-        "Singer avec 30g de farine et torréfier quelques minutes",
-        "Mouiller avec 75cl de vin rouge, ajouter 2 gousses d'ail hachées et un bouquet garni",
-        "Saler et poivrer généreusement",
-        "Porter à ébullition, couvrir et cuire au four à 180°C pendant 2 heures",
-        "Ajouter les champignons et lardons à mi-cuisson",
-        "Sortir du four, retirer le bouquet garni et faire réduire la sauce",
-        "Servir chaud avec des pommes de terre ou des pâtes fraîches"
+      "recipeInstructions": [
+        "Rincer les lentilles.",
+        "Dans une sauteuse profonde, faire revenir le lard coupé en petits morceaux.",
+        "Une fois que le lard est doré, ajoutez les lentilles, l'estragon et poivrez.",
+        "Couvrez d'eau et laissez cuire 1/2 heure.",
+        "5 minutes avant la fin de la cuisson, faites revenir la pomme coupée en petits morceaux dans une poêle avec la cuiller à soupe de margarine et la cuiller à soupe de miel. ",
+        "Attendez qu'elle soit dorée.",
+        "Vérifiez les lentilles et éliminez si nécessaire le jus excédentaire.",
+        "Ajoutez la pomme.",
+        "Parfumez d'un peu de vinaigre de cidre.",
+        "Laissez refroidir.  ",
+        "A consommer comme une salade.",
+        "Voilà un plat aux saveurs parfumées, nutritif et équilibré, facile à préparer et peu coûteux!"
       ],
-      "prep_time": "30",
-      "servings": "4",
-      "cook_time": "120",
-      "total_time": "150",
-      "image": "scraped_images/boeuf_bourguignon.jpg"
-    },
-    {
-      "source_url": "https://www.cuisineactuelle.fr/recettes/ratatouille.htm",
-      "scraped_at": "2026-04-02T11:07:59.626322",
-      "raw_content": "\n# Ratatouille Méditerranéenne\n\n## Description\nClassique provençal avec légumes du soleil, parfait pour l'été, accompagnement idéal.\n\n## Ingrédients\n- 2 belles courgettes\n- 1 grosse aubergine\n- 2 poivrons (1 rouge, 1 vert)\n- 4 tomates bien mûres\n- 2 oignons moyens\n- 4 gousses d'ail\n- 1 bouquet garni (thym, laurier, romarin)\n- 6 cuillères à soupe d'huile d'olive vierge extra\n- Sel fin et poivre noir du moulin\n- Quelques feuilles de basilic frais\n\n## Instructions\n1. Laver tous les légumes\n2. Couper les courgettes et l'aubergine en dés de 2cm\n3. Couper les poivrons en lanières, les tomates en quartiers\n4. Émincer les oignons et hacher l'ail\n5. Faire chauffer 4 cuillères d'huile dans une grande cocotte\n6. Faire revenir les oignons 5 minutes à feu moyen\n7. Ajouter l'ail et cuire 2 minutes\n8. Ajouter les courgettes et aubergines, cuire 10 minutes\n9. Ajouter les poivrons et cuire 5 minutes\n10. Ajouter les tomates et le bouquet garni\n11. Saler, poivrer et couvrir\n12. Laisser mijoter à feu doux 45 minutes\n13. Retirer le bouquet garni\n14. Garnir de basilic ciselé avant de servir\n15. Servir tiède ou froid avec du pain frais\n\n## Temps\n- Préparation: 30 minutes\n- Cuisson: 60 minutes\n- Total: 90 minutes\n\n## Portions\n6 personnes\n",
-      "name": "Recette Exemple",
-      "description": "Classique provençal avec légumes du soleil, parfait pour l'été, accompagnement idéal.",
-      "ingredients": [
-        "2 belles courgettes",
-        "1 grosse aubergine",
-        "2 poivrons (1 rouge, 1 vert)",
-        "4 tomates bien mûres",
-        "2 oignons moyens",
-        "4 gousses d'ail",
-        "1 bouquet garni (thym, laurier, romarin)",
-        "6 cuillères à soupe d'huile d'olive vierge extra",
-        "Sel fin et poivre noir du moulin",
-        "Quelques feuilles de basilic frais"
-      ],
-      "instructions": [
-        "Laver tous les légumes",
-        "Couper les courgettes et l'aubergine en dés de 2cm",
-        "Couper les poivrons en lanières, les tomates en quartiers",
-        "Émincer les oignons et hacher l'ail",
-        "Faire chauffer 4 cuillères d'huile dans une grande cocotte",
-        "Faire revenir les oignons 5 minutes à feu moyen",
-        "Ajouter l'ail et cuire 2 minutes",
-        "Ajouter les courgettes et aubergines, cuire 10 minutes",
-        "Ajouter les poivrons et cuire 5 minutes",
-        "Ajouter les tomates et le bouquet garni",
-        "Saler, poivrer et couvrir",
-        "Laisser mijoter à feu doux 45 minutes",
-        "Retirer le bouquet garni",
-        "Garnir de basilic ciselé avant de servir",
-        "Servir tiède ou froid avec du pain frais"
-      ],
-      "prep_time": "30",
-      "cook_time": "60",
-      "total_time": "90",
-      "servings": "6",
-      "image": "scraped_images/recette_exemple.jpg"
+      "image": "https://static.afcdn.com/relmrtn/Front/Vendor/img/default-recipe-picture_80x80.jpg",
+      "source_url": "https://www.marmiton.org/recettes/recette_carbonara_40142.aspx",
+      "scraped_at": "2026-04-15T19:44:49.244663"
     }
   ],
   "statistics": {
-    "total_instructions": 9,
-    "total_ingredients": 13,
-    "avg_instructions_per_recipe": 4.5,
-    "avg_ingredients_per_recipe": 6.5
+    "total_recipes": 1,
+    "avg_ingredients_per_recipe": 8.0,
+    "avg_instructions_per_recipe": 12.0
   }
 }

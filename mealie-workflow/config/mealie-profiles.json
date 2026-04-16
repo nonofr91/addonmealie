@@ -1,9 +1,9 @@
 {
   "profiles": {
     "local": {
-      "name": "D\u00e9veloppement local",
+      "name": "Développement local",
       "url": "http://127.0.0.1:9925",
-      "description": "Instance locale Docker pour d\u00e9veloppement rapide",
+      "description": "Instance locale Docker pour développement rapide",
       "token_env": "MEALIE_LOCAL_API_KEY"
     },
     "coolify": {
