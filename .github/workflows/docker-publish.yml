@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "addon-v*"
+      - "nutrition-v*"
   workflow_dispatch:
 
 env:
@@ -12,7 +13,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-push:
+  build-push-import:
+    name: Build & Push Import Addon
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -54,4 +56,49 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/user/packages/container/mealie-import-addon" \
+            -d '{"visibility":"public"}'
+
+  build-push-nutrition:
+    name: Build & Push Nutrition Addon
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/mealie-nutrition-advisor
+          tags: |
+            type=match,pattern=nutrition-v(.*),group=1
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: addons/mealie-nutrition-advisor/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Make package public
+        run: |
+          curl -s -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/user/packages/container/mealie-nutrition-advisor" \
             -d '{"visibility":"public"}'
