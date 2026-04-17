@@ -110,6 +110,8 @@ class NutritionOrchestrator:
                             for ing in recipe_details.get("recipeIngredient", [])
                         ]
                         
+                        logger.debug("Ingredients extracted for '%s': %s", name, ingredient_texts)
+                        
                         if not ingredient_texts:
                             skipped.append({"slug": slug, "name": name, "reason": "No ingredients"})
                             continue
