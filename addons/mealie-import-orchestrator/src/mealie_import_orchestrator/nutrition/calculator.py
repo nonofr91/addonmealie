@@ -44,6 +44,7 @@ class NutritionCalculator:
     ) -> RecipeNutritionResult:
         """Calcule la nutrition complète d'une recette."""
         logger.info("Calcul nutrition: '%s' (%d ingrédients, %d portions)", recipe_name, len(ingredient_texts), servings)
+        logger.debug("Ingredient texts: %s", ingredient_texts)
 
         result = RecipeNutritionResult(
             recipe_slug=recipe_slug,
@@ -53,6 +54,7 @@ class NutritionCalculator:
 
         for raw_text in ingredient_texts:
             if not raw_text or not raw_text.strip():
+                logger.debug("Skipping empty ingredient text: '%s'", raw_text)
                 continue
             ing_nutrition = self._calculate_ingredient(raw_text)
             result.ingredients.append(ing_nutrition)
