@@ -108,10 +108,15 @@ class NutritionOrchestrator:
                         recipe_ingredients = recipe_details.get("recipeIngredient", [])
                         if recipe_ingredients:
                             logger.info("First ingredient raw structure for '%s': %s", name, recipe_ingredients[0])
-                        ingredient_texts = [
-                            ing.get("note", ing.get("originalText", ing.get("display", ing.get("food", {}).get("name", ""))))
-                            for ing in recipe_ingredients
-                        ]
+                        ingredient_texts = []
+                        for ing in recipe_ingredients:
+                            note = ing.get("note", "")
+                            original_text = ing.get("originalText", "")
+                            display = ing.get("display", "")
+                            food = ing.get("food")
+                            food_name = food.get("name", "") if food else ""
+                            text = note or original_text or display or food_name
+                            ingredient_texts.append(text)
                         
                         logger.debug("Ingredients extracted for '%s': %s", name, ingredient_texts)
                         
