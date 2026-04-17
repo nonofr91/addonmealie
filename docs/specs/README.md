@@ -11,3 +11,4 @@ Specs actuellement importantes :
 - `mealie-import-orchestrator.md` : spec du premier addon concret pour piloter le workflow d'import de recettes vers Mealie.
 - `local-mealie-dev-stack.md` : définit la stack locale Docker canonique pour développer et tester les addons contre Mealie.
 - `local-addon-dev-flow.md` : décrit le parcours développeur local pour tester un addon contre Mealie avant validation dans Coolify.
+- `mealie-nutrition-advisor.md` : périmètre, architecture et contrats de l'addon de calcul nutritionnel et planification de menus.

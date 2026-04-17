@@ -22,6 +22,8 @@ class AddonConfig:
     openai_model: str
     ai_enabled: bool
     addon_secret_key: str | None
+    enable_nutrition: bool
+    nutrition_api_url: str
 
     @classmethod
     def load(cls, workflow_directory: str | None = None) -> "AddonConfig":
@@ -55,6 +57,10 @@ class AddonConfig:
             openai_model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
             ai_enabled=bool(openai_api_key),
             addon_secret_key=os.environ.get("ADDON_SECRET_KEY") or None,
+            enable_nutrition=cls._parse_bool(
+                os.environ.get("ENABLE_NUTRITION", "true")
+            ),
+            nutrition_api_url=os.environ.get("NUTRITION_API_URL", "http://localhost:8001"),
         )
         config.validate()
         return config

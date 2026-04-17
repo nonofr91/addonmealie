@@ -57,6 +57,7 @@ class MealieImportOrchestrator:
     def import_from_url(self, url: str) -> dict[str, Any]:
         """Scrape + structure + import une recette depuis une URL unique."""
         import os, contextlib, sys
+        import requests
 
         if not url or not url.startswith("http"):
             return {"success": False, "error": "URL invalide"}
@@ -92,17 +93,48 @@ class MealieImportOrchestrator:
 
         imported = result.get("imported_recipes", [])
         first = imported[0] if imported else {}
-        return {
+        slug = first.get("slug", "")
+        
+        # 4. Nutrition enrichment (if enabled)
+        nutrition_data = None
+        if self.config.enable_nutrition and slug:
+            try:
+                headers = {}
+                if self.config.addon_secret_key:
+                    headers["X-Addon-Key"] = self.config.addon_secret_key
+                
+                nutrition_resp = requests.post(
+                    f"{self.config.nutrition_api_url}/nutrition/recipe/{slug}",
+                    headers=headers,
+                    timeout=60,
+                )
+                if nutrition_resp.status_code == 200:
+                    nutrition_data = nutrition_resp.json()
+            except Exception as exc:
+                # Don't fail import if nutrition enrichment fails
+                pass
+        
+        response = {
             "success": True,
-            "slug": first.get("slug", ""),
+            "slug": slug,
             "name": first.get("name", ""),
             "total_imported": result.get("total_imported", len(imported)),
             "mealie_url": (
-                f"{self.config.mealie_base_url}/g/home/r/{first.get('slug', '')}"
-                if first.get("slug")
+                f"{self.config.mealie_base_url}/g/home/r/{slug}"
+                if slug
                 else None
             ),
         }
+        
+        if nutrition_data and nutrition_data.get("success"):
+            response["nutrition"] = {
+                "calories": nutrition_data.get("calories"),
+                "protein": nutrition_data.get("protein"),
+                "fat": nutrition_data.get("fat"),
+                "carbohydrates": nutrition_data.get("carbohydrates"),
+            }
+        
+        return response
 
     def audit(self, fix: bool = False) -> dict[str, Any]:
         """Lance l'audit qualité via mcp_auth_wrapper.audit_recipes()."""
