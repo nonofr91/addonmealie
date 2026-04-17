@@ -9,6 +9,22 @@ from typing import Optional
 
 from ..models.nutrition import NutritionFacts, NutritionSource
 
+# Import AI clients at module level to detect installation errors early
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None  # type: ignore
+
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None  # type: ignore
+
+try:
+    from mistralai import Mistral
+except ImportError:
+    Mistral = None  # type: ignore
+
 logger = logging.getLogger(__name__)
 
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "mock")
@@ -93,9 +109,7 @@ class AIEstimator:
         return NutritionFacts(**data, source=NutritionSource.ai_estimate)
 
     def _openai_estimate(self, ingredient_name: str) -> Optional[NutritionFacts]:
-        try:
-            from openai import OpenAI
-        except ImportError:
+        if OpenAI is None:
             logger.error("openai non installé. pip install 'mealie-nutrition-advisor[openai]'")
             return self._mock_estimate(ingredient_name)
 
@@ -105,11 +119,9 @@ class AIEstimator:
 
         try:
             client = OpenAI(api_key=OPENAI_API_KEY)
-            prompt = ESTIMATION_PROMPT.format(ingredient=ingredient_name)
             response = client.chat.completions.create(
                 model=OPENAI_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
+                messages=[{"role": "user", "content": ESTIMATION_PROMPT.format(ingredient=ingredient_name)}],
                 response_format={"type": "json_object"},
             )
             raw = response.choices[0].message.content or "{}"
@@ -119,9 +131,7 @@ class AIEstimator:
             return self._mock_estimate(ingredient_name)
 
     def _anthropic_estimate(self, ingredient_name: str) -> Optional[NutritionFacts]:
-        try:
-            import anthropic
-        except ImportError:
+        if Anthropic is None:
             logger.error("anthropic non installé. pip install 'mealie-nutrition-advisor[anthropic]'")
             return self._mock_estimate(ingredient_name)
 
@@ -130,12 +140,11 @@ class AIEstimator:
             return self._mock_estimate(ingredient_name)
 
         try:
-            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-            prompt = ESTIMATION_PROMPT.format(ingredient=ingredient_name)
+            client = Anthropic(api_key=ANTHROPIC_API_KEY)
             message = client.messages.create(
                 model=ANTHROPIC_MODEL,
                 max_tokens=256,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": ESTIMATION_PROMPT.format(ingredient=ingredient_name)}],
             )
             raw = message.content[0].text if message.content else "{}"
             return self._parse_llm_response(raw)
@@ -144,9 +153,7 @@ class AIEstimator:
             return self._mock_estimate(ingredient_name)
 
     def _mistral_estimate(self, ingredient_name: str) -> Optional[NutritionFacts]:
-        try:
-            from mistralai import Mistral
-        except ImportError:
+        if Mistral is None:
             logger.error("mistralai non installé. pip install 'mealie-nutrition-advisor[mistral]'")
             return self._mock_estimate(ingredient_name)
 
