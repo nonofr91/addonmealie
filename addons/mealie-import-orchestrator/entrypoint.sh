@@ -28,6 +28,14 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
+# Run automatic setup for fake recipe
+echo "   Setting up fake recipe in Mealie…"
+if python -m mealie_import_orchestrator.setup; then
+    echo "   Setup  : ✅ completed"
+else
+    echo "   Setup  : ⚠️  failed (non-critical, addon will still work)"
+fi
+
 # Start Streamlit in foreground (keeps container alive)
 UI_FILE=$(python -c "import mealie_import_orchestrator.ui as m; import os; print(os.path.abspath(m.__file__))")
 exec streamlit run "$UI_FILE" \
