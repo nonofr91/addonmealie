@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import time
 
 import requests
 
@@ -24,6 +25,29 @@ class MealieSetup:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+
+    def _wait_for_mealie(self, max_retries: int = 10, initial_delay: int = 2) -> bool:
+        """Wait for Mealie API to be ready with exponential backoff."""
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(
+                    f"{self.mealie_base_url}/api/app/about",
+                    headers=self.headers,
+                    timeout=5,
+                )
+                if response.status_code == 200:
+                    logger.info(f"Mealie API ready after {attempt + 1} attempt(s)")
+                    return True
+            except Exception as exc:
+                logger.warning(f"Attempt {attempt + 1}/{max_retries}: Mealie not ready - {exc}")
+            
+            if attempt < max_retries - 1:
+                delay = initial_delay * (2 ** attempt)  # Exponential backoff
+                logger.info(f"Waiting {delay}s before retry...")
+                time.sleep(delay)
+        
+        logger.error("Mealie API did not become ready after maximum retries")
+        return False
 
     def _check_fake_recipe_exists(self) -> bool:
         """Check if the fake recipe already exists."""
@@ -77,6 +101,11 @@ class MealieSetup:
 
     def setup_fake_recipe(self, force: bool = False) -> dict[str, str]:
         """Setup fake recipe if it doesn't exist."""
+        # Wait for Mealie to be ready
+        if not self._wait_for_mealie():
+            logger.error("Mealie API not ready, skipping setup")
+            return {"status": "failed", "error": "Mealie API not ready"}
+        
         if not force and self._check_fake_recipe_exists():
             logger.info("Fake recipe already exists, skipping creation")
             return {"status": "skipped", "reason": "already_exists"}
