@@ -184,8 +184,8 @@ with tab_nutrition:
 
             st.metric("Recettes analysées", total)
             col1, col2 = st.columns(2)
-            col1.metric("Enrichies avec succès", enriched)
-            col2.metric("Échecs", failed)
+            col1.metric("Enrichies avec succès", len(enriched) if isinstance(enriched, list) else enriched)
+            col2.metric("Échecs", len(failed) if isinstance(failed, list) else failed)
 
             if report.get("details"):
                 st.subheader("Détails")
