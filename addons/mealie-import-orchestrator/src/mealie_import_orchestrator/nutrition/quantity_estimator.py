@@ -9,6 +9,22 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Import AI clients at module level to detect installation errors early
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None  # type: ignore
+
+try:
+    from anthropic import Anthropic
+except ImportError:
+    Anthropic = None  # type: ignore
+
+try:
+    from mistralai import Mistral
+except ImportError:
+    Mistral = None  # type: ignore
+
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "mock")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
@@ -88,9 +104,7 @@ class QuantityEstimator:
         return int(data["weight_g"])
 
     def _openai_estimate(self, ingredient_text: str, servings: int) -> Optional[int]:
-        try:
-            from openai import OpenAI
-        except ImportError:
+        if OpenAI is None:
             logger.error("openai non installé. pip install 'mealie-nutrition-advisor[openai]'")
             return self._mock_estimate(ingredient_text)
 
@@ -114,9 +128,7 @@ class QuantityEstimator:
             return self._mock_estimate(ingredient_text)
 
     def _anthropic_estimate(self, ingredient_text: str, servings: int) -> Optional[int]:
-        try:
-            import anthropic
-        except ImportError:
+        if Anthropic is None:
             logger.error("anthropic non installé. pip install 'mealie-nutrition-advisor[anthropic]'")
             return self._mock_estimate(ingredient_text)
 
@@ -125,7 +137,7 @@ class QuantityEstimator:
             return self._mock_estimate(ingredient_text)
 
         try:
-            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+            client = Anthropic(api_key=ANTHROPIC_API_KEY)
             prompt = QUANTITY_ESTIMATION_PROMPT.format(ingredient=ingredient_text, servings=servings)
             message = client.messages.create(
                 model=ANTHROPIC_MODEL,
@@ -139,10 +151,8 @@ class QuantityEstimator:
             return self._mock_estimate(ingredient_text)
 
     def _mistral_estimate(self, ingredient_text: str, servings: int) -> Optional[int]:
-        try:
-            from mistralai.client import Mistral
-        except ImportError:
-            logger.error("mistralai non installé. pip install mistralai")
+        if Mistral is None:
+            logger.error("mistralai non installé. pip install 'mealie-nutrition-advisor[mistral]'")
             return self._mock_estimate(ingredient_text)
 
         if not MISTRAL_API_KEY:
