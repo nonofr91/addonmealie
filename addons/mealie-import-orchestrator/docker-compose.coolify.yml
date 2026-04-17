@@ -39,7 +39,7 @@ services:
       - 'MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}'
       - 'OFF_BASE_URL=${OFF_BASE_URL:-https://world.openfoodfacts.org}'
       - 'NUTRITION_CACHE_TTL_DAYS=${NUTRITION_CACHE_TTL_DAYS:-30}'
-      - 'LOG_LEVEL=${LOG_LEVEL:-INFO}'
+      - 'LOG_LEVEL=${LOG_LEVEL:-DEBUG}'
     depends_on:
       mealie:
         condition: service_started
