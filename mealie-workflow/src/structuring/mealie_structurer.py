@@ -65,15 +65,15 @@ class MealieDataStructurer:
                 "slug": slug,
                 "description": scraped_recipe.get('description', ''),
                 
-                # Informations de temps
-                "prepTime": f"PT{scraped_recipe.get('prep_time', '15')}M",
-                "cookTime": f"PT{scraped_recipe.get('cook_time', '20')}M",
-                "totalTime": f"PT{scraped_recipe.get('total_time', '35')}M",
-                
+                # Informations de temps (format texte lisible, comme l'importateur natif Mealie)
+                "prepTime": self._minutes_to_text(scraped_recipe.get('prep_time')),
+                "cookTime": self._minutes_to_text(scraped_recipe.get('cook_time')),
+                "totalTime": self._minutes_to_text(scraped_recipe.get('total_time')),
+
                 # Portions
                 "recipeServings": float(scraped_recipe.get('servings', '4')),
                 "recipeYieldQuantity": float(scraped_recipe.get('servings', '4')),
-                "recipeYield": f"{scraped_recipe.get('servings', '4')} servings",
+                "recipeYield": scraped_recipe.get('servings', '4'),
                 
                 # Ingrédients (format Mealie)
                 "recipeIngredient": formatted_ingredients,
@@ -118,6 +118,25 @@ class MealieDataStructurer:
             print(f"❌ Erreur structuration {scraped_recipe.get('name', 'Inconnue')}: {e}")
             return None
     
+    def _minutes_to_text(self, minutes) -> Optional[str]:
+        """Convertit des minutes en texte lisible (format natif Mealie).
+        Ex: 10 → '10 minutes', 90 → '1 hour 30 minutes', None → None
+        """
+        if minutes is None:
+            return None
+        try:
+            m = int(minutes)
+        except (ValueError, TypeError):
+            return None
+        if m <= 0:
+            return None
+        hours, mins = divmod(m, 60)
+        if hours == 0:
+            return f"{mins} minutes"
+        if mins == 0:
+            return f"{hours} hour{'s' if hours > 1 else ''}"
+        return f"{hours} hour{'s' if hours > 1 else ''} {mins} minutes"
+
     def create_slug(self, name: str) -> str:
         """Crée un slug URL-friendly"""
         # Nettoyer le nom
@@ -186,9 +205,44 @@ class MealieDataStructurer:
         "tasse", "tasses",
         "brin", "brins",
         "goutte", "gouttes",
-        "filet",
-        "kg", "mg", "cl", "ml", "dl", "lb", "oz", "g",
     ]
+
+    # Poids par défaut pour aliments sans unité explicite (en grammes)
+    DEFAULT_WEIGHTS_G = {
+        # Viandes entières
+        "gigot": 1500,
+        "gigot d'agneau": 1500,
+        "poulet": 1200,
+        "poulet entier": 1200,
+        "lapin": 1500,
+        "canard": 1500,
+        "dinde": 5000,
+        "rôti de porc": 1000,
+        # Poissons entiers
+        "saumon": 400,
+        "saumon entier": 400,
+        "truite": 300,
+        "dorade": 400,
+        "bar": 400,
+        # Fruits/légumes moyens
+        "oignon": 80,
+        "ail": 5,
+        "gousse d'ail": 5,
+        "tomate": 100,
+        "courgette": 200,
+        "aubergine": 250,
+        "poivron": 150,
+        "carotte": 70,
+        "pomme de terre": 150,
+        "patate": 150,
+        "citron": 80,
+        "orange": 150,
+        "pomme": 150,
+        "banane": 120,
+        # Autres
+        "œuf": 50,
+        "oeuf": 50,
+    }
 
     def parse_ingredient(self, ingredient: str) -> Dict:
         """Parse un ingrédient en quantité/unité/aliment via liste d'unités connues."""
@@ -233,6 +287,14 @@ class MealieDataStructurer:
 
         # Étape 3 : supprimer les prépositions françaises en tête
         rest = re.sub(r"^(de |d'|du |des |à )", '', rest, flags=re.IGNORECASE).strip()
+
+        # Étape 4 : si pas d'unité et quantité=0, chercher dans DEFAULT_WEIGHTS_G
+        if not unit and qty == 0:
+            for key, weight in self.DEFAULT_WEIGHTS_G.items():
+                if key.lower() in rest.lower():
+                    qty = weight
+                    unit = 'g'  # Indiquer que c'est en grammes
+                    break
 
         return {
             'quantity': qty,

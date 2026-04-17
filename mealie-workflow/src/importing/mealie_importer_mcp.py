@@ -200,10 +200,10 @@ class MealieImporterMCP:
                 "name": structured_recipe["name"],
                 "description": structured_recipe.get("description", ""),
                 
-                # Temps (format plat API 3.14)
-                "prepTime": structured_recipe.get("prepTime", "PT15M"),
-                "cookTime": structured_recipe.get("cookTime", "PT20M"),
-                "totalTime": structured_recipe.get("totalTime", "PT35M"),
+                # Temps (None si non disponible — éviter les valeurs fallback mensongères)
+                "prepTime": structured_recipe.get("prepTime") or None,
+                "cookTime": structured_recipe.get("cookTime") or None,
+                "totalTime": structured_recipe.get("totalTime") or None,
                 
                 # Portions (format API 3.14)
                 "recipeServings": structured_recipe.get('recipeServings', 4),

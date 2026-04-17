@@ -1264,15 +1264,19 @@ Recette délicieuse et facile à réaliser.
                         if numbers:
                             recipe_data['servings'] = numbers[0]
             
-            # Valeurs par défaut
+            # Extraction fallback des temps depuis le contenu brut
+            if not recipe_data.get('prep_time') or not recipe_data.get('cook_time'):
+                self._extract_times_from_raw(content, recipe_data)
+
+            # Valeurs par défaut (seulement si extraction échouée)
             recipe_data.setdefault('name', 'Recette Sans Nom')
             recipe_data.setdefault('description', 'Recette délicieuse')
             recipe_data.setdefault('ingredients', ['Ingrédient 1', 'Ingrédient 2'])
             recipe_data.setdefault('instructions', ['Préparer', 'Cuire', 'Servir'])
             recipe_data.setdefault('servings', '4')
-            recipe_data.setdefault('prep_time', '15')
-            recipe_data.setdefault('cook_time', '20')
-            recipe_data.setdefault('total_time', '35')
+            recipe_data.setdefault('prep_time', None)
+            recipe_data.setdefault('cook_time', None)
+            recipe_data.setdefault('total_time', None)
             
             return recipe_data
             
@@ -1295,6 +1299,75 @@ Recette délicieuse et facile à réaliser.
             if match:
                 recipe_data['total_time'] = match.group(1)
     
+    def _extract_times_from_raw(self, content: str, recipe_data: Dict):
+        """Extrait les temps depuis le contenu brut en fallback (ISO 8601 + patterns FR)."""
+
+        def iso_to_minutes(iso: str) -> Optional[str]:
+            """Convertit PT15M, PT1H30M → '15', '90'."""
+            m = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?', iso.upper())
+            if not m:
+                return None
+            hours = int(m.group(1) or 0)
+            minutes = int(m.group(2) or 0)
+            total = hours * 60 + minutes
+            return str(total) if total > 0 else None
+
+        # Patterns ISO 8601 dans le texte (ex: schema.org JSON-LD rendu en texte)
+        iso_patterns = {
+            'prep_time': [
+                r'preptime["\s:]+(["\']?PT[\dHM]+["\']?)',
+                r'prep.?time["\s:]+(["\']?PT[\dHM]+["\']?)',
+            ],
+            'cook_time': [
+                r'cooktime["\s:]+(["\']?PT[\dHM]+["\']?)',
+                r'cook.?time["\s:]+(["\']?PT[\dHM]+["\']?)',
+                r'performtime["\s:]+(["\']?PT[\dHM]+["\']?)',
+            ],
+            'total_time': [
+                r'totaltime["\s:]+(["\']?PT[\dHM]+["\']?)',
+                r'total.?time["\s:]+(["\']?PT[\dHM]+["\']?)',
+            ],
+        }
+
+        for field, patterns in iso_patterns.items():
+            if recipe_data.get(field):
+                continue
+            for pat in patterns:
+                m = re.search(pat, content, re.IGNORECASE)
+                if m:
+                    raw = m.group(1).strip("\"'")
+                    minutes = iso_to_minutes(raw)
+                    if minutes:
+                        recipe_data[field] = minutes
+                        break
+
+        # Patterns textuels FR (ex: "15 min de préparation", "Préparation : 15 mn")
+        text_patterns = [
+            (r'pr[ée]paration\s*[:\-]?\s*(\d+)\s*(?:min|mn|minutes?)', 'prep_time'),
+            (r'(\d+)\s*(?:min|mn|minutes?)\s*de\s*pr[ée]paration', 'prep_time'),
+            (r'cuisson\s*[:\-]?\s*(\d+)\s*(?:min|mn|minutes?)', 'cook_time'),
+            (r'(\d+)\s*(?:min|mn|minutes?)\s*de\s*cuisson', 'cook_time'),
+            (r'temps?\s*total\s*[:\-]?\s*(\d+)\s*(?:min|mn|minutes?)', 'total_time'),
+            (r'total\s*[:\-]?\s*(\d+)\s*(?:min|mn|minutes?)', 'total_time'),
+        ]
+
+        for pat, field in text_patterns:
+            if recipe_data.get(field):
+                continue
+            m = re.search(pat, content, re.IGNORECASE)
+            if m:
+                recipe_data[field] = m.group(1)
+
+        # Calculer total_time si manquant
+        if not recipe_data.get('total_time'):
+            prep = recipe_data.get('prep_time')
+            cook = recipe_data.get('cook_time')
+            if prep and cook:
+                try:
+                    recipe_data['total_time'] = str(int(prep) + int(cook))
+                except ValueError:
+                    pass
+
     def extract_recipe_image(self, url: str, recipe_name: str) -> Optional[str]:
         """
         Extrait l'image d'une recette
