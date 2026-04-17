@@ -163,6 +163,7 @@ def parse_ingredient(text: str, servings: int = 4, use_ai: bool = USE_AI_ESTIMAT
         servings: Nombre de portions pour le contexte
         use_ai: Utiliser l'estimation IA (défaut: USE_AI_ESTIMATION env var)
     """
+    logger.info("parse_ingredient called with text='%s', servings=%d, use_ai=%s", text, servings, use_ai)
     text = text.strip()
     if not text:
         logger.debug("Empty ingredient text, using default quantity")
