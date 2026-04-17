@@ -2,7 +2,7 @@
 
 echo "🍽️  Mealie Import Addon starting…"
 echo "   Mealie : ${MEALIE_BASE_URL:-<not set>}"
-echo "   AI     : ${OPENAI_API_KEY:+enabled}${OPENAI_API_KEY:-disabled}"
+echo "   AI     : ${AI_PROVIDER:-mock} (${MISTRAL_API_KEY:+mistral}${ANTHROPIC_API_KEY:+anthropic}${OPENAI_API_KEY:+openai}${MISTRAL_API_KEY:-${ANTHROPIC_API_KEY:-${OPENAI_API_KEY:-disabled}}})"
 
 API_PORT="${ADDON_API_PORT:-8000}"
 

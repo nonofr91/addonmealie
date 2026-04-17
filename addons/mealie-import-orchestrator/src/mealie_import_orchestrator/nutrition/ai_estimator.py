@@ -16,6 +16,8 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
+MISTRAL_MODEL = os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
 
 ESTIMATION_PROMPT = """Tu es un nutritionniste expert. 
 Estime les valeurs nutritionnelles pour 100g de l'aliment suivant : "{ingredient}"
@@ -73,6 +75,8 @@ class AIEstimator:
             return self._openai_estimate(ingredient_name)
         elif self.provider == "anthropic":
             return self._anthropic_estimate(ingredient_name)
+        elif self.provider == "mistral":
+            return self._mistral_estimate(ingredient_name)
         else:
             logger.warning("AI_PROVIDER inconnu '%s', fallback sur mock", self.provider)
             return self._mock_estimate(ingredient_name)
@@ -137,6 +141,31 @@ class AIEstimator:
             return self._parse_llm_response(raw)
         except Exception as exc:
             logger.warning("Anthropic erreur pour '%s': %s", ingredient_name, exc)
+            return self._mock_estimate(ingredient_name)
+
+    def _mistral_estimate(self, ingredient_name: str) -> Optional[NutritionFacts]:
+        try:
+            from mistralai import Mistral
+        except ImportError:
+            logger.error("mistralai non installé. pip install 'mealie-nutrition-advisor[mistral]'")
+            return self._mock_estimate(ingredient_name)
+
+        if not MISTRAL_API_KEY:
+            logger.error("MISTRAL_API_KEY manquante")
+            return self._mock_estimate(ingredient_name)
+
+        try:
+            client = Mistral(api_key=MISTRAL_API_KEY)
+            prompt = ESTIMATION_PROMPT.format(ingredient=ingredient_name)
+            response = client.chat.complete(
+                model=MISTRAL_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+            )
+            raw = response.choices[0].message.content or "{}"
+            return self._parse_llm_response(raw)
+        except Exception as exc:
+            logger.warning("Mistral erreur pour '%s': %s", ingredient_name, exc)
             return self._mock_estimate(ingredient_name)
 
     @staticmethod
