@@ -11,6 +11,7 @@ from pydantic import BaseModel, HttpUrl
 
 from .config import AddonConfig, AddonConfigurationError
 from .orchestrator import AddonExecutionError, MealieImportOrchestrator
+from .nutrition_orchestrator import NutritionOrchestrator, NutritionOrchestratorError
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -47,6 +48,7 @@ def _check_key(key: str | None = Security(_API_KEY_HEADER)) -> None:
 # ---------------------------------------------------------------------------
 
 _orchestrator: MealieImportOrchestrator | None = None
+_nutrition_orchestrator: NutritionOrchestrator | None = None
 
 
 def _get_orchestrator() -> MealieImportOrchestrator:
@@ -57,6 +59,16 @@ def _get_orchestrator() -> MealieImportOrchestrator:
         except AddonConfigurationError as exc:
             raise HTTPException(status_code=503, detail=f"Addon misconfigured: {exc}") from exc
     return _orchestrator
+
+
+def _get_nutrition_orchestrator() -> NutritionOrchestrator:
+    global _nutrition_orchestrator
+    if _nutrition_orchestrator is None:
+        try:
+            _nutrition_orchestrator = NutritionOrchestrator()
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail=f"Nutrition addon misconfigured: {exc}") from exc
+    return _nutrition_orchestrator
 
 
 # ---------------------------------------------------------------------------
@@ -72,6 +84,10 @@ class AuditResponse(BaseModel):
     total: int
     issues: list[dict[str, Any]]
     fixed: list[str] = []
+
+
+class EnrichRequest(BaseModel):
+    force: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +138,45 @@ def audit_fix(_: None = Security(_check_key)) -> dict[str, Any]:
     orch = _get_orchestrator()
     try:
         return orch.audit(fix=True)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ---------------------------------------------------------------------------
+# Nutrition endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get("/nutrition/scan", tags=["nutrition"])
+def nutrition_scan(_: None = Security(_check_key)) -> dict[str, Any]:
+    """Scan Mealie recipes to find those without nutrition data."""
+    orch = _get_nutrition_orchestrator()
+    try:
+        return orch.scan_recipes()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/nutrition/enrich", tags=["nutrition"])
+def nutrition_enrich(req: EnrichRequest, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Enrich all recipes without nutrition (or all if force=True)."""
+    orch = _get_nutrition_orchestrator()
+    try:
+        return orch.enrich_all(force=req.force)
+    except NutritionOrchestratorError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/nutrition/recipe/{slug}", tags=["nutrition"])
+def nutrition_enrich_recipe(slug: str, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Enrich a single recipe by slug."""
+    orch = _get_nutrition_orchestrator()
+    try:
+        return orch.enrich_recipe(slug)
+    except NutritionOrchestratorError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

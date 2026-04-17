@@ -69,7 +69,7 @@ with col_btn:
             unsafe_allow_html=True,
         )
 
-tab_import, tab_audit, tab_status = st.tabs(["📥 Import", "🔍 Audit", "📊 Statut"])
+tab_import, tab_audit, tab_nutrition, tab_status = st.tabs(["📥 Import", "🔍 Audit", "🥗 Nutrition", "📊 Statut"])
 
 # ---------------------------------------------------------------------------
 # Tab 1 — Import
@@ -150,6 +150,50 @@ with tab_audit:
                 st.subheader("Corrections appliquées")
                 for fix in fixed:
                     st.success(f"✅ {fix}")
+
+# ---------------------------------------------------------------------------
+# Tab 3 — Nutrition
+# ---------------------------------------------------------------------------
+with tab_nutrition:
+    st.header("Enrichissement nutritionnel")
+    st.caption("Ajoute des données nutritionnelles aux recettes Mealie via OpenFoodFacts et l'IA.")
+
+    col_scan, col_enrich = st.columns(2)
+
+    with col_scan:
+        if st.button("🔍 Scanner", type="secondary"):
+            with st.spinner("Analyse en cours…"):
+                report = _api("GET", "/nutrition/scan")
+            st.session_state["nutrition_report"] = report
+
+    with col_enrich:
+        force = st.checkbox("Forcer le recalcul", value=False)
+        if st.button("🚀 Enrichir", type="primary"):
+            with st.spinner("Enrichissement en cours…"):
+                report = _api("POST", "/nutrition/enrich", json={"force": force})
+            st.session_state["nutrition_report"] = report
+
+    report = st.session_state.get("nutrition_report")
+    if report:
+        if not report.get("success", True) and report.get("error"):
+            st.error(report["error"])
+        else:
+            total = report.get("total", 0)
+            enriched = report.get("enriched", 0)
+            failed = report.get("failed", 0)
+
+            st.metric("Recettes analysées", total)
+            col1, col2 = st.columns(2)
+            col1.metric("Enrichies avec succès", enriched)
+            col2.metric("Échecs", failed)
+
+            if report.get("details"):
+                st.subheader("Détails")
+                for detail in report["details"]:
+                    if detail.get("success"):
+                        st.success(f"✅ {detail.get('name', detail.get('slug', '?'))}")
+                    else:
+                        st.error(f"❌ {detail.get('name', detail.get('slug', '?'))}: {detail.get('error', 'Erreur inconnue')}")
 
 # ---------------------------------------------------------------------------
 # Tab 3 — Status
