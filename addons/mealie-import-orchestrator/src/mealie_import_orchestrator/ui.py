@@ -83,7 +83,7 @@ with tab_import:
         placeholder="https://www.marmiton.org/recettes/...",
     )
 
-    if st.button("🚀 Importer", type="primary", disabled=not url_input):
+    if st.button("🚀 Importer", type="primary", disabled=not url_input, key="import_button_unique"):
         with st.spinner("Import en cours… (scraping → structuration → Mealie)"):
             result = _api("POST", "/import", json={"url": url_input})
 
@@ -111,13 +111,13 @@ with tab_audit:
     col_scan, col_fix = st.columns(2)
 
     with col_scan:
-        if st.button("🔍 Scanner", type="secondary"):
+        if st.button("🔍 Scanner", type="secondary", key="audit_scan_button"):
             with st.spinner("Analyse en cours…"):
                 report = _api("GET", "/audit")
             st.session_state["audit_report"] = report
 
     with col_fix:
-        if st.button("🔧 Corriger automatiquement", type="primary"):
+        if st.button("🔧 Corriger automatiquement", type="primary", key="audit_fix_button"):
             with st.spinner("Corrections en cours…"):
                 report = _api("POST", "/audit/fix")
             st.session_state["audit_report"] = report
@@ -161,14 +161,14 @@ with tab_nutrition:
     col_scan, col_enrich = st.columns(2)
 
     with col_scan:
-        if st.button("🔍 Scanner", type="secondary"):
+        if st.button("🔍 Scanner", type="secondary", key="nutrition_scan_button"):
             with st.spinner("Analyse en cours…"):
                 report = _api("GET", "/nutrition/scan")
             st.session_state["nutrition_report"] = report
 
     with col_enrich:
         force = st.checkbox("Forcer le recalcul", value=False)
-        if st.button("🚀 Enrichir", type="primary"):
+        if st.button("🚀 Enrichir", type="primary", key="nutrition_enrich_button"):
             with st.spinner("Enrichissement en cours…"):
                 report = _api("POST", "/nutrition/enrich", json={"force": force})
             st.session_state["nutrition_report"] = report
@@ -201,7 +201,7 @@ with tab_nutrition:
 with tab_status:
     st.header("Statut de l'addon")
 
-    if st.button("🔄 Rafraîchir"):
+    if st.button("🔄 Rafraîchir", key="status_refresh_button_unique"):
         st.session_state["status"] = _api("GET", "/status")
 
     s = st.session_state.get("status")
