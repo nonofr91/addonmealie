@@ -169,7 +169,7 @@ class NutritionOrchestrator:
                 
                 # Extract ingredients
                 ingredient_texts = [
-                    ing.get("note", ing.get("food", {}).get("name", ""))
+                    ing.get("note", ing.get("originalText", ing.get("display", ing.get("food", {}).get("name", ""))))
                     for ing in recipe_details.get("recipeIngredient", [])
                 ]
                 
