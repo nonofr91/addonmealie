@@ -21,7 +21,7 @@ services:
       start_period: 120s
 
   mealie-addon:
-    image: 'ghcr.io/nonofr91/mealie-import-addon:0.4.6'
+    image: 'ghcr.io/nonofr91/mealie-import-addon:0.4.7'
     environment:
       - SERVICE_FQDN_MEALIEADDON_8501
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
