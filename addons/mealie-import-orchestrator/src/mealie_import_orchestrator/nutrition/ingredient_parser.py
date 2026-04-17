@@ -9,12 +9,15 @@ Handles text like:
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from dataclasses import dataclass
 from typing import Optional
 
 from .quantity_estimator import QuantityEstimator
+
+logger = logging.getLogger(__name__)
 
 UNIT_TO_GRAMS: dict[str, float] = {
     "g": 1,
@@ -162,6 +165,7 @@ def parse_ingredient(text: str, servings: int = 4, use_ai: bool = USE_AI_ESTIMAT
     """
     text = text.strip()
     if not text:
+        logger.debug("Empty ingredient text, using default quantity")
         return ParsedIngredient(raw_text=text, food_name=text, quantity_g=DEFAULT_QUANTITY_G)
 
     # 1. Quantité explicite
@@ -171,9 +175,11 @@ def parse_ingredient(text: str, servings: int = 4, use_ai: bool = USE_AI_ESTIMAT
         unit = (m.group("unit") or "").lower().strip()
         food = _clean_food_name(m.group("food"))
         grams = qty * UNIT_TO_GRAMS.get(unit, DEFAULT_QUANTITY_G / qty if unit == "" else DEFAULT_QUANTITY_G)
+        logger.debug("Parsed explicit quantity: '%s' -> food='%s', qty=%.1fg (unit=%s, raw_qty=%s)", text, food, grams, unit, qty)
         return ParsedIngredient(raw_text=text, food_name=food, quantity_g=round(grams, 1))
 
     food_clean = _clean_food_name(text)
+    logger.debug("No explicit quantity pattern match for '%s', cleaned food='%s'", text, food_clean)
     
     # Détecter si c'est une épice/condiment - désactiver IA pour ces cas-là
     spice_keywords = ["sel", "poivre", "muscade", "cannelle", "piment", "paprika", "curry", "thym", "romarin", "origan", "basilic", "persil", "estragon", "ciboulette", "vanille", "safran"]
@@ -181,20 +187,31 @@ def parse_ingredient(text: str, servings: int = 4, use_ai: bool = USE_AI_ESTIMAT
     
     if is_spice:
         use_ai = False  # Désactiver IA pour les épices/condiments
+        logger.debug("Detected spice/condiment '%s', AI estimation disabled", food_clean)
 
     # 2. DEFAULT_WEIGHTS_G
     for key, weight in DEFAULT_WEIGHTS_G.items():
         if key.lower() in food_clean.lower():
+            logger.debug("Matched DEFAULT_WEIGHTS_G: '%s' -> %sg (key='%s')", food_clean, weight, key)
             return ParsedIngredient(raw_text=text, food_name=food_clean, quantity_g=weight)
+
+    logger.debug("No DEFAULT_WEIGHTS_G match for '%s'", food_clean)
 
     # 3. IA estimation (optionnel)
     if use_ai:
+        logger.debug("Attempting AI estimation for '%s' (use_ai=True)", food_clean)
         estimator = QuantityEstimator()
         estimated = estimator.estimate(text, servings)
         if estimated:
+            logger.debug("AI estimation successful: '%s' -> %sg", food_clean, estimated)
             return ParsedIngredient(raw_text=text, food_name=food_clean, quantity_g=estimated)
+        else:
+            logger.debug("AI estimation failed or returned None for '%s'", food_clean)
+    else:
+        logger.debug("AI estimation disabled for '%s' (use_ai=%s, is_spice=%s)", food_clean, use_ai, is_spice)
 
     # 4. Fallback DEFAULT_QUANTITY_G
+    logger.debug("Using fallback DEFAULT_QUANTITY_G=%sg for '%s'", DEFAULT_QUANTITY_G, food_clean)
     return ParsedIngredient(raw_text=text, food_name=food_clean, quantity_g=DEFAULT_QUANTITY_G)
 
 
