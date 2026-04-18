@@ -1,68 +1,148 @@
-# Plateforme Mealie Addons + Windsurf Starter Pack
+# Mealie Addons Platform
 
-Plateforme locale pour construire des améliorations externes à Mealie avec Cascade, ainsi qu'un starter pack Windsurf réutilisable pour des projets agentiques propres et maintenables.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Objectifs
+Une suite d'addons externes pour [Mealie](https://mealie.io) qui automatisent les corvées culinaires : import de recettes, calcul nutritionnel, planification de menus, gestion des courses et coaching nutritionnel.
 
-- Construire des addons externes autour de Mealie sans modifier l'image Mealie.
-- Préserver une source de vérité unique par capacité métier.
-- Structurer le repo pour limiter la pollution et les variantes concurrentes.
-- Fournir un socle Windsurf réutilisable : `AGENTS.md`, `Rules`, `Workflows`, `Skills`, structure canonique et documentation de gouvernance.
+## 🎯 Vision
 
-## Capacités couvertes
+Devenir l'assistant intelligent ultime pour les corvées culinaires en fournissant des outils modulaires qui s'intègrent à Mealie sans jamais modifier son image Docker.
 
-- Import de recettes et pipeline hybride Python + IA
-- Normalisation des recettes et ingrédients
-- Analyse nutritionnelle
-- Optimisation des listes de courses
-- Gestion d'images
-- Outillage MCP et workflows externes autour de Mealie
+## ✨ Fonctionnalités
 
-## Couche Windsurf du projet
+### 🍽️ Import de recettes intelligent
+- Scraping de sites de cuisine (Marmiton, 750g, etc.)
+- Structuration automatique des recettes
+- Audit de qualité (images, tags, doublons)
+- Auto-fix avec images de fallback
+- Support IA optionnel (OpenAI, Anthropic, Mistral)
 
-- `AGENTS.md` : gouvernance always-on du repo
-- `.windsurf/rules/` : contraintes courtes et durables par type de fichier ou domaine
-- `.windsurf/workflows/` : procédures manuelles réutilisables
-- `.windsurf/skills/` : expertises métier et de gouvernance réutilisables
-- `docs/specs/` : spécifications courtes
-- `docs/decisions/` : décisions d'architecture et de gouvernance
+### 🥗 Calcul nutritionnel automatique
+- Calcul des valeurs nutritionnelles (kcal, protéines, lipides, glucides, fibres)
+- Enrichissement des recettes existantes
+- Sources multiples : Open Food Facts + IA + cache
+- Profils avancés du foyer (pathologies, objectifs)
+- Ajustement automatique selon les pathologies médicales
 
-## Structure recommandée
+### 📅 Planification de menus
+- Génération de menus hebdomadaires
+- Adaptation aux profils du foyer
+- Gestion des absences (pattern de présence)
+- Intégration avec le planning natif Mealie
 
-- `addons/` pour les addons externes publiables
-- `packages/` pour le code partagé
-- `scripts/` pour l'orchestration stable
-- `tests/` pour les validations
-- `labs/` pour les expérimentations structurées
-- `tmp/` pour le temporaire
-- `reports/` et `data/generated/` pour le généré
+### 🤖 Intégration MCP
+- 45 outils API couvrant l'intégralité de l'API Mealie
+- Compatible avec Claude Desktop et autres clients MCP
+- Gestion des recettes, listes de courses, catégories, tags
 
-## Règles de conduite essentielles
+## 🚀 Installation rapide
 
-- Ne pas créer de nouveau fichier métier à la racine
-- Ne pas multiplier les fichiers `final`, `debug`, `copy`, `fixed`, `v2`, `v3`
-- Préférer les MCP disponibles avant d'ajouter une intégration Mealie ad hoc
-- Produire une spec courte pour les changements non triviaux
-- Nettoyer les artefacts et mettre à jour la documentation durable en fin de tâche
+### Docker (recommandé)
 
-## Pour démarrer
+```bash
+# Import Addon
+docker run -d \
+  -e MEALIE_BASE_URL=https://your-mealie.com \
+  -e MEALIE_API_KEY=your-key \
+  -p 8000:8000 -p 8501:8501 \
+  ghcr.io/nonofr91/mealie-import-addon:latest
 
-1. Lire `AGENTS.md`
-2. Utiliser `/task-intake` pour cadrer une nouvelle demande
-3. Utiliser `Plan mode` pour les changements structurants
-4. Utiliser les workflows de gouvernance avant et après les tâches à risque
-5. Consulter `docs/decisions/windsurf-project-operating-model.md` pour le modèle opératoire du repo
+# Nutrition Addon
+docker run -d \
+  -e MEALIE_BASE_URL=https://your-mealie.com \
+  -e MEALIE_API_KEY=your-key \
+  -p 8001:8001 -p 8502:8502 \
+  ghcr.io/nonofr91/mealie-nutrition-advisor:latest
+```
 
-## Réutiliser ce repo comme template
+### Docker Compose
 
-- Utiliser `/bootstrap-project` pour initialiser un nouveau repo à partir de ce starter pack.
-- Conserver le noyau de gouvernance : `AGENTS.md`, `.gitignore`, `.windsurf/rules/`, workflows génériques, skills transverses et documentation canonique.
-- Adapter le contexte produit dans `README.md`, `AGENTS.md` et la règle métier dédiée au nouveau domaine.
-- Retirer les workflows, skills, scripts et données trop spécifiques au domaine source.
-- Documenter le bootstrap du nouveau repo dans `docs/specs/` et sa première décision structurante dans `docs/decisions/`.
+```yaml
+services:
+  mealie-import-addon:
+    image: ghcr.io/nonofr91/mealie-import-addon:latest
+    environment:
+      - MEALIE_BASE_URL=https://your-mealie.com
+      - MEALIE_API_KEY=your-key
+    ports:
+      - "8000:8000"
+      - "8501:8501"
 
-## Sécurité
+  mealie-nutrition-addon:
+    image: ghcr.io/nonofr91/mealie-nutrition-advisor:latest
+    environment:
+      - MEALIE_BASE_URL=https://your-mealie.com
+      - MEALIE_API_KEY=your-key
+    ports:
+      - "8001:8001"
+      - "8502:8502"
+```
 
-- Garder les secrets hors du code versionné
-- Utiliser `.env.template` quand un exemple de configuration est nécessaire
-- Passer par des interfaces publiques et des intégrations externes à Mealie
+Voir [docs/INSTALLATION.md](docs/INSTALLATION.md) pour les instructions détaillées.
+
+## 📁 Structure du dépôt
+
+```
+.
+├── addons/                    # Addons externes Mealie
+│   ├── mealie-import-orchestrator/   # Import de recettes
+│   └── mealie-nutrition-advisor/     # Nutrition + menus
+├── mealie-mcp-server/         # Serveur MCP pour assistants IA
+├── mealie-workflow/           # Scripts et outils d'import
+├── packages/                  # Code partagé
+├── scripts/                   # Scripts utilitaires
+├── docs/                      # Documentation
+│   ├── INSTALLATION.md        # Guide d'installation
+│   ├── ARCHITECTURE.md        # Architecture technique
+│   ├── ROADMAP.md             # Roadmap et perspectives
+│   ├── decisions/             # Décisions d'architecture
+│   └── internal/              # Documentation interne Windsurf
+├── CONTRIBUTING.md            # Guide de contribution
+└── LICENSE                    # Licence MIT
+```
+
+## 🔧 Addons disponibles
+
+| Addon | Description | API | UI |
+|-------|-------------|-----|-----|
+| [mealie-import-orchestrator](addons/mealie-import-orchestrator/) | Import de recettes et audit de qualité | :8000 | :8501 |
+| [mealie-nutrition-advisor](addons/mealie-nutrition-advisor/) | Calcul nutritionnel et planification | :8001 | :8502 |
+| [mealie-mcp-server](mealie-mcp-server/) | Intégration MCP pour assistants IA | MCP | - |
+
+## 🗺️ Roadmap
+
+Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour les perspectives futures :
+
+- 🔄 Optimisation des listes de courses
+- 💰 Budget alimentaire
+- ⏱️ Gestion du temps de cuisine
+- 🚚 Interface livraison
+- 🧠 Coaching nutritionnel personnalisé
+
+## 📚 Documentation
+
+- [Guide d'installation](docs/INSTALLATION.md)
+- [Architecture technique](docs/ARCHITECTURE.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Contribuer](CONTRIBUTING.md)
+- [Décisions d'architecture](docs/decisions/)
+
+## 🤝 Contribuer
+
+Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les guidelines.
+
+## 📄 Licence
+
+Ce projet est licencié sous la licence MIT - voir le fichier [LICENSE](LICENSE) pour les détails.
+
+## 🙏 Remerciements
+
+- [Mealie](https://github.com/mealie-recipes/mealie) - Le système de gestion de recettes
+- [FastMCP](https://github.com/jlowin/fastmcp) - Framework MCP
+- [Open Food Facts](https://world.openfoodfacts.org/) - Base de données nutritionnelle
+
+## 🔗 Liens
+
+- [Documentation Mealie](https://docs.mealie.io)
+- [MCP Protocol](https://modelcontextprotocol.io)
+- [GitHub Issues](https://github.com/nonofr91/addonmealie/issues)
