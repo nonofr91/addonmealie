@@ -37,6 +37,34 @@ Avant de proposer une nouvelle fonctionnalité :
 - `fix/xxx` : corrections de bugs
 - `docs/xxx` : modifications de documentation
 
+### Développement de fonctionnalités
+
+Pour développer une nouvelle fonctionnalité sans la publier immédiatement, deux options :
+
+#### Option 1 : Branches de feature (recommandé pour les fonctionnalités structurées)
+
+```bash
+git checkout -b feature/nouvelle-fonctionnalite
+# Développer
+git commit -m "WIP: nouvelle fonctionnalité"
+git push origin feature/nouvelle-fonctionnalite
+# Créer un PR en mode "draft" pour ne pas publier
+```
+
+Les branches de feature sont publiques mais ne sont pas visibles tant qu'elles ne sont pas mergées dans main.
+
+#### Option 2 : Dossier labs/ (pour les expérimentations rapides)
+
+Utilisez le dossier `labs/` pour les expérimentations et prototypes :
+
+1. Créer un dossier : `labs/ma-feature/`
+2. Ajouter un README.md avec l'objectif et l'état
+3. Développer dans `labs/ma-feature/`
+4. Quand prêt, promouvoir dans le module canonique (`addons/`, `packages/`, `scripts/`)
+5. Supprimer le dossier `labs/ma-feature/`
+
+Voir `labs/README.md` pour plus de détails.
+
 ### Commits
 
 Utilisez des messages de commit clairs et descriptifs :

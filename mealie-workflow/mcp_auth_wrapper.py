@@ -8,6 +8,7 @@ import json
 import os
 import requests
 import sys
+import urllib.parse
 from pathlib import Path
 
 WRAPPER_DIR = Path(__file__).parent
@@ -402,9 +403,13 @@ def _upload_recipe_image(api_url, headers, slug, image_url, recipe_name):
     img_ok = False
     if image_url and isinstance(image_url, str) and image_url.startswith("http"):
         # Adapter le Referer selon le CDN pour contourner le hotlink protection
-        if "afcdn.com" in image_url:
+        # Valider le domaine correctement pour éviter les attaques par homographe
+        parsed_url = urllib.parse.urlparse(image_url)
+        domain = parsed_url.netloc.lower()
+        
+        if domain == "afcdn.com" or domain.endswith(".afcdn.com"):
             referer = "https://www.marmiton.org/"
-        elif "750g.com" in image_url or "reseaudesmedias.com" in image_url:
+        elif domain == "750g.com" or domain.endswith(".750g.com") or domain == "reseaudesmedias.com" or domain.endswith(".reseaudesmedias.com"):
             referer = "https://www.750g.com/"
         else:
             referer = image_url

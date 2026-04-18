@@ -111,7 +111,7 @@ def get_status(_: None = Security(_check_key)) -> dict[str, Any]:
     try:
         return orch.get_status()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error getting status") from exc
 
 
 @app.get("/nutrition/scan", tags=["nutrition"])
@@ -121,7 +121,7 @@ def scan_recipes(_: None = Security(_check_key)) -> dict[str, Any]:
     try:
         return orch.scan_recipes()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during nutrition scan") from exc
 
 
 @app.post("/nutrition/enrich", tags=["nutrition"])
@@ -133,7 +133,7 @@ def enrich_recipes(req: EnrichRequest, _: None = Security(_check_key)) -> dict[s
     except NutritionOrchestratorError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during nutrition enrichment") from exc
 
 
 @app.post("/nutrition/recipe/{slug}", tags=["nutrition"])
@@ -145,7 +145,7 @@ def enrich_recipe(slug: str, _: None = Security(_check_key)) -> dict[str, Any]:
     except NutritionOrchestratorError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during nutrition enrichment") from exc
 
 
 @app.get("/profiles", tags=["profiles"])
@@ -160,7 +160,7 @@ def get_profiles(_: None = Security(_check_key)) -> dict[str, Any]:
             "members": [m.model_dump() for m in household.members],
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error getting profiles") from exc
 
 
 @app.get("/profiles/{name}", tags=["profiles"])
@@ -175,7 +175,7 @@ def get_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error getting profile") from exc
 
 
 @app.post("/profiles", tags=["profiles"])
@@ -186,7 +186,7 @@ def create_profile(req: ProfileCreateRequest, _: None = Security(_check_key)) ->
         pm.add_member(req.member)
         return {"success": True, "member": req.member.model_dump()}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error creating profile") from exc
 
 
 @app.put("/profiles/{name}", tags=["profiles"])
@@ -202,7 +202,7 @@ def update_profile(name: str, req: ProfileUpdateRequest, _: None = Security(_che
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error updating profile") from exc
 
 
 @app.delete("/profiles/{name}", tags=["profiles"])
@@ -217,7 +217,7 @@ def delete_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error deleting profile") from exc
 
 
 @app.post("/profiles/{name}/presence", tags=["profiles"])
@@ -228,9 +228,9 @@ def update_presence(name: str, req: PresenceUpdateRequest, _: None = Security(_c
         pm.set_weekly_presence(name, req.presence)
         return {"success": True, "presence": req.presence.model_dump()}
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error updating presence") from exc
 
 
 # ---------------------------------------------------------------------------

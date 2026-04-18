@@ -106,7 +106,7 @@ def get_status(_: None = Security(_check_key)) -> dict[str, Any]:
     try:
         return orch.get_health()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error getting status") from exc
 
 
 @app.post("/import", tags=["recipes"])
@@ -129,7 +129,7 @@ def audit_scan(_: None = Security(_check_key)) -> dict[str, Any]:
     try:
         return orch.audit(fix=False)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during audit scan") from exc
 
 
 @app.post("/audit/fix", tags=["audit"])
@@ -139,7 +139,7 @@ def audit_fix(_: None = Security(_check_key)) -> dict[str, Any]:
     try:
         return orch.audit(fix=True)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during audit fix") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +154,7 @@ def nutrition_scan(_: None = Security(_check_key)) -> dict[str, Any]:
     try:
         return orch.scan_recipes()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during nutrition scan") from exc
 
 
 @app.post("/nutrition/enrich", tags=["nutrition"])
@@ -166,7 +166,7 @@ def nutrition_enrich(req: EnrichRequest, _: None = Security(_check_key)) -> dict
     except NutritionOrchestratorError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during nutrition enrichment") from exc
 
 
 @app.post("/nutrition/recipe/{slug}", tags=["nutrition"])
@@ -178,7 +178,7 @@ def nutrition_enrich_recipe(slug: str, _: None = Security(_check_key)) -> dict[s
     except NutritionOrchestratorError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Internal server error during nutrition enrichment") from exc
 
 
 # ---------------------------------------------------------------------------
