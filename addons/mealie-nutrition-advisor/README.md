@@ -122,6 +122,27 @@ NUTRITION_API_URL=http://nutrition-api:8001
 
 Lors de l'import d'une recette, l'addon nutrition sera appelé automatiquement pour calculer les valeurs nutritionnelles.
 
+### Intégration UI dans Mealie (Recipe Actions)
+
+Pour intégrer l'UI de l'addon dans Mealie de manière plus élégante, utilisez le script d'automatisation :
+
+```bash
+# Configurer les variables d'environnement
+export MEALIE_BASE_URL=http://votre-mealie:9000
+export MEALIE_API_KEY=votre_token_api
+export ADDON_UI_URL=http://localhost:8502
+
+# Exécuter le script
+python3 addons/mealie-nutrition-advisor/scripts/setup_mealie_integration.py
+```
+
+Ce script crée automatiquement :
+- Une recette spéciale "🔬 Nutrition Advisor" dans Mealie
+- Un tag `nutrition-addon` pour la retrouver facilement
+- Une recipe action qui ouvre l'UI de l'addon
+
+Vous pouvez ensuite trouver cette recette dans Mealie en recherchant le tag `nutrition-addon` ou le nom "🔬 Nutrition Advisor".
+
 ## Sources nutritionnelles
 
 1. **Open Food Facts** — base mondiale gratuite, sans clé API
