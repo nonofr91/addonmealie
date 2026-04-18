@@ -167,7 +167,7 @@ cd addonmealie/addons/mealie-import-orchestrator
 #### 2. Créer l'environnement virtuel
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 # .venv\Scripts\activate  # Windows
 ```
@@ -179,6 +179,8 @@ pip install -e .
 pip install fastapi uvicorn[standard] streamlit requests beautifulsoup4
 ```
 
+> **Note** : Sur Linux, utiliser systématiquement `python3` au lieu de `python` pour toutes les commandes Python.
+
 #### 4. Configurer
 
 ```bash
@@ -189,14 +191,16 @@ cp .env.template .env
 #### 5. Lancer l'API
 
 ```bash
-python -m uvicorn mealie_import_orchestrator.api:app --port 8000
+python3 -m uvicorn mealie_import_orchestrator.api:app --port 8000
 ```
+
+> **Note** : Si le port 8000 est déjà utilisé, vous pouvez changer le port via la variable d'environnement `ADDON_API_PORT` dans `.env` ou spécifier un autre port directement dans la commande (ex: `--port 8002`).
 
 #### 6. Lancer l'UI (dans un autre terminal)
 
 ```bash
 ADDON_API_URL=http://localhost:8000 \
-python -m streamlit run src/mealie_import_orchestrator/ui.py --server.port 8501
+python3 -m streamlit run src/mealie_import_orchestrator/ui.py --server.port 8501
 ```
 
 ### Nutrition Addon
@@ -211,7 +215,7 @@ cd addonmealie/addons/mealie-nutrition-advisor
 #### 2. Créer l'environnement virtuel
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 # .venv\Scripts\activate  # Windows
 ```
@@ -234,7 +238,7 @@ cp .env.template .env
 
 ```bash
 PYTHONPATH=src \
-python -m mealie_nutrition_advisor.api
+python3 -m mealie_nutrition_advisor.api
 ```
 
 #### 6. Lancer l'UI (dans un autre terminal)
@@ -242,7 +246,7 @@ python -m mealie_nutrition_advisor.api
 ```bash
 PYTHONPATH=src \
 ADDON_API_URL=http://localhost:8001 \
-python -m mealie_nutrition_advisor.ui
+python3 -m mealie_nutrition_advisor.ui
 ```
 
 ## Configuration
@@ -378,7 +382,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" https://your-mealie.com/api/groups
 
 **Test avec mock :**
 ```bash
-AI_PROVIDER=mock python -m mealie_nutrition_advisor.api
+AI_PROVIDER=mock python3 -m mealie_nutrition_advisor.api
 ```
 
 ### Logs trop verbeux
