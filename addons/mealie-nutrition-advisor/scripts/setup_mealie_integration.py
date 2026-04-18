@@ -81,38 +81,24 @@ def create_nutrition_advisor_recipe(client: httpx.Client, tag_id: str) -> dict:
     recipe_data = {
         "name": RECIPE_NAME,
         "description": RECIPE_DESCRIPTION,
-        "recipeYield": "1 serving",
-        "recipeIngredient": [],
-        "recipeInstructions": [
-            {
-                "title": "Ouvrir l'interface Nutrition Advisor",
-                "text": "Cliquez sur l'action ci-dessous pour ouvrir l'interface de gestion des profils nutritionnels."
-            }
-        ],
-        "settings": {
-            "disableAmounts": True,
-            "disableComments": True,
-            "disableRating": True
-        },
-        "tags": [{"id": tag_id}],
-        "recipeActions": [
-            {
-                "name": "Ouvrir Nutrition Advisor",
-                "description": "Accéder à l'interface de gestion des profils nutritionnels",
-                "action": "link",
-                "link": ADDON_UI_URL,
-                "icon": "flask"
-            }
-        ]
+        "tags": [TAG_NAME]
     }
     
-    print(f"Mise à jour de la recette avec description et actions...")
-    resp = client.patch(f"/api/recipes/{slug}", json=recipe_data)
-    resp.raise_for_status()
-    
-    recipe = resp.json()
-    print(f"✓ Recette mise à jour")
-    return recipe
+    print(f"Mise à jour de la recette avec description...")
+    try:
+        resp = client.patch(f"/api/recipes/{slug}", json=recipe_data)
+        resp.raise_for_status()
+        recipe = resp.json()
+        print(f"✓ Recette mise à jour")
+        return recipe
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 400:
+            print(f"⚠ Erreur PATCH (instance Mealie locale incompatible)")
+            print(f"   La recette a été créée mais la mise à jour a échoué.")
+            print(f"   Slug: {slug}")
+            print(f"   Vous devrez mettre à jour la recette manuellement dans Mealie.")
+            return {"slug": slug, "name": RECIPE_NAME}
+        raise
 
 
 def main():
