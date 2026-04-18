@@ -50,6 +50,13 @@ class NutritionOrchestrator:
                 for recipe in recipes:
                     slug = recipe.get("slug", "")
                     name = recipe.get("name", slug)
+                    tags = recipe.get("tags", [])
+                    
+                    # Exclure les recettes spéciales (tags addon)
+                    tag_slugs = {tag.get("slug", "") for tag in tags}
+                    if "nutrition-addon" in tag_slugs or "addon-import" in tag_slugs:
+                        continue
+                    
                     nutrition = recipe.get("nutrition", {})
                     
                     # Check if nutrition data exists and is meaningful
