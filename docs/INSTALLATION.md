@@ -147,10 +147,48 @@ services:
     restart: unless-stopped
 ```
 
-Lancement :
+### Déploiement complet (recommandé)
+
+Pour déployer toute la plateforme Mealie + tous les addons en une seule commande, utilisez le docker-compose global au niveau racine du dépôt.
+
+#### 1. Cloner le dépôt
+
+```bash
+git clone https://github.com/nonofr91/addonmealie.git
+cd addonmealie
+```
+
+#### 2. Configurer
+
+```bash
+cp .env.template .env
+# Éditer .env avec vos valeurs
+```
+
+> **⚠️ IMPORTANT** : Dans le .env global, utilisez l'URL de Mealie SANS `/api` (ex: `http://localhost:9925`). Le docker-compose global configure automatiquement les URLs correctes pour chaque addon.
+
+#### 3. Lancer tous les services
 
 ```bash
 docker-compose up -d
+```
+
+Cela démarre :
+- **Mealie** : Instance Mealie complète (port 9925)
+- **Import Addon** : API (port 8000) + UI (port 8501)
+- **Nutrition Addon** : API (port 8001)
+- **MCP Server** : Serveur MCP pour intégration
+
+#### 4. Vérifier les services
+
+```bash
+docker-compose ps
+```
+
+#### 5. Arrêter les services
+
+```bash
+docker-compose down
 ```
 
 ## Installation locale (développement)
@@ -255,10 +293,17 @@ python3 -m mealie_nutrition_advisor.ui
 
 | Variable | Requis | Description |
 |----------|--------|-------------|
-| `MEALIE_BASE_URL` | ✅ | URL de votre instance Mealie |
+| `MEALIE_BASE_URL` | ✅ | URL de votre instance Mealie (voir note importante ci-dessous) |
 | `MEALIE_API_KEY` | ✅ | Token API Mealie |
 | `ADDON_SECRET_KEY` | — | Secret pour sécuriser l'API (optionnel) |
 | `LOG_LEVEL` | — | Niveau de log (DEBUG, INFO, WARNING, ERROR) |
+
+> **⚠️ IMPORTANT : Format de MEALIE_BASE_URL**
+>
+> - **Import Addon** : `MEALIE_BASE_URL` doit inclure `/api` (ex: `http://localhost:9925/api`)
+> - **Nutrition Addon** : `MEALIE_BASE_URL` ne doit PAS inclure `/api` (ex: `http://localhost:9925`)
+>
+> Cette différence est due à la façon dont chaque addon construit les URLs vers l'API Mealie.
 
 ### Import Addon - Variables spécifiques
 
