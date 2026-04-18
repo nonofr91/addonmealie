@@ -112,10 +112,15 @@ class NutritionOrchestrator:
                             continue
                         
                         # Extract ingredients
-                        ingredient_texts = [
-                            ing.get("note", ing.get("food", {}).get("name", ""))
-                            for ing in recipe_details.get("recipeIngredient", [])
-                        ]
+                        ingredient_texts = []
+                        for ing in recipe_details.get("recipeIngredient", []):
+                            note = ing.get("note", "")
+                            if note:
+                                ingredient_texts.append(note)
+                            else:
+                                food = ing.get("food")
+                                if food and isinstance(food, dict):
+                                    ingredient_texts.append(food.get("name", ""))
                         
                         if not ingredient_texts:
                             skipped.append({"slug": slug, "name": name, "reason": "No ingredients"})
