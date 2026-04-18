@@ -166,6 +166,33 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
         slug = result.get("recipe_id")
         print(f"✓ Recette créée avec succès (slug: {slug})")
         print(f"✓ Lien vers l'UI ajouté dans la description (format markdown)")
+        
+        # Nettoyer les champs inutiles pour une recette spéciale
+        print(f"Nettoyage des champs inutiles...")
+        headers = {
+            "Authorization": f"Bearer {MEALIE_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        cleanup_response = requests.patch(
+            f"{MEALIE_BASE_URL}/api/recipes/{slug}",
+            headers=headers,
+            json={
+                "recipeServings": 0,
+                "totalTime": None,
+                "prepTime": None,
+                "cookTime": None,
+                "performTime": None,
+                "recipeYield": None,
+                "recipeYieldQuantity": None
+            }
+        )
+        
+        if cleanup_response.status_code in [200, 201]:
+            print(f"✓ Champs inutiles nettoyés")
+        else:
+            print(f"⚠ Nettoyage échoué: {cleanup_response.status_code}")
+        
         return {"slug": slug, "name": RECIPE_NAME}
     else:
         print(f"❌ Erreur lors de la création: {result.get('error')}")
