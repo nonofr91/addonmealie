@@ -136,29 +136,13 @@ export ADDON_UI_URL=http://localhost:8502
 python3 addons/mealie-nutrition-advisor/scripts/setup_mealie_integration.py
 ```
 
-**Limitations de l'API Mealie locale** :
-- L'API locale ne supporte pas PATCH/PUT pour mettre à jour les recettes après création
-- Le POST avec payload complet n'est pas accepté
-- Le script crée la recette avec seulement le nom
-- Vous devrez ajouter manuellement la description et le tag dans l'interface Mealie
+Ce script utilise `mcp_auth_wrapper` (depuis `mealie-workflow`) pour créer automatiquement :
+- Une recette spéciale "🔬 Nutrition Advisor" dans Mealie
+- Un tag `nutrition-addon` pour la retrouver facilement
+- La description complète de la recette
+- Les tags associés
 
-**Étapes manuelles après exécution du script** :
-1. Ouvrir la recette créée dans Mealie
-2. Ajouter la description :
-   ```
-   Gestionnaire de profils nutritionnels et planificateur de menus.
-   
-   Cette recette spéciale fournit un lien vers l'interface de gestion des profils 
-   nutritionnels de l'addon mealie-nutrition-advisor.
-   
-   Fonctionnalités :
-   - Gestion des profils des membres du foyer
-   - Configuration des pathologies médicales
-   - Planification des présences hebdomadaires
-   - Calcul nutritionnel personnalisé
-   ```
-3. Ajouter le tag `nutrition-addon`
-4. Ajouter une recipe action de type "link" vers l'URL de l'UI de l'addon
+**Note** : Le script utilise le workflow Mealie correct (POST + PATCH) via `mcp_auth_wrapper`, ce qui permet de créer la recette avec tous les champs (description, tags, etc.) en une seule opération. C'est la même méthode utilisée par `mealie-import-orchestrator`.
 
 Vous pouvez ensuite trouver cette recette dans Mealie en recherchant le tag `nutrition-addon` ou le nom "🔬 Nutrition Advisor".
 

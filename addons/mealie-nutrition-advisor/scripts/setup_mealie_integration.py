@@ -11,7 +11,6 @@ import os
 import sys
 from pathlib import Path
 
-import httpx
 from dotenv import load_dotenv
 
 # Charger les variables d'environnement
@@ -37,20 +36,32 @@ Fonctionnalités :
 """
 TAG_NAME = "nutrition-addon"
 
+# Charger mcp_auth_wrapper depuis mealie-workflow
+WORKFLOW_DIR = Path(__file__).parent.parent.parent.parent / "mealie-workflow"
+sys.path.insert(0, str(WORKFLOW_DIR))
 
-def get_client() -> httpx.Client:
-    """Crée un client HTTP avec authentification."""
+try:
+    import mcp_auth_wrapper as mcp
+    print(f"✓ mcp_auth_wrapper chargé depuis {WORKFLOW_DIR}")
+except ImportError as exc:
+    print(f"❌ Impossible d'importer mcp_auth_wrapper: {exc}")
+    print(f"   Assurez-vous que mealie-workflow existe à {WORKFLOW_DIR}")
+    sys.exit(1)
+
+
+def get_or_create_tag(tag_name: str) -> str:
+    """Récupère ou crée un tag via API REST (pas de fonction MCP dans le wrapper)."""
+    import requests
+    
     headers = {
         "Authorization": f"Bearer {MEALIE_API_KEY}",
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
     }
-    return httpx.Client(base_url=MEALIE_BASE_URL, headers=headers, timeout=30.0)
-
-
-def get_or_create_tag(client: httpx.Client, tag_name: str) -> str:
-    """Récupère ou crée un tag."""
+    
+    api_url = f"{MEALIE_BASE_URL}/api"
+    
     # Chercher le tag existant
-    resp = client.get("/api/organizers/tags", params={"perPage": 200})
+    resp = requests.get(f"{api_url}/organizers/tags", params={"perPage": 200}, headers=headers)
     resp.raise_for_status()
     tags = resp.json().get("items", [])
     
@@ -61,20 +72,18 @@ def get_or_create_tag(client: httpx.Client, tag_name: str) -> str:
     
     # Créer le tag s'il n'existe pas
     print(f"Création du tag '{tag_name}'...")
-    resp = client.post("/api/organizers/tags", json={"name": tag_name})
+    resp = requests.post(f"{api_url}/organizers/tags", headers=headers, json={"name": tag_name})
     resp.raise_for_status()
     tag_id = resp.json().get("id")
-    print(f"✓ Tag '{tag_NAME}' créé (ID: {tag_id})")
+    print(f"✓ Tag '{tag_name}' créé (ID: {tag_id})")
     return tag_id
 
 
-def create_nutrition_advisor_recipe(client: httpx.Client, tag_id: str) -> dict:
-    """Crée la recette spéciale Nutrition Advisor."""
+def create_nutrition_advisor_recipe(tag_id: str) -> dict:
+    """Crée la recette spéciale Nutrition Advisor via mcp_auth_wrapper."""
     # Chercher si la recette existe déjà
     print(f"Recherche de la recette '{RECIPE_NAME}'...")
-    resp = client.get("/api/recipes", params={"perPage": 200})
-    resp.raise_for_status()
-    recipes = resp.json().get("items", [])
+    recipes = mcp.mcp3_list_recipes()
     
     existing_slug = None
     for recipe in recipes:
@@ -87,58 +96,24 @@ def create_nutrition_advisor_recipe(client: httpx.Client, tag_id: str) -> dict:
         print(f"⚠ La recette existe déjà. Supprimez-la d'abord dans Mealie ou utilisez un autre nom.")
         return {"slug": existing_slug, "name": RECIPE_NAME}
     
-    # Créer une nouvelle recette avec tous les champs en une seule fois
+    # Créer la recette via mcp_auth_wrapper
     print(f"Création de la recette '{RECIPE_NAME}' avec description et tag...")
-    recipe_data = {
-        "name": RECIPE_NAME,
-        "description": RECIPE_DESCRIPTION,
-        "tags": [TAG_NAME],
-        "recipeIngredient": [],
-        "recipeInstructions": []
-    }
     
-    try:
-        # Essayer POST avec payload complet
-        resp = client.post("/api/recipes", json=recipe_data)
-        if resp.status_code == 200:
-            recipe = resp.json()
-            print(f"✓ Recette créée avec succès (slug: {recipe.get('slug')})")
-            return recipe
-        else:
-            print(f"⚠ POST retourné {resp.status_code}")
-    except httpx.HTTPStatusError as exc:
-        if exc.response.status_code == 422:
-            print(f"⚠ Erreur 422 - payload non accepté")
-            print(f"   L'API locale n'accepte que {'name': ...} lors de la création")
-        else:
-            print(f"⚠ Erreur POST: {exc.response.status_code}")
-            raise
+    result = mcp.mcp3_create_recipe(
+        name=RECIPE_NAME,
+        description=RECIPE_DESCRIPTION,
+        tags=[TAG_NAME],
+        ingredients=[],
+        instructions=[]
+    )
     
-    # Fallback : créer avec seulement le nom
-    print(f"Création de la recette avec seulement le nom...")
-    resp = client.post("/api/recipes", json={"name": RECIPE_NAME})
-    resp.raise_for_status()
-    slug = resp.json()
-    print(f"✓ Recette créée (slug: {slug})")
-    
-    # Essayer d'ajouter le tag via l'endpoint de liaison
-    print(f"Tentative d'ajout du tag à la recette...")
-    try:
-        # Récupérer l'ID de la recette
-        resp = client.get(f"/api/recipes/{slug}")
-        resp.raise_for_status()
-        recipe_id = resp.json().get("id")
-        
-        # Essayer d'ajouter le tag via l'endpoint de liaison
-        resp = client.post(f"/api/recipes/{recipe_id}/tags", json={"id": tag_id})
-        if resp.status_code == 200:
-            print(f"✓ Tag ajouté à la recette")
-    except Exception as exc:
-        print(f"⚠ Impossible d'ajouter le tag automatiquement: {exc}")
-    
-    print(f"⚠ L'API locale ne permet pas d'ajouter description lors de la création.")
-    print(f"   Vous devrez mettre à jour la description manuellement dans Mealie.")
-    return {"slug": slug, "name": RECIPE_NAME}
+    if result.get("success"):
+        slug = result.get("recipe_id")
+        print(f"✓ Recette créée avec succès (slug: {slug})")
+        return {"slug": slug, "name": RECIPE_NAME}
+    else:
+        print(f"❌ Erreur lors de la création: {result.get('error')}")
+        sys.exit(1)
 
 
 def main():
@@ -156,56 +131,35 @@ def main():
         sys.exit(1)
     
     try:
-        with get_client() as client:
-            # Vérifier la connexion
-            print("Vérification de la connexion à Mealie...")
-            try:
-                resp = client.get("/api/about")
-                resp.raise_for_status()
-                print(f"✓ Connecté à Mealie (version: {resp.json().get('version', 'inconnue')})")
-            except httpx.HTTPStatusError as exc:
-                if exc.response.status_code == 404:
-                    print("⚠ Endpoint /api/about non trouvé, tentative de continuer...")
-                else:
-                    raise
-            print()
+        # Vérifier la connexion
+        print("Vérification de la connexion à Mealie...")
+        recipes = mcp.mcp3_list_recipes()
+        print(f"✓ Connecté à Mealie ({len(recipes)} recettes trouvées)")
+        print()
+        
+        # Créer ou récupérer le tag
+        tag_id = get_or_create_tag(TAG_NAME)
+        print()
+        
+        # Créer la recette spéciale
+        recipe = create_nutrition_advisor_recipe(tag_id)
+        print()
+        
+        print("=" * 60)
+        print("✓ Configuration terminée avec succès")
+        print("=" * 60)
+        print()
+        print(f"Recette créée : {MEALIE_BASE_URL}/recipe/{recipe.get('slug')}")
+        print(f"Tag : {TAG_NAME}")
+        print(f"Action : {ADDON_UI_URL}")
+        print()
+        print("Vous pouvez maintenant trouver cette recette dans Mealie en")
+        print("recherchant le tag 'nutrition-addon' ou le nom '🔬 Nutrition Advisor'.")
             
-            # Créer ou récupérer le tag
-            tag_id = get_or_create_tag(client, TAG_NAME)
-            print()
-            
-            # Créer la recette spéciale
-            recipe = create_nutrition_advisor_recipe(client, tag_id)
-            print()
-            
-            print("=" * 60)
-            print("✓ Configuration terminée avec succès")
-            print("=" * 60)
-            print()
-            print(f"Recette créée : {MEALIE_BASE_URL}/recipe/{recipe.get('slug')}")
-            print(f"Tag : {TAG_NAME}")
-            print(f"Action : {ADDON_UI_URL}")
-            print()
-            print("Vous pouvez maintenant trouver cette recette dans Mealie en")
-            print("recherchant le tag 'nutrition-addon' ou le nom '🔬 Nutrition Advisor'.")
-            
-    except httpx.HTTPStatusError as exc:
-        print(f"❌ Erreur HTTP {exc.response.status_code}")
-        if exc.response.status_code == 401:
-            print("   Vérifiez que votre API key est correcte")
-        elif exc.response.status_code == 403:
-            print("   Vérifiez les permissions de votre API key")
-        elif exc.response.status_code == 404:
-            print("   Endpoint non trouvé, vérifiez l'URL de Mealie")
-        else:
-            print(f"   {exc.response.text[:200]}")
-        sys.exit(1)
-    except httpx.ConnectError:
-        print("❌ Erreur de connexion à Mealie")
-        print(f"   Vérifiez que Mealie est accessible à {MEALIE_BASE_URL}")
-        sys.exit(1)
     except Exception as exc:
         print(f"❌ Erreur: {exc}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
