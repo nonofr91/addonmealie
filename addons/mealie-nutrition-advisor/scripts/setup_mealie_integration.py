@@ -28,6 +28,8 @@ Gestionnaire de profils nutritionnels et planificateur de menus.
 Cette recette spéciale fournit un lien vers l'interface de gestion des profils 
 nutritionnels de l'addon mealie-nutrition-advisor.
 
+**[Ouvrir Nutrition Advisor →]({ADDON_UI_URL_PLACEHOLDER})**
+
 Fonctionnalités :
 - Gestion des profils des membres du foyer
 - Configuration des pathologies médicales
@@ -81,6 +83,11 @@ def get_or_create_tag(tag_name: str) -> str:
 
 def create_nutrition_advisor_recipe(tag_id: str) -> dict:
     """Crée la recette spéciale Nutrition Advisor via mcp_auth_wrapper."""
+    import requests
+    
+    # Remplacer le placeholder par la vraie URL
+    description_with_url = RECIPE_DESCRIPTION.replace("{ADDON_UI_URL_PLACEHOLDER}", ADDON_UI_URL)
+    
     # Chercher si la recette existe déjà
     print(f"Recherche de la recette '{RECIPE_NAME}'...")
     recipes = mcp.mcp3_list_recipes()
@@ -101,7 +108,7 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
     
     result = mcp.mcp3_create_recipe(
         name=RECIPE_NAME,
-        description=RECIPE_DESCRIPTION,
+        description=description_with_url,
         tags=[TAG_NAME],
         ingredients=[],
         instructions=[]
@@ -110,6 +117,7 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
     if result.get("success"):
         slug = result.get("recipe_id")
         print(f"✓ Recette créée avec succès (slug: {slug})")
+        print(f"✓ Lien vers l'UI ajouté dans la description (format markdown)")
         return {"slug": slug, "name": RECIPE_NAME}
     else:
         print(f"❌ Erreur lors de la création: {result.get('error')}")
