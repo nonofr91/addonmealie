@@ -32,16 +32,16 @@ RECIPE_NAME = "🔬 Nutrition Advisor"
 RECIPE_DESCRIPTION = """
 Gestionnaire de profils nutritionnels et planificateur de menus.
 
-Cette recette spéciale fournit un lien vers l'interface de gestion des profils 
+Cette recette spéciale sert de point d'entrée vers l'interface de gestion des profils 
 nutritionnels de l'addon mealie-nutrition-advisor.
-
-**[Ouvrir Nutrition Advisor →]({ADDON_UI_URL_PLACEHOLDER})**
 
 Fonctionnalités :
 - Gestion des profils des membres du foyer
 - Configuration des pathologies médicales
 - Planification des présences hebdomadaires
 - Calcul nutritionnel personnalisé
+
+**Note** : L'interface de l'addon sera accessible une fois l'UI démarrée.
 """
 TAG_NAME = "nutrition-addon"
 
@@ -133,9 +133,6 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
     """Crée la recette spéciale Nutrition Advisor via mcp_auth_wrapper."""
     import requests
     
-    # Remplacer le placeholder par la vraie URL
-    description_with_url = RECIPE_DESCRIPTION.replace("{ADDON_UI_URL_PLACEHOLDER}", ADDON_UI_URL)
-    
     # Chercher si la recette existe déjà
     print(f"Recherche de la recette '{RECIPE_NAME}'...")
     recipes = mcp.mcp3_list_recipes()
@@ -156,7 +153,7 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
     
     result = mcp.mcp3_create_recipe(
         name=RECIPE_NAME,
-        description=description_with_url,
+        description=RECIPE_DESCRIPTION,
         tags=[TAG_NAME],
         ingredients=[],
         instructions=[]
@@ -165,7 +162,6 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
     if result.get("success"):
         slug = result.get("recipe_id")
         print(f"✓ Recette créée avec succès (slug: {slug})")
-        print(f"✓ Lien vers l'UI ajouté dans la description (format markdown)")
         
         # Nettoyer les champs inutiles pour une recette spéciale
         print(f"Nettoyage des champs inutiles...")

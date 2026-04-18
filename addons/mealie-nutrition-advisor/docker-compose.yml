@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "mealie_nutrition_advisor.api", "start"]
     networks:
-      - mealie-network
+      - mealie-dev
 
   nutrition-ui:
     build:
@@ -52,5 +52,5 @@ services:
       - mealie-network
 
 networks:
-  mealie-network:
+  mealie-dev:
     external: true
