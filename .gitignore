@@ -2,6 +2,7 @@
 recipe_env/
 scraper_env/
 __pycache__/
+.windsurf/
 *.py[cod]
 *.pyo
 *.pyd
@@ -20,12 +21,10 @@ build/
 logs/
 tmp/
 data/generated/
-quality_reports/
 workflow_reports/
 import_reports/
 scraped_data/
 structured_data/
-scraped_images/
 .DS_Store
 # MCP config files with sensitive credentials
 mcp_config*.json

@@ -1,0 +1,172 @@
+{
+  "generated_at": "2026-04-15T19:19:01.201018",
+  "global_score": 84.26666666666667,
+  "status": "BON",
+  "level_scores": {
+    "structural": 86.66666666666667,
+    "content": 74.0,
+    "business": 95.55555555555556
+  },
+  "detailed_results": {
+    "structural": {
+      "scraped_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "statistics_present": true,
+        "recipe_fields": [
+          "25%"
+        ],
+        "issues": [
+          "Champs des recettes incomplets"
+        ],
+        "score": 80.0
+      },
+      "structured_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "mealie_format": true,
+        "uuids_valid": true,
+        "time_format_valid": true,
+        "issues": [],
+        "score": 100.0
+      },
+      "import_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "statistics_present": true,
+        "recipe_ids_valid": false,
+        "issues": [
+          "IDs de recettes invalides"
+        ],
+        "score": 80.0
+      },
+      "overall_score": 86.66666666666667
+    },
+    "content": {
+      "duplicates": {
+        "total_recipes": 1,
+        "unique_names": 1,
+        "unique_content": 1,
+        "duplicate_groups": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "time_consistency": {
+        "total_recipes": 1,
+        "consistent_times": 1,
+        "inconsistent_times": [],
+        "parsing_errors": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "ingredient_quality": {
+        "total_recipes": 1,
+        "total_ingredients": 6,
+        "specific_ingredients": 6,
+        "generic_ingredients": 0,
+        "parsed_correctly": 6,
+        "generic_examples": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "instruction_quality": {
+        "total_recipes": 1,
+        "total_instructions": 7,
+        "detailed_instructions": 4,
+        "vague_instructions": 3,
+        "valid_format": 7,
+        "vague_examples": [
+          "laisser refroidir....",
+          "laisser au froid....",
+          "bon appétit !!!..."
+        ],
+        "issues": [
+          "Taux d'instructions vagues élevé: 42.9%"
+        ],
+        "score": 70.0
+      },
+      "image_quality": {
+        "score": 0,
+        "issues": [
+          "Erreur analyse images: 'list' object has no attribute 'startswith'"
+        ]
+      },
+      "overall_score": 74.0
+    },
+    "business": {
+      "nutrition_quality": {
+        "total_recipes": 1,
+        "with_nutrition": 1,
+        "valid_calories": 0,
+        "valid_macros": 1,
+        "calorie_ranges": {
+          "low": 0,
+          "medium": 0,
+          "high": 0
+        },
+        "issues": [],
+        "score": 60.00000000000001
+      },
+      "category_quality": {
+        "total_recipes": 1,
+        "with_categories": 1,
+        "with_tags": 1,
+        "unique_categories": [
+          "Plat Principal"
+        ],
+        "unique_tags": [
+          "recette",
+          "fait_maison"
+        ],
+        "avg_categories_per_recipe": 1.0,
+        "avg_tags_per_recipe": 2.0,
+        "issues": [],
+        "score": 160.0
+      },
+      "usability_quality": {
+        "total_structured": 1,
+        "total_imported": 1,
+        "import_success_rate": 1.0,
+        "complete_recipes": 1,
+        "agent_ready": 0,
+        "issues": [
+          "1 recettes non prêtes pour les agents"
+        ],
+        "score": 66.66666666666667
+      },
+      "overall_score": 95.55555555555556
+    }
+  },
+  "total_issues": 5,
+  "critical_issues": [
+    {
+      "level": "structural",
+      "category": "import_data",
+      "issue": "IDs de recettes invalides"
+    },
+    {
+      "level": "content",
+      "category": "image_quality",
+      "issue": "Erreur analyse images: 'list' object has no attribute 'startswith'"
+    }
+  ],
+  "recommendations": [
+    "📝 Améliorer la qualité du contenu (réduire les doublons, corriger les temps)",
+    "🖼️ Implémenter la recherche d'images réelles avec mcp2_search_images"
+  ],
+  "next_steps": [
+    "1. Corriger les problèmes structurels",
+    "2. Améliorer la qualité du contenu",
+    "4. Relancer la vérification complète",
+    "5. Valider pour la production"
+  ],
+  "duration": 0.001421,
+  "files_analyzed": {
+    "scraped": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow/scraped_data/latest_scraped_recipes_mcp.json",
+    "structured": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow/structured_data/optimized_structured_recipes_20260415_191900.json",
+    "import": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow/import_reports/mealie_import_report_20260415_191901.json"
+  }
+}

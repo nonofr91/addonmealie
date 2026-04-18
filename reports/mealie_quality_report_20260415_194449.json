@@ -1,0 +1,166 @@
+{
+  "generated_at": "2026-04-15T19:44:49.911483",
+  "global_score": 92.8,
+  "status": "EXCELLENT",
+  "level_scores": {
+    "structural": 86.66666666666667,
+    "content": 95.33333333333333,
+    "business": 95.55555555555556
+  },
+  "detailed_results": {
+    "structural": {
+      "scraped_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "statistics_present": true,
+        "recipe_fields": [
+          "25%"
+        ],
+        "issues": [
+          "Champs des recettes incomplets"
+        ],
+        "score": 80.0
+      },
+      "structured_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "mealie_format": true,
+        "uuids_valid": true,
+        "time_format_valid": true,
+        "issues": [],
+        "score": 100.0
+      },
+      "import_data": {
+        "valid_json": true,
+        "metadata_present": true,
+        "recipes_present": true,
+        "statistics_present": true,
+        "recipe_ids_valid": false,
+        "issues": [
+          "IDs de recettes invalides"
+        ],
+        "score": 80.0
+      },
+      "overall_score": 86.66666666666667
+    },
+    "content": {
+      "duplicates": {
+        "total_recipes": 1,
+        "unique_names": 1,
+        "unique_content": 1,
+        "duplicate_groups": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "time_consistency": {
+        "total_recipes": 1,
+        "consistent_times": 1,
+        "inconsistent_times": [],
+        "parsing_errors": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "ingredient_quality": {
+        "total_recipes": 1,
+        "total_ingredients": 8,
+        "specific_ingredients": 8,
+        "generic_ingredients": 0,
+        "parsed_correctly": 8,
+        "generic_examples": [],
+        "issues": [],
+        "score": 100.0
+      },
+      "instruction_quality": {
+        "total_recipes": 1,
+        "total_instructions": 12,
+        "detailed_instructions": 8,
+        "vague_instructions": 4,
+        "valid_format": 12,
+        "vague_examples": [
+          "rincer les lentilles....",
+          "attendez qu'elle soit dorée....",
+          "ajoutez la pomme...."
+        ],
+        "issues": [],
+        "score": 76.66666666666666
+      },
+      "image_quality": {
+        "total_recipes": 1,
+        "recipes_with_images": 1,
+        "valid_urls": 1,
+        "local_paths": 0,
+        "missing_images": 0,
+        "image_sources": [
+          "url"
+        ],
+        "issues": [],
+        "score": 100.0
+      },
+      "overall_score": 95.33333333333333
+    },
+    "business": {
+      "nutrition_quality": {
+        "total_recipes": 1,
+        "with_nutrition": 1,
+        "valid_calories": 0,
+        "valid_macros": 1,
+        "calorie_ranges": {
+          "low": 0,
+          "medium": 0,
+          "high": 0
+        },
+        "issues": [],
+        "score": 60.00000000000001
+      },
+      "category_quality": {
+        "total_recipes": 1,
+        "with_categories": 1,
+        "with_tags": 1,
+        "unique_categories": [
+          "Salade"
+        ],
+        "unique_tags": [
+          "recette",
+          "fait_maison"
+        ],
+        "avg_categories_per_recipe": 1.0,
+        "avg_tags_per_recipe": 2.0,
+        "issues": [],
+        "score": 160.0
+      },
+      "usability_quality": {
+        "total_structured": 1,
+        "total_imported": 1,
+        "import_success_rate": 1.0,
+        "complete_recipes": 1,
+        "agent_ready": 0,
+        "issues": [
+          "1 recettes non prêtes pour les agents"
+        ],
+        "score": 66.66666666666667
+      },
+      "overall_score": 95.55555555555556
+    }
+  },
+  "total_issues": 3,
+  "critical_issues": [
+    {
+      "level": "structural",
+      "category": "import_data",
+      "issue": "IDs de recettes invalides"
+    }
+  ],
+  "recommendations": [],
+  "next_steps": [
+    "✅ Workflow validé - Prêt pour la production",
+    "🚀 Déployer en environnement réel"
+  ],
+  "duration": 0.00137,
+  "files_analyzed": {
+    "scraped": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow/scraped_data/latest_scraped_recipes_mcp.json",
+    "structured": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow/structured_data/optimized_structured_recipes_20260415_194449.json",
+    "import": "/home/bruno/CascadeProjects/windsurf-project-7/mealie-workflow/import_reports/mealie_import_report_20260415_194449.json"
+  }
+}
