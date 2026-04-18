@@ -26,4 +26,4 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 [project.optional-dependencies]
-dev = ["black>=24.1.0", "isort>=5.13.0"]
+dev = ["black>=26.3.1", "isort>=5.13.0"]
