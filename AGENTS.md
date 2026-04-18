@@ -9,6 +9,8 @@ Ce dépôt sert à construire des améliorations externes pour Mealie.
 - **Garder un repo propre** : pas de prolifération de scripts `final_*`, `debug_*`, `copy`, `v2`
 - **Conserver une seule source de vérité** par capacité métier
 
+> **Note** : Pour utiliser ce dépôt comme starter pack Windsurf pour un autre projet, adapter AGENTS.md avec l'objectif, les zones canoniques et les contraintes du nouveau domaine. Voir docs/specs/starter-pack-bootstrap.md pour la procédure de bootstrap.
+
 ## Règles de conduite pour Cascade
 
 ### 1. Source de vérité

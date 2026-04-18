@@ -28,3 +28,5 @@ structured_data/
 .DS_Store
 # MCP config files with sensitive credentials
 mcp_config*.json
+# Windsurf local configuration files
+docs/specs/starter-pack-bootstrap.md
