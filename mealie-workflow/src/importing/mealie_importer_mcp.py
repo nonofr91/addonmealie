@@ -169,6 +169,15 @@ class MealieImporterMCP:
 
                     # Texte complet pour le champ note (fallback si unit/food non résolus)
                     display_text = ingredient.get('display') or ingredient.get('originalText') or display_note or ''
+                    
+                    # Déduplication : si display contient le même texte deux fois, le nettoyer
+                    if display_text and isinstance(display_text, str):
+                        text_parts = display_text.strip().split()
+                        if len(text_parts) > 1 and len(text_parts) % 2 == 0:
+                            mid = len(text_parts) // 2
+                            if text_parts[:mid] == text_parts[mid:]:
+                                display_text = ' '.join(text_parts[:mid])
+                    
                     # unit/food transmis comme strings → résolus en objets Mealie dans mcp_auth_wrapper
                     formatted_ingredients.append({
                         "quantity": quantity,
