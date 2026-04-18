@@ -1,48 +1,48 @@
 # 🍽️ Mealie Import Addon
 
-An external addon for [Mealie](https://mealie.io) that adds a **Web UI + REST API** to import recipes from any cooking website (Marmiton, 750g, …) and audit recipe quality — without modifying your Mealie instance.
+Addon externe pour [Mealie](https://mealie.io) qui ajoute une **Web UI + REST API** pour importer des recettes depuis n'importe quel site de cuisine (Marmiton, 750g, …) et auditer la qualité des recettes — sans modifier votre instance Mealie.
 
-## Features
+## Fonctionnalités
 
-- **📥 Import by URL** — paste any recipe URL, the addon scrapes, structures and imports it into Mealie automatically
-- **🔍 Quality audit** — detects missing images, placeholder CDN images, test tags, and probable duplicates
-- **🔧 Auto-fix** — uploads a relevant fallback image (via TheMealDB), removes unwanted tags
-- **🌐 Web UI** (Streamlit) — simple 3-tab interface: Import / Audit / Status
+- **📥 Import par URL** — collez n'importe quelle URL de recette, l'addon scrape, structure et importe automatiquement dans Mealie
+- **🔍 Audit de qualité** — détecte les images manquantes, les images CDN placeholder, les tags de test, et les doublons probables
+- **🔧 Auto-correction** — télécharge une image de remplacement pertinente (via TheMealDB), supprime les tags indésirables
+- **🌐 Web UI** (Streamlit) — interface simple à 3 onglets : Import / Audit / Statut
 - **⚡ REST API** (FastAPI) — `POST /import`, `GET /audit`, `POST /audit/fix`, `GET /status`
-- **🤖 AI optional** — works without OpenAI key (JSON-LD fallback); enable AI for better recipe structuring
-- **🐳 Standalone Docker image** — no dependency on the host filesystem
+- **🤖 IA optionnelle** — fonctionne sans clé OpenAI (fallback JSON-LD) ; activez l'IA pour un meilleur structuration des recettes
+- **🐳 Image Docker autonome** — aucune dépendance au système de fichiers hôte
 
-## Quick start (Docker Compose)
+## Démarrage rapide (Docker Compose)
 
 ```bash
-# 1. Clone and configure
+# 1. Cloner et configurer
 git clone https://github.com/nonofr91/addonmealie.git
 cd addonmealie/addons/mealie-import-orchestrator
 cp .env.template .env
-# Edit .env with your Mealie URL and API key
+# Éditez .env avec votre URL Mealie et clé API
 
-# 2. Start
+# 2. Démarrer
 docker compose up -d
 
-# 3. Open
+# 3. Ouvrir
 #   Web UI  → http://localhost:8501
 #   API     → http://localhost:8000
 #   API docs → http://localhost:8000/docs
 ```
 
-## Environment variables
+## Variables d'environnement
 
 ```env
-# Required
+# Obligatoire
 MEALIE_BASE_URL=https://your-mealie-instance.example.com
 MEALIE_API_KEY=your-mealie-api-key
 
-# Optional — AI structuring (JSON-LD fallback if absent)
+# Optionnel — structuration IA (fallback JSON-LD si absent)
 # OPENAI_API_KEY=sk-...
 # OPENAI_BASE_URL=https://api.openai.com/v1
 # OPENAI_MODEL=gpt-4.1-mini
 
-# Optional — secure the addon API
+# Optionnel — sécuriser l'API de l'addon
 # ADDON_SECRET_KEY=change-me-in-production
 
 ADDON_API_PORT=8000
@@ -50,9 +50,9 @@ ADDON_UI_PORT=8501
 LOG_LEVEL=INFO
 ```
 
-## Deploy on Coolify / self-hosted
+## Déploiement sur Coolify / self-hosted
 
-Use the pre-built Docker image:
+Utilisez l'image Docker pré-construite :
 
 ```bash
 docker pull ghcr.io/nonofr91/mealie-import-addon:latest
@@ -63,29 +63,29 @@ docker run -d \
   ghcr.io/nonofr91/mealie-import-addon:latest
 ```
 
-## REST API
+## API REST
 
-| Method | Endpoint | Description |
+| Méthode | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/health` | Liveness check |
-| `GET` | `/status` | Mealie connectivity + AI status |
-| `POST` | `/import` | `{"url": "..."}` → import recipe |
-| `GET` | `/audit` | Scan all recipes, return issues |
-| `POST` | `/audit/fix` | Scan + auto-fix issues |
+| `GET` | `/health` | Vérification de l'état |
+| `GET` | `/status` | Connectivité Mealie + statut IA |
+| `POST` | `/import` | `{"url": "..."}` → importer une recette |
+| `GET` | `/audit` | Scanner toutes les recettes, retourner les problèmes |
+| `POST` | `/audit/fix` | Scanner + auto-correction des problèmes |
 
-Optional auth: pass `X-Addon-Key: <ADDON_SECRET_KEY>` header.
+Auth optionnelle : passez l'en-tête `X-Addon-Key: <ADDON_SECRET_KEY>`.
 
-## Run locally (dev)
+## Exécution locale (dev)
 
 ```bash
-# Install
+# Installer
 pip install -e .
 
-# Start API (port 8002)
+# Démarrer l'API (port 8002)
 MEALIE_BASE_URL=http://localhost:9925 MEALIE_API_KEY=<key> \
   python -m uvicorn mealie_import_orchestrator.api:app --port 8002
 
-# Start UI (port 8502)
+# Démarrer l'UI (port 8502)
 ADDON_API_URL=http://localhost:8002 \
   python -m streamlit run src/mealie_import_orchestrator/ui.py --server.port 8502
 ```
@@ -106,12 +106,12 @@ addons/mealie-import-orchestrator/
 └── .env.template       ← Config template
 ```
 
-The addon communicates with Mealie **exclusively via its public API** — no modifications to the Mealie image or database.
+L'addon communique avec Mealie **exclusivement via son API publique** — aucune modification de l'image Mealie ou de la base de données.
 
-## Supported recipe sources
+## Sources de recettes supportées
 
-Tested: Marmiton, 750g  
-Should work: any site with JSON-LD `Recipe` schema
+Testés : Marmiton, 750g  
+Devrait fonctionner : tout site avec schema JSON-LD `Recipe`
 
 ## License
 
