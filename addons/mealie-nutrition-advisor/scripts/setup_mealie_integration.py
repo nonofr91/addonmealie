@@ -64,41 +64,81 @@ def get_or_create_tag(client: httpx.Client, tag_name: str) -> str:
     resp = client.post("/api/organizers/tags", json={"name": tag_name})
     resp.raise_for_status()
     tag_id = resp.json().get("id")
-    print(f"✓ Tag '{tag_name}' créé (ID: {tag_id})")
+    print(f"✓ Tag '{tag_NAME}' créé (ID: {tag_id})")
     return tag_id
 
 
 def create_nutrition_advisor_recipe(client: httpx.Client, tag_id: str) -> dict:
     """Crée la recette spéciale Nutrition Advisor."""
-    # Étape 1 : Créer la recette (POST avec seulement le nom)
-    print(f"Création de la recette '{RECIPE_NAME}'...")
+    # Chercher si la recette existe déjà
+    print(f"Recherche de la recette '{RECIPE_NAME}'...")
+    resp = client.get("/api/recipes", params={"perPage": 200})
+    resp.raise_for_status()
+    recipes = resp.json().get("items", [])
+    
+    existing_slug = None
+    for recipe in recipes:
+        if recipe.get("name") == RECIPE_NAME:
+            existing_slug = recipe.get("slug")
+            print(f"✓ Recette existante trouvée (slug: {existing_slug})")
+            break
+    
+    if existing_slug:
+        print(f"⚠ La recette existe déjà. Supprimez-la d'abord dans Mealie ou utilisez un autre nom.")
+        return {"slug": existing_slug, "name": RECIPE_NAME}
+    
+    # Créer une nouvelle recette avec tous les champs en une seule fois
+    print(f"Création de la recette '{RECIPE_NAME}' avec description et tag...")
+    recipe_data = {
+        "name": RECIPE_NAME,
+        "description": RECIPE_DESCRIPTION,
+        "tags": [TAG_NAME],
+        "recipeIngredient": [],
+        "recipeInstructions": []
+    }
+    
+    try:
+        # Essayer POST avec payload complet
+        resp = client.post("/api/recipes", json=recipe_data)
+        if resp.status_code == 200:
+            recipe = resp.json()
+            print(f"✓ Recette créée avec succès (slug: {recipe.get('slug')})")
+            return recipe
+        else:
+            print(f"⚠ POST retourné {resp.status_code}")
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 422:
+            print(f"⚠ Erreur 422 - payload non accepté")
+            print(f"   L'API locale n'accepte que {'name': ...} lors de la création")
+        else:
+            print(f"⚠ Erreur POST: {exc.response.status_code}")
+            raise
+    
+    # Fallback : créer avec seulement le nom
+    print(f"Création de la recette avec seulement le nom...")
     resp = client.post("/api/recipes", json={"name": RECIPE_NAME})
     resp.raise_for_status()
     slug = resp.json()
     print(f"✓ Recette créée (slug: {slug})")
     
-    # Étape 2 : Mettre à jour la recette avec le payload complet
-    recipe_data = {
-        "name": RECIPE_NAME,
-        "description": RECIPE_DESCRIPTION,
-        "tags": [TAG_NAME]
-    }
-    
-    print(f"Mise à jour de la recette avec description...")
+    # Essayer d'ajouter le tag via l'endpoint de liaison
+    print(f"Tentative d'ajout du tag à la recette...")
     try:
-        resp = client.patch(f"/api/recipes/{slug}", json=recipe_data)
+        # Récupérer l'ID de la recette
+        resp = client.get(f"/api/recipes/{slug}")
         resp.raise_for_status()
-        recipe = resp.json()
-        print(f"✓ Recette mise à jour")
-        return recipe
-    except httpx.HTTPStatusError as exc:
-        if exc.response.status_code == 400:
-            print(f"⚠ Erreur PATCH (instance Mealie locale incompatible)")
-            print(f"   La recette a été créée mais la mise à jour a échoué.")
-            print(f"   Slug: {slug}")
-            print(f"   Vous devrez mettre à jour la recette manuellement dans Mealie.")
-            return {"slug": slug, "name": RECIPE_NAME}
-        raise
+        recipe_id = resp.json().get("id")
+        
+        # Essayer d'ajouter le tag via l'endpoint de liaison
+        resp = client.post(f"/api/recipes/{recipe_id}/tags", json={"id": tag_id})
+        if resp.status_code == 200:
+            print(f"✓ Tag ajouté à la recette")
+    except Exception as exc:
+        print(f"⚠ Impossible d'ajouter le tag automatiquement: {exc}")
+    
+    print(f"⚠ L'API locale ne permet pas d'ajouter description lors de la création.")
+    print(f"   Vous devrez mettre à jour la description manuellement dans Mealie.")
+    return {"slug": slug, "name": RECIPE_NAME}
 
 
 def main():
