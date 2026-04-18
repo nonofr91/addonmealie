@@ -91,5 +91,22 @@ Avant de conclure une tâche, vérifier :
 - Préférer une règle versionnée dans le repo à une instruction implicite en mémoire
 - Utiliser `.windsurf/rules/` pour les contraintes courtes, durables et ciblées par type de fichier ou domaine
 
+## Patterns et erreurs fréquentes à éviter
+
+### Commandes système
+- Sur Linux, utiliser `python3` au lieu de `python`
+- Dans bash, ne jamais utiliser `cd`, utiliser le paramètre `Cwd`
+- Toujours vérifier `git status` avant les opérations destructrices
+
+### Git
+- `git mv` ne fonctionne que pour les fichiers versionnés
+- Pour les fichiers non versionnés, utiliser `mv` puis `git add`
+- Vérifier si un fichier est dans `.gitignore` avant de tenter de le lire
+
+### Gouvernance
+- Préférer les MCP disponibles avant d'écrire une logique ad hoc
+- Ne jamais hardcoder de secrets, tokens ou URLs sensibles
+- Utiliser MCP GitHub pour vérifier l'état distant après les opérations importantes
+
 ---
 *Ce dépôt doit évoluer vers une plateforme d'addons externes pour Mealie, maintenable, publiable et sans pollution structurelle, et servir de starter pack Windsurf réutilisable pour d'autres projets.*
