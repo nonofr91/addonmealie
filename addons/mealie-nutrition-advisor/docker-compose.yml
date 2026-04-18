@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   nutrition-api:
-    build:
-      context: ..
-      dockerfile: addons/mealie-nutrition-advisor/Dockerfile
+    build: .
     container_name: mealie-nutrition-api
     environment:
       - MEALIE_BASE_URL=${SERVICE_URL_MEALIE:-http://mealie:9000}
@@ -26,16 +24,14 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - ../addons/mealie-nutrition-advisor/data:/app/addons/mealie-nutrition-advisor/data
+      - ./data:/app/data
     restart: unless-stopped
-    command: ["python", "-m", "mealie_nutrition_advisor.api", "start"]
+    command: ["uvicorn", "mealie_nutrition_advisor.api:app", "--host", "0.0.0.0", "--port", "8001"]
     networks:
       - mealie-dev
 
   nutrition-ui:
-    build:
-      context: ..
-      dockerfile: addons/mealie-nutrition-advisor/Dockerfile
+    build: .
     container_name: mealie-nutrition-ui
     environment:
       - ADDON_API_URL=http://nutrition-api:8001
@@ -47,9 +43,9 @@ services:
     depends_on:
       - nutrition-api
     restart: unless-stopped
-    command: ["python", "-m", "mealie_nutrition_advisor.ui"]
+    command: ["streamlit", "run", "src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
     networks:
-      - mealie-network
+      - mealie-dev
 
 networks:
   mealie-dev:
