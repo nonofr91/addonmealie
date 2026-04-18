@@ -93,6 +93,23 @@ class MealieSetup:
             )
             response.raise_for_status()
 
+            # Cleanup useless fields for special recipe
+            logger.info("Cleaning up useless fields for special recipe")
+            response = requests.patch(
+                f"{self.mealie_base_url}/api/recipes/{slug}",
+                headers=self.headers,
+                json={
+                    "recipeServings": 0,
+                    "totalTime": None,
+                    "prepTime": None,
+                    "cookTime": None,
+                    "performTime": None,
+                    "recipeYield": None,
+                    "recipeYieldQuantity": None
+                },
+            )
+            response.raise_for_status()
+
             logger.info(f"Created fake recipe: {slug}")
             return slug
 
