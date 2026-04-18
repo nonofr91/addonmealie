@@ -4,8 +4,9 @@ Addon externe Mealie pour :
 - **Calculer** les valeurs nutritionnelles des recettes (kcal, protéines, lipides, glucides, fibres)
 - **Enrichir** les recettes existantes sans données nutritionnelles
 - **Intégrer** automatiquement le calcul nutritionnel lors des imports
-- **Gérer** les profils des membres du foyer avec besoins caloriques personnalisés
-- **Planifier** des menus hebdomadaires compatibles avec chaque profil
+- **Gérer** les profils avancés des membres du foyer (pathologies, présence hebdomadaire)
+- **Planifier** des menus hebdomadaires compatibles avec chaque profil et absences
+- **Intégrer** avec le planning natif de Mealie (recipe_id UUID)
 
 > Cet addon ne modifie pas l'image Mealie. Il passe exclusivement par l'API publique.
 
@@ -72,6 +73,12 @@ Endpoints disponibles :
 - `GET /nutrition/scan` - Scanner les recettes sans nutrition
 - `POST /nutrition/enrich` - Enrichir toutes les recettes (optionnel `force=true`)
 - `POST /nutrition/recipe/{slug}` - Enrichir une recette spécifique
+- `GET /profiles` - Lister tous les profils du foyer
+- `GET /profiles/{name}` - Détails d'un profil spécifique
+- `POST /profiles` - Créer un nouveau profil
+- `PUT /profiles/{name}` - Mettre à jour un profil
+- `DELETE /profiles/{name}` - Supprimer un profil
+- `POST /profiles/{name}/presence` - Mettre à jour le pattern de présence hebdomadaire
 
 ### UI Streamlit
 
@@ -87,7 +94,7 @@ python3 -m mealie_nutrition_advisor.ui
 
 L'UI est accessible sur http://localhost:8502 avec 3 tabs :
 - **Enrichissement** - Scanner et enrichir les recettes
-- **Profils** - Gestion des profils du foyer (CLI uniquement pour le moment)
+- **Profils** - Gestion complète des profils du foyer (ajout, modification, suppression, pathologies, présence)
 - **Statut** - Statut de l'addon
 
 ### Docker
@@ -123,9 +130,19 @@ Lors de l'import d'une recette, l'addon nutrition sera appelé automatiquement p
 
 ## Profils du foyer
 
-Éditer `config/household_profiles.json` ou utiliser `mealie-nutrition profile add`.
+Éditer `config/household_profiles.json`, utiliser `mealie-nutrition profile add`, ou l'UI Streamlit.
 
-Champs supportés : nom, âge, sexe, poids, taille, niveau d'activité, objectif (perte/maintien/prise de poids), restrictions alimentaires, cibles numériques personnalisées.
+Champs supportés :
+- **Basiques** : nom, âge, sexe, poids, taille, niveau d'activité
+- **Objectifs** : perte/maintien/prise de poids, cibles numériques personnalisées
+- **Santé** : pathologies médicales (diabète, hypertension, cholestérol, goutte, reflux, insuffisance rénale)
+- **Restrictions** : restrictions alimentaires, allergies
+- **Présence** : planning hebdomadaire fixe des repas pris par jour (absences gérées)
+
+Les pathologies médicales ajustent automatiquement les cibles nutritionnelles :
+- Hypertension : sodium réduit à 1500mg/jour
+- Diabète : glucides limités à 45% des calories
+- Insuffisance rénale : sodium réduit à 2000mg/jour
 
 ## Structure
 

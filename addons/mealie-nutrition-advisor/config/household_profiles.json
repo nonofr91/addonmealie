@@ -11,6 +11,18 @@
       "goal": "maintenance",
       "dietary_restrictions": [],
       "allergies": [],
+      "medical_conditions": [],
+      "weekly_presence": {
+        "presence": {
+          "monday": ["breakfast", "lunch", "dinner"],
+          "tuesday": ["breakfast", "lunch", "dinner"],
+          "wednesday": ["breakfast", "lunch", "dinner"],
+          "thursday": ["breakfast", "lunch", "dinner"],
+          "friday": ["breakfast", "lunch", "dinner"],
+          "saturday": ["breakfast", "lunch", "dinner"],
+          "sunday": ["breakfast", "lunch", "dinner"]
+        }
+      },
       "custom_targets": {}
     },
     {
@@ -23,6 +35,18 @@
       "goal": "weight_loss",
       "dietary_restrictions": [],
       "allergies": ["cacahuètes"],
+      "medical_conditions": ["hypertension"],
+      "weekly_presence": {
+        "presence": {
+          "monday": ["breakfast", "dinner"],
+          "tuesday": ["breakfast", "lunch", "dinner"],
+          "wednesday": ["breakfast", "dinner"],
+          "thursday": ["breakfast", "lunch", "dinner"],
+          "friday": ["breakfast", "dinner"],
+          "saturday": ["breakfast", "lunch", "dinner"],
+          "sunday": ["breakfast", "lunch", "dinner"]
+        }
+      },
       "custom_targets": {
         "protein_g_per_day": 130
       }
@@ -37,6 +61,18 @@
       "goal": "maintenance",
       "dietary_restrictions": [],
       "allergies": [],
+      "medical_conditions": [],
+      "weekly_presence": {
+        "presence": {
+          "monday": ["breakfast", "lunch", "dinner"],
+          "tuesday": ["breakfast", "lunch", "dinner"],
+          "wednesday": ["breakfast", "lunch", "dinner"],
+          "thursday": ["breakfast", "lunch", "dinner"],
+          "friday": ["breakfast", "lunch", "dinner"],
+          "saturday": ["breakfast", "lunch"],
+          "sunday": ["breakfast", "lunch"]
+        }
+      },
       "custom_targets": {}
     }
   ]

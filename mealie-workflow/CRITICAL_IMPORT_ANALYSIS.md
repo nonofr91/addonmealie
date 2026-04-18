@@ -4,7 +4,7 @@
 
 ### 🔍 **URL Testée**
 ```
-https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr/g/famille-saint-hilaire-arasa/r/quiche-lorraine-1
+https://your-mealie-instance.com/g/your-cookbook/r/recipe-slug
 ```
 
 ### ❌ **Problèmes Identifiés**

@@ -53,6 +53,16 @@ class DietaryRestriction(str, Enum):
     low_fodmap = "low_fodmap"
 
 
+class MedicalCondition(str, Enum):
+    """Pathologies médicales courantes impactant l'alimentation."""
+    diabetes = "diabetes"
+    hypertension = "hypertension"
+    high_cholesterol = "high_cholesterol"
+    gout = "gout"
+    gerd = "gerd"  # Reflux gastrique
+    kidney_disease = "kidney_disease"
+
+
 class MacroTargets(BaseModel):
     """Cibles nutritionnelles journalières personnalisées."""
 
@@ -62,6 +72,40 @@ class MacroTargets(BaseModel):
     carb_pct_max: Optional[float] = Field(None, ge=0, le=100, description="% calories glucides max")
     fiber_g_per_day: Optional[float] = Field(None, ge=0, description="Fibres cibles g/jour")
     sodium_mg_per_day_max: Optional[float] = Field(None, ge=0, description="Sodium max mg/jour")
+
+
+class DayOfWeek(str, Enum):
+    """Jours de la semaine."""
+    monday = "monday"
+    tuesday = "tuesday"
+    wednesday = "wednesday"
+    thursday = "thursday"
+    friday = "friday"
+    saturday = "saturday"
+    sunday = "sunday"
+
+
+class WeeklyPresencePattern(BaseModel):
+    """Pattern de présence hebdomadaire d'un membre."""
+
+    presence: dict[DayOfWeek, list[str]] = Field(
+        default_factory=lambda: {
+            day: ["breakfast", "lunch", "dinner"] for day in DayOfWeek
+        },
+        description="Mapping jour → liste des repas pris (breakfast/lunch/dinner)",
+    )
+
+    def is_present(self, day: DayOfWeek, meal_type: str) -> bool:
+        """Vérifie si le membre est présent à un repas donné."""
+        return meal_type in self.presence.get(day, [])
+
+    def get_present_days(self) -> list[DayOfWeek]:
+        """Retourne les jours où le membre prend au moins un repas."""
+        return [day for day, meals in self.presence.items() if meals]
+
+    def meals_per_day(self, day: DayOfWeek) -> int:
+        """Nombre de repas pris un jour donné."""
+        return len(self.presence.get(day, []))
 
 
 class MemberProfile(BaseModel):
@@ -76,6 +120,8 @@ class MemberProfile(BaseModel):
     goal: Goal = Goal.maintenance
     dietary_restrictions: list[DietaryRestriction] = Field(default_factory=list)
     allergies: list[str] = Field(default_factory=list, description="Liste d'allergènes en texte libre")
+    medical_conditions: list[MedicalCondition] = Field(default_factory=list, description="Pathologies médicales")
+    weekly_presence: WeeklyPresencePattern = Field(default_factory=WeeklyPresencePattern)
     custom_targets: MacroTargets = Field(default_factory=MacroTargets)
 
     def bmr(self) -> float:
@@ -103,18 +149,35 @@ class MemberProfile(BaseModel):
         factor = {Goal.weight_loss: 1.5, Goal.maintenance: 0.8, Goal.muscle_gain: 2.0}[self.goal]
         return round(self.weight_kg * factor, 0)
 
+    def recommended_sodium_mg(self) -> float:
+        """Sodium recommandé : ajusté selon les pathologies."""
+        if self.custom_targets.sodium_mg_per_day_max is not None:
+            return self.custom_targets.sodium_mg_per_day_max
+
+        base_sodium = 2300.0
+        if MedicalCondition.hypertension in self.medical_conditions:
+            base_sodium = 1500.0
+        elif MedicalCondition.kidney_disease in self.medical_conditions:
+            base_sodium = 2000.0
+        return base_sodium
+
     def recommended_fat_g(self) -> float:
         """Lipides recommandés : 25–35% des calories cibles."""
         pct = self.custom_targets.fat_pct_max or 30.0
         return round(self.target_calories() * (pct / 100.0) / 9.0, 0)
 
     def recommended_carb_g(self) -> float:
-        """Glucides recommandés : calories restantes après protéines et lipides."""
+        """Glucides recommandés : calories restantes après protéines et lipides, ajusté selon pathologies."""
         protein_kcal = self.recommended_protein_g() * 4
         fat_kcal = self.recommended_fat_g() * 9
         carb_kcal = max(self.target_calories() - protein_kcal - fat_kcal, 0)
+
         if self.custom_targets.carb_pct_max:
             carb_kcal = min(carb_kcal, self.target_calories() * self.custom_targets.carb_pct_max / 100.0)
+
+        if MedicalCondition.diabetes in self.medical_conditions:
+            carb_kcal = min(carb_kcal, self.target_calories() * 0.45)
+
         return round(carb_kcal / 4.0, 0)
 
     def summary(self) -> dict:

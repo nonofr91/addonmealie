@@ -10,7 +10,9 @@ from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
 
 from .config import NutritionConfig, NutritionConfigError
+from .models.profile import HouseholdProfile, MemberProfile, WeeklyPresencePattern
 from .orchestrator import NutritionOrchestrator, NutritionOrchestratorError
+from .profiles.manager import ProfileManager
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -47,6 +49,7 @@ def _check_key(key: str | None = Security(_API_KEY_HEADER)) -> None:
 # ---------------------------------------------------------------------------
 
 _orchestrator: NutritionOrchestrator | None = None
+_profile_manager: ProfileManager | None = None
 
 
 def _get_orchestrator() -> NutritionOrchestrator:
@@ -57,6 +60,13 @@ def _get_orchestrator() -> NutritionOrchestrator:
         except NutritionConfigError as exc:
             raise HTTPException(status_code=503, detail=f"Addon misconfigured: {exc}") from exc
     return _orchestrator
+
+
+def _get_profile_manager() -> ProfileManager:
+    global _profile_manager
+    if _profile_manager is None:
+        _profile_manager = ProfileManager()
+    return _profile_manager
 
 
 # ---------------------------------------------------------------------------
@@ -70,6 +80,18 @@ class EnrichRequest(BaseModel):
 
 class RecipeEnrichRequest(BaseModel):
     slug: str
+
+
+class ProfileCreateRequest(BaseModel):
+    member: MemberProfile
+
+
+class ProfileUpdateRequest(BaseModel):
+    member: MemberProfile
+
+
+class PresenceUpdateRequest(BaseModel):
+    presence: WeeklyPresencePattern
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +144,91 @@ def enrich_recipe(slug: str, _: None = Security(_check_key)) -> dict[str, Any]:
         return orch.enrich_recipe(slug)
     except NutritionOrchestratorError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/profiles", tags=["profiles"])
+def get_profiles(_: None = Security(_check_key)) -> dict[str, Any]:
+    """List all household profiles."""
+    pm = _get_profile_manager()
+    try:
+        household = pm.household
+        return {
+            "success": True,
+            "household_name": household.household_name,
+            "members": [m.model_dump() for m in household.members],
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/profiles/{name}", tags=["profiles"])
+def get_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Get a specific member profile by name."""
+    pm = _get_profile_manager()
+    try:
+        member = pm.get_member(name)
+        if not member:
+            raise HTTPException(status_code=404, detail=f"Member '{name}' not found")
+        return {"success": True, "member": member.model_dump()}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/profiles", tags=["profiles"])
+def create_profile(req: ProfileCreateRequest, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Create a new member profile."""
+    pm = _get_profile_manager()
+    try:
+        pm.add_member(req.member)
+        return {"success": True, "member": req.member.model_dump()}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.put("/profiles/{name}", tags=["profiles"])
+def update_profile(name: str, req: ProfileUpdateRequest, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Update an existing member profile."""
+    pm = _get_profile_manager()
+    try:
+        existing = pm.get_member(name)
+        if not existing:
+            raise HTTPException(status_code=404, detail=f"Member '{name}' not found")
+        pm.add_member(req.member)
+        return {"success": True, "member": req.member.model_dump()}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.delete("/profiles/{name}", tags=["profiles"])
+def delete_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Delete a member profile."""
+    pm = _get_profile_manager()
+    try:
+        deleted = pm.remove_member(name)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Member '{name}' not found")
+        return {"success": True, "deleted": name}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/profiles/{name}/presence", tags=["profiles"])
+def update_presence(name: str, req: PresenceUpdateRequest, _: None = Security(_check_key)) -> dict[str, Any]:
+    """Update the weekly presence pattern for a member."""
+    pm = _get_profile_manager()
+    try:
+        pm.set_weekly_presence(name, req.presence)
+        return {"success": True, "presence": req.presence.model_dump()}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

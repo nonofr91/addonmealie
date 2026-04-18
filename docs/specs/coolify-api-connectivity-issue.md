@@ -1,8 +1,8 @@
-# Problème de connectivité API Coolify
+# Problème de connectivité API Production
 
 ## Symptôme
 
-L’instance Coolify (`https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr/api`) retourne du HTML frontend (404) au lieu de JSON pour tous les endpoints API.
+L’instance production (`https://your-mealie-instance.com/api`) retourne du HTML frontend (404) au lieu de JSON pour tous les endpoints API.
 
 ## Endpoints testés
 
@@ -17,7 +17,7 @@ Tous les endpoints retournent le même HTML frontend :
 Le problème n’est pas spécifique aux nouveaux endpoints foods/units. Il affecte tous les endpoints API, y compris ceux qui existaient avant la restauration.
 
 **Cause probable** :
-- L’instance Coolify n’expose pas l’API publique correctement
+- L’instance production n’expose pas l’API publique correctement
 - Configuration de routage incorrecte (frontend au lieu de backend)
 - Problème de configuration nginx/proxy
 - Instance en mode maintenance ou dégradé
@@ -26,7 +26,7 @@ Le problème n’est pas spécifique aux nouveaux endpoints foods/units. Il affe
 
 - **Implémentation MCP** : ✅ Correcte et fonctionnelle
 - **Serveur MCP** : ✅ Démarre correctement, 51 tools exposés
-- **Connexion API** : ❌ Échoue sur l’instance Coolify spécifique
+- **Connexion API** : ❌ Échoue sur l’instance production spécifique
 
 ## Recommandations
 
@@ -45,17 +45,17 @@ Configurer MCP avec :
 }
 ```
 
-### Option 2 : Vérifier la configuration Coolify
-- Vérifier les variables d’environnement Coolify
+### Option 2 : Vérifier la configuration production
+- Vérifier les variables d’environnement production
 - Vérifier la configuration nginx/proxy
 - Vérifier que l’API est activée dans l’instance
 
-### Option 3 : Utiliser une autre instance Coolify
-Tester contre une autre instance Coolify avec connectivité API confirmée.
+### Option 3 : Utiliser une autre instance production
+Tester contre une autre instance production avec connectivité API confirmée.
 
 ## État de la restauration
 
-La restauration des tools foods/units est **complète et fonctionnelle** du point de vue code. Le problème est purement environnemental (connectivité API Coolify).
+La restauration des tools foods/units est **complète et fonctionnelle** du point de vue code. Le problème est purement environnemental (connectivité API production).
 
 **Outils restaurés** :
 - 7 tools foods/units dans le serveur MCP

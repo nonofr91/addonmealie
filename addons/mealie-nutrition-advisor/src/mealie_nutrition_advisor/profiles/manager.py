@@ -8,12 +8,15 @@ from pathlib import Path
 
 from ..models.profile import (
     ActivityLevel,
+    DayOfWeek,
     DietaryRestriction,
     Goal,
     HouseholdProfile,
     MacroTargets,
+    MedicalCondition,
     MemberProfile,
     Sex,
+    WeeklyPresencePattern,
 )
 
 logger = logging.getLogger(__name__)
@@ -92,6 +95,20 @@ class ProfileManager:
             return True
         return False
 
+    def set_weekly_presence(self, name: str, pattern: WeeklyPresencePattern) -> None:
+        """Définit le pattern de présence hebdomadaire d'un membre."""
+        member = self.get_member(name)
+        if not member:
+            raise ValueError(f"Membre '{name}' non trouvé")
+        member.weekly_presence = pattern
+        self.save()
+        logger.info("Pattern de présence mis à jour pour: %s", name)
+
+    def get_weekly_presence(self, name: str) -> WeeklyPresencePattern | None:
+        """Retourne le pattern de présence hebdomadaire d'un membre."""
+        member = self.get_member(name)
+        return member.weekly_presence if member else None
+
     def print_summary(self) -> None:
         """Affiche un résumé des profils du foyer."""
         h = self.household
@@ -101,7 +118,9 @@ class ProfileManager:
             s = m.summary()
             print(f"  👤 {s['name']} ({m.age} ans, {m.sex.value}, {m.weight_kg} kg, {m.height_cm} cm)")
             print(f"     BMR: {s['bmr_kcal']} kcal | TDEE: {s['tdee_kcal']} kcal | Cible: {s['target_calories_kcal']} kcal")
-            print(f"     Protéines: {s['recommended_protein_g']}g | Lipides: {s['recommended_fat_g']}g | Glucides: {s['recommended_carb_g']}g")
+            print(f"     Protéines: {s['recommended_protein_g']}g | Lipides: {s['recommended_fat_g']}g | Glucides: {s['recommended_carb_g']}g | Sodium: {round(m.recommended_sodium_mg())}mg")
+            if m.medical_conditions:
+                print(f"     Pathologies: {', '.join(c.value for c in m.medical_conditions)}")
             if s["restrictions"]:
                 print(f"     Régimes: {', '.join(s['restrictions'])}")
             if s["allergies"]:
@@ -129,6 +148,17 @@ class ProfileManager:
         allergies_raw = input("Allergies (virgule-séparées, vide si aucune) : ").strip()
         allergies = [a.strip() for a in allergies_raw.split(",") if a.strip()]
 
+        print(f"Pathologies disponibles : {[c.value for c in MedicalCondition]}")
+        conditions_raw = input("Pathologies (virgule-séparées, vide si aucune) : ").strip()
+        conditions = []
+        for c_raw in conditions_raw.split(","):
+            c_clean = c_raw.strip()
+            if c_clean:
+                try:
+                    conditions.append(MedicalCondition(c_clean))
+                except ValueError:
+                    print(f"⚠️  Pathologie inconnue: {c_clean} (ignorée)")
+
         member = MemberProfile(
             name=name,
             age=age,
@@ -138,6 +168,7 @@ class ProfileManager:
             activity_level=activity,
             goal=goal,
             allergies=allergies,
+            medical_conditions=conditions,
         )
         self.add_member(member)
         print(f"\n✅  {name} ajouté(e). Cible: {member.target_calories()} kcal/jour")

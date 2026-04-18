@@ -10,8 +10,8 @@ Système pour basculer facilement entre les instances Mealie (local vs Coolify).
 - **Token** : MEALIE_LOCAL_API_KEY
 - **Stack** : packages/mealie-dev-stack/
 
-### coolify (Production)
-- **URL** : https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr
+### production (Production)
+- **URL** : https://your-mealie-instance.com
 - **Usage** : Validation et packaging réel
 - **Token** : MEALIE_API_KEY
 
@@ -41,10 +41,10 @@ export MEALIE_BASE_URL="http://127.0.0.1:9925"
 export MEALIE_LOCAL_API_KEY="<votre_token_local>"
 ```
 
-**Profil Coolify** :
+**Profil production** :
 ```bash
-export MEALIE_BASE_URL="https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr"
-export MEALIE_API_KEY="<votre_token_coolify>"
+export MEALIE_BASE_URL="https://your-mealie-instance.com"
+export MEALIE_API_KEY="<votre_token_production>"
 ```
 
 ## Workflow recommandé
@@ -67,14 +67,14 @@ Le wrapper MCP (`mealie-workflow/mcp_auth_wrapper.py`) utilise automatiquement l
 ## Distinction importante : MCP Cascade vs Wrapper HTTP
 
 ### MCP Cascade (Outils Cascade)
-- **Instance actuelle** : Coolify (https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr)
+- **Instance actuelle** : Production (https://your-mealie-instance.com)
 - **Usage** : Outils Cascade dans l’IDE (mcp3_create_recipe, mcp3_get_recipes, etc.)
 - **Configuration** : Externe à ce workspace, configurée dans l’environnement Cascade
-- **Recettes actuelles** : 29 recettes sur l’instance Coolify
+- **Recettes actuelles** : Dépend de l’instance
 - **Limitation** : Ne peut pas être reconfiguré depuis ce workspace
 
 ### Wrapper HTTP (mealie-import-orchestrator)
-- **Instance actuelle** : Dépend du profil actif (local ou coolify)
+- **Instance actuelle** : Dépend du profil actif (local ou production)
 - **Usage** : Import via addon mealie-import-orchestrator
 - **Configuration** : Via système de profils (`mealie-workflow/config/mealie-profiles.json`)
 - **Recettes actuelles** : Dépend de l’instance ciblée
@@ -82,5 +82,5 @@ Le wrapper MCP (`mealie-workflow/mcp_auth_wrapper.py`) utilise automatiquement l
 
 ### Workflow recommandé
 1. **Développement local** : Utiliser le profil `local` avec le wrapper HTTP
-2. **Validation Coolify** : Basculer vers le profil `coolify` pour tester en conditions réelles
-3. **Outils Cascade** : Utiliser les MCP Cascade pour interagir avec l’instance Coolify uniquement
+2. **Validation production** : Basculer vers le profil `production` pour tester en conditions réelles
+3. **Outils Cascade** : Utiliser les MCP Cascade pour interagir avec l’instance production uniquement

@@ -11,7 +11,7 @@ from typing import Optional
 
 from ..mealie_sync import MealieClient
 from ..models.menu import DayMenu, MealSlot, MealType, WeekMenu
-from ..models.profile import HouseholdProfile
+from ..models.profile import DayOfWeek, HouseholdProfile
 from ..profiles.manager import ProfileManager
 from .allergy_filter import AllergyFilter
 from .scorer import RecipeScorer, _parse_mealie_nutrition
@@ -21,6 +21,20 @@ logger = logging.getLogger(__name__)
 MEAL_STRUCTURE: list[MealType] = [MealType.breakfast, MealType.lunch, MealType.dinner]
 
 REPORTS_DIR = Path(__file__).parent.parent.parent.parent / "data" / "menu_plans"
+
+
+def _date_to_day_of_week(d: date) -> DayOfWeek:
+    """Convertit une date en DayOfWeek."""
+    day_map = {
+        0: DayOfWeek.monday,
+        1: DayOfWeek.tuesday,
+        2: DayOfWeek.wednesday,
+        3: DayOfWeek.thursday,
+        4: DayOfWeek.friday,
+        5: DayOfWeek.saturday,
+        6: DayOfWeek.sunday,
+    }
+    return day_map[d.weekday()]
 
 
 class MenuPlanner:
@@ -70,9 +84,19 @@ class MenuPlanner:
 
         for day_offset in range(7):
             day_date = start_date + timedelta(days=day_offset)
+            day_of_week = _date_to_day_of_week(day_date)
             day_menu = DayMenu(date=day_date)
 
             for meal_type in MEAL_STRUCTURE:
+                present_members = [
+                    m for m in household.members
+                    if m.weekly_presence.is_present(day_of_week, meal_type.value)
+                ]
+
+                if not present_members:
+                    logger.debug("Aucun membre présent pour %s %s", day_of_week.value, meal_type.value)
+                    continue
+
                 recipe = self._pick_recipe(
                     recipe_details, household, meal_type, used_slugs
                 )
@@ -81,6 +105,7 @@ class MenuPlanner:
 
                 slug = recipe.get("slug", "")
                 name = recipe.get("name", slug)
+                recipe_id = recipe.get("id")
                 used_slugs.add(slug)
 
                 nutrition = _parse_mealie_nutrition(recipe)
@@ -91,13 +116,14 @@ class MenuPlanner:
                     servings = 1
                 per_serving = nutrition.scale(1.0 / servings)
 
-                household_score = self.scorer.score_for_household(recipe, household.members, meal_type)
+                household_score = self.scorer.score_for_household(recipe, present_members, meal_type)
 
                 slot = MealSlot(
                     meal_type=meal_type,
                     recipe_slug=slug,
+                    recipe_id=recipe_id,
                     recipe_name=name,
-                    servings=len(household.members),
+                    servings=len(present_members),
                     nutrition_per_serving=per_serving,
                     score=household_score,
                 )
@@ -144,14 +170,18 @@ class MenuPlanner:
         return random.choice(top)[0]
 
     def _push_to_mealie(self, week: WeekMenu) -> None:
-        """Pousse le planning dans Mealie via l'API."""
+        """Pousse le planning dans Mealie."""
         entries = week.to_mealie_mealplan_entries()
-        ok = self.client.create_mealplan_bulk(entries)
-        if ok:
-            logger.info("Planning poussé dans Mealie: %d entrées", len(entries))
+        success_count = 0
+        for entry in entries:
+            ok = self.client.create_mealplan(entry)
+            if ok:
+                success_count += 1
+        if success_count == len(entries):
+            logger.info("Planning poussé dans Mealie: %d entrées", success_count)
             print(f"✅ Planning semaine {week.week_label} créé dans Mealie ({len(entries)} repas)")
         else:
-            logger.warning("Échec de la création du planning dans Mealie")
+            logger.warning("Push partiel dans Mealie: %d/%d entrées", success_count, len(entries))
 
     def _save_report(self, week: WeekMenu, household: HouseholdProfile) -> None:
         """Sauvegarde le rapport JSON du menu."""

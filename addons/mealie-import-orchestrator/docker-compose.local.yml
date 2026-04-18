@@ -1,0 +1,15 @@
+services:
+  mealie-addon:
+    image: 'mealie-import-addon:0.4.13'
+    environment:
+      - 'MEALIE_BASE_URL=http://host.docker.internal:9925'
+      - 'MEALIE_API_KEY=${MEALIE_API_KEY}'
+      - 'ADDON_SECRET_KEY='
+      - 'ADDON_API_URL=http://localhost:8000'
+      - 'ENABLE_NUTRITION=true'
+      - 'AI_PROVIDER=mock'
+      - 'USE_AI_ESTIMATION=false'
+      - 'LOG_LEVEL=INFO'
+    ports:
+      - "8000:8000"
+      - "8501:8501"

@@ -23,6 +23,7 @@ class MealSlot(BaseModel):
 
     meal_type: MealType
     recipe_slug: str
+    recipe_id: Optional[str] = None
     recipe_name: str
     servings: int = 1
     nutrition_per_serving: NutritionFacts = Field(default_factory=NutritionFacts)
@@ -59,15 +60,19 @@ class WeekMenu(BaseModel):
         return round(sum(d.total_calories() for d in self.days) / len(self.days), 1)
 
     def to_mealie_mealplan_entries(self) -> list[dict]:
-        """Formate pour mcp3_create_mealplan_bulk."""
+        """Formate pour l'API Mealie mealplan bulk."""
         entries = []
         for day in self.days:
             for slot in day.slots:
-                entries.append({
+                entry = {
                     "date": day.date.isoformat(),
                     "entry_type": slot.meal_type.value,
-                    "title": slot.recipe_name,
-                })
+                }
+                if slot.recipe_id:
+                    entry["recipe_id"] = slot.recipe_id
+                else:
+                    entry["title"] = slot.recipe_name
+                entries.append(entry)
         return entries
 
 

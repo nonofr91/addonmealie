@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from ..models.profile import DietaryRestriction, HouseholdProfile, MemberProfile
+from ..models.profile import DietaryRestriction, HouseholdProfile, MemberProfile, MedicalCondition
 
 RESTRICTION_KEYWORDS: dict[DietaryRestriction, list[str]] = {
     DietaryRestriction.vegetarian: [
@@ -24,6 +24,26 @@ RESTRICTION_KEYWORDS: dict[DietaryRestriction, list[str]] = {
     ],
     DietaryRestriction.lactose_free: [
         "lait", "beurre", "crème", "fromage", "yaourt",
+    ],
+}
+
+MEDICAL_KEYWORDS: dict[MedicalCondition, list[str]] = {
+    MedicalCondition.gout: [
+        "viande rouge", "boeuf", "agneau", "veau", "porc",
+        "foie", "rognons", "abats",
+        "sardine", "anchois", "maquereau", "hareng",
+        "crevette", "crabe", "homard", "langouste", "moule", "coquille",
+        "bière", "alcool",
+    ],
+    MedicalCondition.gerd: [
+        "piment", "chili", "poivre", "curry", "cayenne",
+        "citron", "orange", "pamplemousse", "tomate", "vinaigre",
+        "café", "thé", "chocolat", "alcool", "menthe",
+        "ail", "oignon",
+    ],
+    MedicalCondition.kidney_disease: [
+        "banane", "avocat", "épinard", "pomme de terre",
+        "noix", "amande", "cacahuète",
     ],
 }
 
@@ -53,10 +73,29 @@ def _contains(texts: list[str], keywords: list[str]) -> list[str]:
 class AllergyFilter:
     """Filtre les recettes incompatibles avec les profils du foyer."""
 
+    def is_safe_for_medical_conditions(self, recipe: dict, member: MemberProfile) -> tuple[bool, str]:
+        """
+        Vérifie si la recette est compatible avec les pathologies médicales du membre.
+        Retourne (safe, reason).
+        """
+        if not member.medical_conditions:
+            return True, ""
+
+        texts = _ingredient_texts(recipe)
+        full_text = " ".join(texts)
+
+        for condition in member.medical_conditions:
+            keywords = MEDICAL_KEYWORDS.get(condition, [])
+            found = _contains(texts, keywords)
+            if found:
+                return False, f"pathologie {condition.value}: {', '.join(found[:3])}"
+
+        return True, ""
+
     def is_safe_for_member(self, recipe: dict, member: MemberProfile) -> tuple[bool, str]:
         """
         Retourne (safe, reason).
-        safe=False si la recette contient un allergène ou ingrédient interdit.
+        safe=False si la recette contient un allergène, restriction alimentaire ou ingrédient incompatible avec une pathologie.
         """
         texts = _ingredient_texts(recipe)
         full_text = " ".join(texts)
@@ -71,6 +110,10 @@ class AllergyFilter:
             found = _contains(texts, keywords)
             if found:
                 return False, f"restriction {restriction.value}: {', '.join(found[:3])}"
+
+        medical_safe, medical_reason = self.is_safe_for_medical_conditions(recipe, member)
+        if not medical_safe:
+            return False, medical_reason
 
         return True, ""
 

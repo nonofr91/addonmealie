@@ -154,15 +154,102 @@ with tab_enrich:
 # ---------------------------------------------------------------------------
 with tab_profiles:
     st.header("Gestion des profils du foyer")
-    st.caption("Gérez les profils nutritionnels des membres du foyer (CLI uniquement pour le moment).")
-    
-    st.info("Pour gérer les profils, utilisez le CLI :")
-    st.code("mealie-nutrition profile list\nmealie-nutrition profile add\nmealie-nutrition profile remove --name <nom>")
-    
-    st.subheader("Fonctionnalités à venir dans l'UI :")
-    st.markdown("- Ajouter/Modifier/Supprimer des profils")
-    st.markdown("- Définir les besoins caloriques quotidiens")
-    st.markdown("- Gérer les restrictions alimentaires")
+    st.caption("Gérez les profils nutritionnels des membres du foyer.")
+
+    col_list, col_form = st.columns([1, 2])
+
+    with col_list:
+        st.subheader("Membres du foyer")
+        profiles_response = _api("GET", "/profiles")
+        
+        if profiles_response.get("success"):
+            members = profiles_response.get("members", [])
+            if not members:
+                st.info("Aucun membre. Ajoutez-en un via le formulaire.")
+            else:
+                for member in members:
+                    with st.expander(f"👤 {member.get('name', '?')}"):
+                        st.write(f"**Âge:** {member.get('age')} ans")
+                        st.write(f"**Sexe:** {member.get('sex')}")
+                        st.write(f"**Poids:** {member.get('weight_kg')} kg")
+                        st.write(f"**Taille:** {member.get('height_cm')} cm")
+                        st.write(f"**Activité:** {member.get('activity_level')}")
+                        st.write(f"**Objectif:** {member.get('goal')}")
+                        
+                        conditions = member.get('medical_conditions', [])
+                        if conditions:
+                            st.write(f"**Pathologies:** {', '.join(conditions)}")
+                        
+                        allergies = member.get('allergies', [])
+                        if allergies:
+                            st.write(f"**Allergies:** {', '.join(allergies)}")
+                        
+                        if st.button(f"Supprimer {member.get('name')}", key=f"del_{member.get('name')}"):
+                            delete_resp = _api("DELETE", f"/profiles/{member.get('name')}")
+                            if delete_resp.get("success"):
+                                st.success(f"{member.get('name')} supprimé")
+                                st.rerun()
+                            else:
+                                st.error(f"Erreur: {delete_resp.get('error')}")
+        else:
+            st.error(f"Erreur chargement profils: {profiles_response.get('error')}")
+
+    with col_form:
+        st.subheader("Ajouter/Modifier un membre")
+        
+        with st.form("profile_form"):
+            name = st.text_input("Nom *")
+            age = st.number_input("Âge *", min_value=1, max_value=120, value=30)
+            sex = st.selectbox("Sexe *", ["male", "female"])
+            weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=70.0)
+            height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=170.0)
+            activity = st.selectbox("Niveau d'activité", 
+                ["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"])
+            goal = st.selectbox("Objectif", ["weight_loss", "maintenance", "muscle_gain"])
+            
+            st.write("**Pathologies médicales**")
+            conditions = st.multiselect(
+                "Sélectionnez si applicable",
+                ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"]
+            )
+            
+            allergies_text = st.text_input("Allergies (séparées par virgules)")
+            allergies = [a.strip() for a in allergies_text.split(",") if a.strip()]
+            
+            submitted = st.form_submit_button("Enregistrer")
+            
+            if submitted and name:
+                member_data = {
+                    "name": name,
+                    "age": age,
+                    "sex": sex,
+                    "weight_kg": weight,
+                    "height_cm": height,
+                    "activity_level": activity,
+                    "goal": goal,
+                    "medical_conditions": conditions,
+                    "allergies": allergies,
+                    "dietary_restrictions": [],
+                    "weekly_presence": {
+                        "presence": {
+                            "monday": ["breakfast", "lunch", "dinner"],
+                            "tuesday": ["breakfast", "lunch", "dinner"],
+                            "wednesday": ["breakfast", "lunch", "dinner"],
+                            "thursday": ["breakfast", "lunch", "dinner"],
+                            "friday": ["breakfast", "lunch", "dinner"],
+                            "saturday": ["breakfast", "lunch", "dinner"],
+                            "sunday": ["breakfast", "lunch", "dinner"]
+                        }
+                    },
+                    "custom_targets": {}
+                }
+                
+                create_resp = _api("POST", "/profiles", json={"member": member_data})
+                if create_resp.get("success"):
+                    st.success(f"{name} ajouté avec succès")
+                    st.rerun()
+                else:
+                    st.error(f"Erreur: {create_resp.get('error')}")
 
 # ---------------------------------------------------------------------------
 # Tab 3 — Statut

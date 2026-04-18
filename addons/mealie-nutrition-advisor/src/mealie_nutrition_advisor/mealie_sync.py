@@ -1,4 +1,10 @@
-"""Sync computed nutrition data back to Mealie via REST API."""
+"""Sync computed nutrition data back to Mealie via REST API.
+
+Note: L'addon mealie-nutrition-advisor utilise l'API REST directe de Mealie pour
+maintenir son autonomie comme service Docker indépendant. L'intégration avec le
+MCP Mealie nécessiterait une refonte de l'architecture et n'est pas requise pour
+ce cas d'usage spécifique.
+"""
 
 from __future__ import annotations
 
@@ -98,12 +104,21 @@ class MealieClient:
             logger.warning("Patch nutrition échoué pour '%s': %s", slug, exc)
             return False
 
-    def create_mealplan_bulk(self, entries: list[dict]) -> bool:
-        """Crée plusieurs entrées de planning en une requête."""
+    def create_mealplan(self, entry: dict) -> bool:
+        """Crée une entrée de planning."""
         try:
+            payload = {
+                "date": entry.get("date"),
+                "entryType": entry.get("entry_type", "dinner"),
+            }
+            if entry.get("recipe_id"):
+                payload["recipeId"] = entry["recipe_id"]
+            if entry.get("title"):
+                payload["title"] = entry["title"]
+            
             resp = self._client.post(
-                f"{self.base_url}/api/households/mealplans/bulk",
-                json=entries,
+                f"{self.base_url}/api/households/mealplans",
+                json=payload,
             )
             resp.raise_for_status()
             return True

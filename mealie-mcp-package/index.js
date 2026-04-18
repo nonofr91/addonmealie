@@ -3,9 +3,16 @@
 const axios = require('axios');
 
 // Configuration
-const API_URL = "https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr/api";
-const API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MmMzYTg1Ny0yZjY3LTQ3NWQtYjNlYi1jMTg4MGJhN2NjOGIiLCJleHAiOjE3NzUxMjU5OTAsImlzcyI6Im1lYWxpZSJ9.L_Ig2zGzmH0xyDLm4N3O3aTUOhNsrbDklJYnytFt2PY";
-const COOKBOOK_ID = "20afabc1-5185-4f9b-a6d9-2a416b85786c";
+const API_URL = process.env.MEALIE_BASE_URL ? `${process.env.MEALIE_BASE_URL}/api` : "https://your-mealie-instance.com/api";
+const API_TOKEN = process.env.MEALIE_API_KEY || "";
+const COOKBOOK_ID = process.env.COOKBOOK_ID || "your-cookbook-id";
+
+if (!API_TOKEN) {
+    console.error("❌ ERREUR: MEALIE_API_KEY n'est pas définie");
+    console.error("   Exportez la variable d'environnement:");
+    console.error("   export MEALIE_API_KEY=your-api-key");
+    process.exit(1);
+}
 
 const headers = {
     "Authorization": `Bearer ${API_TOKEN}`,
