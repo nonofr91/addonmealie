@@ -32,16 +32,16 @@ RECIPE_NAME = "🔬 Nutrition Advisor"
 RECIPE_DESCRIPTION = """
 Gestionnaire de profils nutritionnels et planificateur de menus.
 
-Cette recette spéciale sert de point d'entrée vers l'interface de gestion des profils 
+Cette recette spéciale fournit un lien vers l'interface de gestion des profils 
 nutritionnels de l'addon mealie-nutrition-advisor.
+
+**[Ouvrir Nutrition Advisor →](http://localhost:8502)**
 
 Fonctionnalités :
 - Gestion des profils des membres du foyer
 - Configuration des pathologies médicales
 - Planification des présences hebdomadaires
 - Calcul nutritionnel personnalisé
-
-**Note** : L'interface de l'addon sera accessible une fois l'UI démarrée.
 """
 TAG_NAME = "nutrition-addon"
 
