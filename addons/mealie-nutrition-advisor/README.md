@@ -137,13 +137,13 @@ python3 addons/mealie-nutrition-advisor/scripts/setup_mealie_integration.py
 ```
 
 Ce script utilise `mcp_auth_wrapper` (depuis `mealie-workflow`) pour créer automatiquement :
-- Une recette spéciale "🔬 Nutrition Advisor" dans Mealie
-- Un tag `nutrition-addon` pour la retrouver facilement
-- La description complète de la recette avec un lien markdown vers l'UI
+- Un cookbook dédié "🔬 Nutrition Advisor" avec un queryFilter pour le tag `nutrition-addon`
+- Un tag `nutrition-addon` pour filtrer les recettes
+- Une recette spéciale "🔬 Nutrition Advisor" avec un lien markdown vers l'UI
 
-**Note** : Le script utilise le workflow Mealie correct (POST + PATCH) via `mcp_auth_wrapper`, ce qui permet de créer la recette avec tous les champs (description, tags, etc.) en une seule opération. Le lien vers l'UI est ajouté dans la description au format markdown : `**[Ouvrir Nutrition Advisor →](URL)**.
+**Note** : L'approche est identique au cookbook "📥 Import Recettes" - le cookbook utilise un queryFilter pour afficher automatiquement toutes les recettes taguées `nutrition-addon`. Le lien vers l'UI est ajouté dans la description de la recette spéciale au format markdown : `**[Ouvrir Nutrition Advisor →](URL)**.
 
-Vous pouvez ensuite trouver cette recette dans Mealie en recherchant le tag `nutrition-addon` ou le nom "🔬 Nutrition Advisor", et cliquer sur le lien dans la description pour ouvrir l'UI de l'addon.
+Vous pouvez ensuite trouver ce cookbook dans Mealie et cliquer sur le lien dans la description pour ouvrir l'UI de l'addon.
 
 ## Sources nutritionnelles
 

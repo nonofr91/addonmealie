@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Script pour créer une recette spéciale "Nutrition Advisor" dans Mealie
-avec une recipe action vers l'UI de l'addon.
+Script pour créer un cookbook dédié "Nutrition Advisor" dans Mealie
+avec une recette spéciale pointant vers l'UI de l'addon.
+
+Le cookbook utilise un queryFilter pour afficher automatiquement
+toutes les recettes taguées "nutrition-addon".
 
 Usage:
     python3 setup_mealie_integration.py
@@ -20,7 +23,11 @@ MEALIE_BASE_URL = os.environ.get("MEALIE_BASE_URL", "http://localhost:9000").rst
 MEALIE_API_KEY = os.environ.get("MEALIE_API_KEY", "")
 ADDON_UI_URL = os.environ.get("ADDON_UI_URL", "http://localhost:8502")
 
-# Configuration de la recette spéciale
+# Configuration
+COOKBOOK_NAME = "🔬 Nutrition Advisor"
+COOKBOOK_DESCRIPTION = "Gestionnaire de profils nutritionnels et planificateur de menus"
+COOKBOOK_SLUG = "nutrition-advisor"
+
 RECIPE_NAME = "🔬 Nutrition Advisor"
 RECIPE_DESCRIPTION = """
 Gestionnaire de profils nutritionnels et planificateur de menus.
@@ -79,6 +86,47 @@ def get_or_create_tag(tag_name: str) -> str:
     tag_id = resp.json().get("id")
     print(f"✓ Tag '{tag_name}' créé (ID: {tag_id})")
     return tag_id
+
+
+def get_or_create_cookbook(name: str, description: str, slug: str, tag_slug: str) -> str:
+    """Récupère ou crée un cookbook avec queryFilter pour filtrer par tag."""
+    import requests
+    
+    headers = {
+        "Authorization": f"Bearer {MEALIE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    api_url = f"{MEALIE_BASE_URL}/api"
+    
+    # Chercher le cookbook existant
+    resp = requests.get(f"{api_url}/households/cookbooks", params={"perPage": 200}, headers=headers)
+    resp.raise_for_status()
+    cookbooks = resp.json().get("items", [])
+    
+    for cookbook in cookbooks:
+        if cookbook.get("slug") == slug:
+            print(f"✓ Cookbook '{name}' trouvé (ID: {cookbook.get('id')})")
+            return cookbook.get("id")
+    
+    # Créer le cookbook s'il n'existe pas
+    print(f"Création du cookbook '{name}' avec queryFilter pour le tag '{tag_slug}'...")
+    resp = requests.post(
+        f"{api_url}/households/cookbooks",
+        headers=headers,
+        json={
+            "name": name,
+            "description": description,
+            "slug": slug,
+            "position": 0,
+            "public": False,
+            "queryFilterString": f'tags.slug IN ["{tag_slug}"]'
+        }
+    )
+    resp.raise_for_status()
+    cookbook_id = resp.json().get("id")
+    print(f"✓ Cookbook '{name}' créé (ID: {cookbook_id})")
+    return cookbook_id
 
 
 def create_nutrition_advisor_recipe(tag_id: str) -> dict:
@@ -149,6 +197,15 @@ def main():
         tag_id = get_or_create_tag(TAG_NAME)
         print()
         
+        # Créer ou récupérer le cookbook
+        cookbook_id = get_or_create_cookbook(
+            COOKBOOK_NAME,
+            COOKBOOK_DESCRIPTION,
+            COOKBOOK_SLUG,
+            TAG_NAME
+        )
+        print()
+        
         # Créer la recette spéciale
         recipe = create_nutrition_advisor_recipe(tag_id)
         print()
@@ -157,12 +214,13 @@ def main():
         print("✓ Configuration terminée avec succès")
         print("=" * 60)
         print()
-        print(f"Recette créée : {MEALIE_BASE_URL}/recipe/{recipe.get('slug')}")
+        print(f"Cookbook : {COOKBOOK_NAME}")
+        print(f"Recette : {MEALIE_BASE_URL}/recipe/{recipe.get('slug')}")
         print(f"Tag : {TAG_NAME}")
         print(f"Action : {ADDON_UI_URL}")
         print()
-        print("Vous pouvez maintenant trouver cette recette dans Mealie en")
-        print("recherchant le tag 'nutrition-addon' ou le nom '🔬 Nutrition Advisor'.")
+        print(f"Le cookbook '{COOKBOOK_NAME}' affichera automatiquement")
+        print(f"toutes les recettes taguées '{TAG_NAME}'.")
             
     except Exception as exc:
         print(f"❌ Erreur: {exc}")
