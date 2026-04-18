@@ -204,15 +204,60 @@ class MealieImporterMCP:
                         "referencedRecipe": None
                     })
             
+            # Validation et correction des temps pour éviter les incohérences
+            prep_time = structured_recipe.get("prepTime")
+            cook_time = structured_recipe.get("cookTime")
+            total_time = structured_recipe.get("totalTime")
+            
+            # Fonction pour convertir les temps en minutes
+            def time_to_minutes(time_str):
+                if not time_str:
+                    return 0
+                try:
+                    # Parser les temps au format Mealie (ex: "1 hour 30 minutes", "35 min")
+                    import re
+                    total = 0
+                    # Heures
+                    hours = re.findall(r'(\d+)\s*hour', time_str.lower())
+                    for h in hours:
+                        total += int(h) * 60
+                    # Minutes
+                    minutes = re.findall(r'(\d+)\s*min', time_str.lower())
+                    for m in minutes:
+                        total += int(m)
+                    return total
+                except:
+                    return 0
+            
+            # Vérifier et corriger les incohérences
+            prep_mins = time_to_minutes(prep_time)
+            cook_mins = time_to_minutes(cook_time)
+            total_mins = time_to_minutes(total_time)
+            
+            # Si totalTime est inférieur à prepTime + cookTime, le corriger
+            if total_mins > 0 and prep_mins + cook_mins > total_mins:
+                corrected_total = prep_mins + cook_mins
+                # Reconvertir en format Mealie
+                if corrected_total >= 60:
+                    hours = corrected_total // 60
+                    mins = corrected_total % 60
+                    if mins > 0:
+                        total_time = f"{hours} hour{'s' if hours > 1 else ''} {mins} minute{'s' if mins > 1 else ''}"
+                    else:
+                        total_time = f"{hours} hour{'s' if hours > 1 else ''}"
+                else:
+                    total_time = f"{corrected_total} minute{'s' if corrected_total > 1 else ''}"
+                logger.warning(f"Temps corrigés pour {structured_recipe['name']}: totalTime recalculé à {total_time}")
+            
             # Créer le payload complet (format Recipe-Input API 3.14)
             payload = {
                 "name": structured_recipe["name"],
                 "description": structured_recipe.get("description", ""),
                 
-                # Temps (None si non disponible — éviter les valeurs fallback mensongères)
-                "prepTime": structured_recipe.get("prepTime") or None,
-                "cookTime": structured_recipe.get("cookTime") or None,
-                "totalTime": structured_recipe.get("totalTime") or None,
+                # Temps (avec validation pour éviter les incohérences)
+                "prepTime": prep_time or None,
+                "cookTime": cook_time or None,
+                "totalTime": total_time or None,
                 
                 # Portions (format API 3.14)
                 "recipeServings": structured_recipe.get('recipeServings', 4),
