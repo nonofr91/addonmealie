@@ -95,6 +95,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: true
+          sbom: true
+
+      - name: Verify image exists
+        run: |
+          echo "Checking if image exists on GHCR..."
+          echo "Image: ${{ steps.meta.outputs.tags }}"
+          docker pull ${{ steps.meta.outputs.tags }} || echo "Failed to pull image"
+          docker images | grep mealie-nutrition-advisor || echo "Image not found locally"
 
       - name: Make package public
         run: |
