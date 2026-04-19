@@ -294,7 +294,7 @@ if ENABLE_PROFILE_UI:
                     if not name:
                         st.error("Le nom est obligatoire")
                     else:
-                        from .models.profile import MemberProfile
+                        from mealie_nutrition_advisor.models.profile import MemberProfile
                         member_data = {
                             "name": name,
                             "age": age,
