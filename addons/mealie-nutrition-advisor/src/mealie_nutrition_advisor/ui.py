@@ -184,36 +184,75 @@ with tab_profiles:
                         if allergies:
                             st.write(f"**Allergies:** {', '.join(allergies)}")
                         
-                        if st.button(f"Supprimer {member.get('name')}", key=f"del_{member.get('name')}"):
-                            delete_resp = _api("DELETE", f"/profiles/{member.get('name')}")
-                            if delete_resp.get("success"):
-                                st.success(f"{member.get('name')} supprimé")
+                        col_btns = st.columns(2)
+                        with col_btns[0]:
+                            if st.button(f"✏️ Modifier", key=f"edit_{member.get('name')}"):
+                                st.session_state["editing_member"] = member
                                 st.rerun()
-                            else:
-                                st.error(f"Erreur: {delete_resp.get('error')}")
+                        with col_btns[1]:
+                            if st.button(f"🗑️ Supprimer", key=f"del_{member.get('name')}"):
+                                delete_resp = _api("DELETE", f"/profiles/{member.get('name')}")
+                                if delete_resp.get("success"):
+                                    st.success(f"{member.get('name')} supprimé")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Erreur: {delete_resp.get('error')}")
         else:
             st.error(f"Erreur chargement profils: {profiles_response.get('error')}")
 
     with col_form:
-        st.subheader("Ajouter/Modifier un membre")
+        editing_member = st.session_state.get("editing_member")
+        if editing_member:
+            st.subheader(f"✏️ Modifier : {editing_member.get('name')}")
+            if st.button("❌ Annuler la modification"):
+                st.session_state.pop("editing_member", None)
+                st.rerun()
+        else:
+            st.subheader("Ajouter/Modifier un membre")
         
         with st.form("profile_form"):
-            name = st.text_input("Nom *")
-            age = st.number_input("Âge *", min_value=1, max_value=120, value=30)
-            sex = st.selectbox("Sexe *", ["male", "female"])
-            weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=70.0)
-            height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=170.0)
-            activity = st.selectbox("Niveau d'activité", 
-                ["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"])
-            goal = st.selectbox("Objectif", ["weight_loss", "maintenance", "muscle_gain"])
+            if editing_member:
+                name = st.text_input("Nom *", value=editing_member.get('name', ''))
+                age = st.number_input("Âge *", min_value=1, max_value=120, value=editing_member.get('age', 30))
+                sex = st.selectbox("Sexe *", ["male", "female"], index=0 if editing_member.get('sex') == 'male' else 1)
+                weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=editing_member.get('weight_kg', 70.0))
+                height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=editing_member.get('height_cm', 170.0))
+                activity = st.selectbox("Niveau d'activité", 
+                    ["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"],
+                    index=["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"].index(editing_member.get('activity_level', 'moderately_active')))
+                goal = st.selectbox("Objectif", ["weight_loss", "maintenance", "muscle_gain"],
+                    index=["weight_loss", "maintenance", "muscle_gain"].index(editing_member.get('goal', 'maintenance')))
+                conditions = st.multiselect(
+                    "Sélectionnez si applicable",
+                    ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"],
+                    default=editing_member.get('medical_conditions', [])
+                )
+                allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
+            else:
+                name = st.text_input("Nom *")
+                age = st.number_input("Âge *", min_value=1, max_value=120, value=30)
+                sex = st.selectbox("Sexe *", ["male", "female"])
+                weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=70.0)
+                height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=170.0)
+                activity = st.selectbox("Niveau d'activité", 
+                    ["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"])
+                goal = st.selectbox("Objectif", ["weight_loss", "maintenance", "muscle_gain"])
             
             st.write("**Pathologies médicales**")
-            conditions = st.multiselect(
-                "Sélectionnez si applicable",
-                ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"]
-            )
+            if editing_member:
+                conditions = st.multiselect(
+                    "Sélectionnez si applicable",
+                    ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"],
+                    default=editing_member.get('medical_conditions', [])
+                )
+                allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
+            else:
+                conditions = st.multiselect(
+                    "Sélectionnez si applicable",
+                    ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"]
+                )
+                allergies_text = st.text_input("Allergies (séparées par virgules)")
             
-            allergies_text = st.text_input("Allergies (séparées par virgules)")
             allergies = [a.strip() for a in allergies_text.split(",") if a.strip()]
             
             submitted = st.form_submit_button("Enregistrer")
@@ -244,12 +283,23 @@ with tab_profiles:
                     "custom_targets": {}
                 }
                 
-                create_resp = _api("POST", "/profiles", json={"member": member_data})
-                if create_resp.get("success"):
-                    st.success(f"{name} ajouté avec succès")
-                    st.rerun()
+                if editing_member:
+                    # Modification : utiliser PUT pour mettre à jour le membre existant
+                    update_resp = _api("PUT", f"/profiles/{editing_member.get('name')}", json={"member": member_data})
+                    if update_resp.get("success"):
+                        st.success(f"{name} modifié avec succès")
+                        st.session_state.pop("editing_member", None)
+                        st.rerun()
+                    else:
+                        st.error(f"Erreur: {update_resp.get('error')}")
                 else:
-                    st.error(f"Erreur: {create_resp.get('error')}")
+                    # Création : utiliser POST pour créer un nouveau membre
+                    create_resp = _api("POST", "/profiles", json={"member": member_data})
+                    if create_resp.get("success"):
+                        st.success(f"{name} ajouté avec succès")
+                        st.rerun()
+                    else:
+                        st.error(f"Erreur: {create_resp.get('error')}")
 
 # ---------------------------------------------------------------------------
 # Tab 3 — Statut
