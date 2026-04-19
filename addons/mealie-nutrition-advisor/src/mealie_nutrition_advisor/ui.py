@@ -21,6 +21,26 @@ if _SECRET:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _map_activity_level(value: str) -> str:
+    """Map English activity levels to French."""
+    mapping = {
+        "sedentary": "sédentaire",
+        "lightly_active": "peu_actif",
+        "moderately_active": "modérément_actif",
+        "very_active": "très_actif",
+        "extra_active": "extra_actif",
+    }
+    return mapping.get(value, value)
+
+def _map_goal(value: str) -> str:
+    """Map English goals to French."""
+    mapping = {
+        "weight_loss": "perte_de_poids",
+        "maintenance": "maintien",
+        "muscle_gain": "prise_de_masse",
+    }
+    return mapping.get(value, value)
+
 
 def _api(method: str, path: str, **kwargs) -> dict:
     try:
@@ -217,11 +237,13 @@ with tab_profiles:
                 sex = st.selectbox("Sexe *", ["male", "female"], index=0 if editing_member.get('sex') == 'male' else 1)
                 weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=editing_member.get('weight_kg', 70.0))
                 height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=editing_member.get('height_cm', 170.0))
+                activity_level_mapped = _map_activity_level(editing_member.get('activity_level', 'modérément_actif'))
                 activity = st.selectbox("Niveau d'activité",
                     ["sédentaire", "peu_actif", "modérément_actif", "très_actif", "extra_actif"],
-                    index=["sédentaire", "peu_actif", "modérément_actif", "très_actif", "extra_actif"].index(editing_member.get('activity_level', 'modérément_actif')))
+                    index=["sédentaire", "peu_actif", "modérément_actif", "très_actif", "extra_actif"].index(activity_level_mapped))
+                goal_mapped = _map_goal(editing_member.get('goal', 'maintien'))
                 goal = st.selectbox("Objectif", ["perte_de_poids", "maintien", "prise_de_masse"],
-                    index=["perte_de_poids", "maintien", "prise_de_masse"].index(editing_member.get('goal', 'maintien')))
+                    index=["perte_de_poids", "maintien", "prise_de_masse"].index(goal_mapped))
                 allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
             else:
                 name = st.text_input("Nom *")
