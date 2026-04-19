@@ -217,16 +217,11 @@ with tab_profiles:
                 sex = st.selectbox("Sexe *", ["male", "female"], index=0 if editing_member.get('sex') == 'male' else 1)
                 weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=editing_member.get('weight_kg', 70.0))
                 height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=editing_member.get('height_cm', 170.0))
-                activity = st.selectbox("Niveau d'activité", 
-                    ["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"],
-                    index=["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"].index(editing_member.get('activity_level', 'moderately_active')))
-                goal = st.selectbox("Objectif", ["weight_loss", "maintenance", "muscle_gain"],
-                    index=["weight_loss", "maintenance", "muscle_gain"].index(editing_member.get('goal', 'maintenance')))
-                conditions = st.multiselect(
-                    "Sélectionnez si applicable",
-                    ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"],
-                    default=editing_member.get('medical_conditions', [])
-                )
+                activity = st.selectbox("Niveau d'activité",
+                    ["sédentaire", "peu_actif", "modérément_actif", "très_actif", "extra_actif"],
+                    index=["sédentaire", "peu_actif", "modérément_actif", "très_actif", "extra_actif"].index(editing_member.get('activity_level', 'modérément_actif')))
+                goal = st.selectbox("Objectif", ["perte_de_poids", "maintien", "prise_de_masse"],
+                    index=["perte_de_poids", "maintien", "prise_de_masse"].index(editing_member.get('goal', 'maintien')))
                 allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
             else:
                 name = st.text_input("Nom *")
@@ -234,24 +229,26 @@ with tab_profiles:
                 sex = st.selectbox("Sexe *", ["male", "female"])
                 weight = st.number_input("Poids (kg) *", min_value=1.0, max_value=500.0, value=70.0)
                 height = st.number_input("Taille (cm) *", min_value=1.0, max_value=300.0, value=170.0)
-                activity = st.selectbox("Niveau d'activité", 
-                    ["sedentary", "lightly_active", "moderately_active", "very_active", "extra_active"])
-                goal = st.selectbox("Objectif", ["weight_loss", "maintenance", "muscle_gain"])
-            
+                activity = st.selectbox("Niveau d'activité",
+                    ["sédentaire", "peu_actif", "modérément_actif", "très_actif", "extra_actif"])
+                goal = st.selectbox("Objectif", ["perte_de_poids", "maintien", "prise_de_masse"])
+
             st.write("**Pathologies médicales**")
             if editing_member:
                 conditions = st.multiselect(
                     "Sélectionnez si applicable",
-                    ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"],
-                    default=editing_member.get('medical_conditions', [])
+                    ["diabète", "hypertension", "cholestérol_élevé", "goutte", "rfg", "maladie_rénale", "foie_gras", "colon_irritable"],
+                    default=editing_member.get('medical_conditions', []),
+                    key="conditions_edit"
                 )
-                allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
+                allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])), key="allergies_edit")
             else:
                 conditions = st.multiselect(
                     "Sélectionnez si applicable",
-                    ["diabetes", "hypertension", "high_cholesterol", "gout", "gerd", "kidney_disease"]
+                    ["diabète", "hypertension", "cholestérol_élevé", "goutte", "rfg", "maladie_rénale", "foie_gras", "colon_irritable"],
+                    key="conditions_new"
                 )
-                allergies_text = st.text_input("Allergies (séparées par virgules)")
+                allergies_text = st.text_input("Allergies (séparées par virgules)", key="allergies_new")
             
             allergies = [a.strip() for a in allergies_text.split(",") if a.strip()]
             
