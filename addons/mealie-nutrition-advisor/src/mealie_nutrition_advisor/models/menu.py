@@ -53,6 +53,7 @@ class WeekMenu(BaseModel):
     week_label: str = Field(..., description="ex: 2026-W16")
     days: list[DayMenu] = Field(default_factory=list)
     member_names: list[str] = Field(default_factory=list, description="Membres ciblés")
+    conflicts: list[dict] = Field(default_factory=list, description="Liste des conflits détectés")
 
     def average_daily_calories(self) -> float:
         if not self.days:

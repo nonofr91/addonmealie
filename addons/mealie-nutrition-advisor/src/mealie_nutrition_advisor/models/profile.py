@@ -61,6 +61,8 @@ class MedicalCondition(str, Enum):
     gout = "gout"
     gerd = "gerd"  # Reflux gastrique
     kidney_disease = "kidney_disease"
+    fatty_liver = "fatty_liver"  # Foie gras
+    irritable_bowel = "irritable_bowel"  # Colon irritable
 
 
 class MacroTargets(BaseModel):

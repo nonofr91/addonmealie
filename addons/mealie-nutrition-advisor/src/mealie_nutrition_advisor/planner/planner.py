@@ -98,7 +98,7 @@ class MenuPlanner:
                     continue
 
                 recipe = self._pick_recipe(
-                    recipe_details, household, meal_type, used_slugs
+                    recipe_details, household, meal_type, used_slugs, present_members
                 )
                 if recipe is None:
                     continue
@@ -107,6 +107,19 @@ class MenuPlanner:
                 name = recipe.get("name", slug)
                 recipe_id = recipe.get("id")
                 used_slugs.add(slug)
+
+                # Vérifier et collecter les conflits pour alerte
+                has_conflict, conflict_msg, individual_scores = self._check_multi_profile_conflict(
+                    recipe, present_members, meal_type
+                )
+                if has_conflict:
+                    week.conflicts.append({
+                        "date": day_date.isoformat(),
+                        "meal_type": meal_type.value,
+                        "recipe": name,
+                        "message": conflict_msg,
+                        "individual_scores": individual_scores,
+                    })
 
                 nutrition = _parse_mealie_nutrition(recipe)
                 servings_raw = recipe.get("recipeServings") or 1
@@ -152,22 +165,81 @@ class MenuPlanner:
         household: HouseholdProfile,
         meal_type: MealType,
         used_slugs: set[str],
+        present_members: list[MemberProfile],
     ) -> Optional[dict]:
         """Choisit la meilleure recette disponible pour un repas donné."""
         candidates = [r for r in recipes if r.get("slug") not in used_slugs]
         if not candidates:
             candidates = [r for r in recipes]
 
-        scored = [
-            (r, self.scorer.score_for_household(r, household.members, meal_type))
-            for r in candidates
-        ]
+        scored = []
+        for r in candidates:
+            # Vérifier les conflits multi-profils
+            has_conflict, conflict_msg, individual_scores = self._check_multi_profile_conflict(
+                r, present_members, meal_type
+            )
+            household_score = self.scorer.score_for_household(r, present_members, meal_type)
+
+            if has_conflict:
+                # Logger le conflit mais ne pas rejeter automatiquement si score > 0.5
+                if household_score < 0.5:
+                    logger.warning(f"Conflit rejeté: {conflict_msg} pour {r.get('name')}")
+                    continue
+                else:
+                    logger.info(f"Conflit détecté mais score acceptable: {conflict_msg} pour {r.get('name')}")
+
+            scored.append((r, household_score, individual_scores))
+
         scored.sort(key=lambda x: x[1], reverse=True)
 
         top = scored[:max(3, len(scored) // 4)]
         if not top:
             return None
-        return random.choice(top)[0]
+
+        selected = random.choice(top)
+        recipe = selected[0]
+        scores = selected[2]
+
+        # Logger les scores individuels pour debug
+        logger.debug(f"Recette sélectionnée: {recipe.get('name')} - Scores: {scores}")
+
+        return recipe
+
+    def _check_multi_profile_conflict(
+        self,
+        recipe: dict,
+        members: list[MemberProfile],
+        meal_type: MealType,
+    ) -> tuple[bool, str, dict]:
+        """
+        Vérifie s'il y a un conflit entre les profils des membres.
+
+        Retourne:
+        - (has_conflict, message, individual_scores)
+        - has_conflict: True si écart > 0.3 ou un score < 0.3
+        - message: Description du conflit
+        - individual_scores: Dict {member_name: score}
+        """
+        individual_scores = {}
+        for member in members:
+            report = self.scorer.score(recipe, member, meal_type)
+            individual_scores[member.name] = report.score
+
+        scores = list(individual_scores.values())
+        min_score = min(scores)
+        max_score = max(scores)
+        score_gap = max_score - min_score
+
+        # Si un score < 0.3, rejet
+        if min_score < 0.3:
+            low_members = [name for name, score in individual_scores.items() if score < 0.3]
+            return True, f"Recette incompatible pour {', '.join(low_members)} (score < 0.3)", individual_scores
+
+        # Si écart > 0.3, alerte pour arbitrage
+        if score_gap > 0.3:
+            return True, f"Conflit de préférences (écart {score_gap:.2f}), arbitrage manuel recommandé", individual_scores
+
+        return False, "", individual_scores
 
     def _push_to_mealie(self, week: WeekMenu) -> None:
         """Pousse le planning dans Mealie."""
@@ -191,6 +263,7 @@ class MenuPlanner:
             "week_label": week.week_label,
             "members": [m.name for m in household.members],
             "avg_daily_calories": week.average_daily_calories(),
+            "conflicts": week.conflicts,
             "days": [
                 {
                     "date": d.date.isoformat(),
