@@ -86,3 +86,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Verify build
+        run: |
+          echo "Tags: ${{ steps.meta.outputs.tags }}"
+          docker images | grep mealie-nutrition-advisor
