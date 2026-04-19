@@ -278,6 +278,14 @@ if ENABLE_PROFILE_UI:
                         key="restrictions_new"
                     )
 
+                st.write("**Allergies et aliments à éviter**")
+                if editing_member:
+                    allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
+                    foods_to_avoid_text = st.text_input("Aliments à éviter (séparées par virgules)", value=', '.join(editing_member.get('foods_to_avoid', [])))
+                else:
+                    allergies_text = st.text_input("Allergies (séparées par virgules)")
+                    foods_to_avoid_text = st.text_input("Aliments à éviter (séparées par virgules)")
+
                 allergies = [a.strip() for a in allergies_text.split(",")] if allergies_text else []
                 foods_to_avoid = [f.strip() for f in foods_to_avoid_text.split(",")] if foods_to_avoid_text else []
 
