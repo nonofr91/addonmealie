@@ -245,6 +245,7 @@ with tab_profiles:
                 goal = st.selectbox("Objectif", ["perte_de_poids", "maintien", "prise_de_masse"],
                     index=["perte_de_poids", "maintien", "prise_de_masse"].index(goal_mapped))
                 allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])))
+                foods_to_avoid_text = st.text_input("Aliments à éviter (séparées par virgules)", value=', '.join(editing_member.get('foods_to_avoid', [])))
             else:
                 name = st.text_input("Nom *")
                 age = st.number_input("Âge *", min_value=1, max_value=120, value=30)
@@ -264,6 +265,7 @@ with tab_profiles:
                     key="conditions_edit"
                 )
                 allergies_text = st.text_input("Allergies (séparées par virgules)", value=', '.join(editing_member.get('allergies', [])), key="allergies_edit")
+                foods_to_avoid_text = st.text_input("Aliments à éviter (séparées par virgules)", value=', '.join(editing_member.get('foods_to_avoid', [])), key="foods_to_avoid_edit")
             else:
                 conditions = st.multiselect(
                     "Sélectionnez si applicable",
@@ -271,8 +273,10 @@ with tab_profiles:
                     key="conditions_new"
                 )
                 allergies_text = st.text_input("Allergies (séparées par virgules)", key="allergies_new")
-            
+                foods_to_avoid_text = st.text_input("Aliments à éviter (séparées par virgules)", key="foods_to_avoid_new")
+
             allergies = [a.strip() for a in allergies_text.split(",") if a.strip()]
+            foods_to_avoid = [f.strip() for f in foods_to_avoid_text.split(",") if f.strip()]
             
             submitted = st.form_submit_button("Enregistrer")
             
@@ -287,6 +291,7 @@ with tab_profiles:
                     "goal": goal,
                     "medical_conditions": conditions,
                     "allergies": allergies,
+                    "foods_to_avoid": foods_to_avoid,
                     "dietary_restrictions": [],
                     "weekly_presence": {
                         "presence": {

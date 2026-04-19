@@ -120,6 +120,7 @@ class MemberProfile(BaseModel):
     goal: Goal = Goal.maintenance
     dietary_restrictions: list[DietaryRestriction] = Field(default_factory=list)
     allergies: list[str] = Field(default_factory=list, description="Liste d'allergènes en texte libre")
+    foods_to_avoid: list[str] = Field(default_factory=list, description="Liste d'aliments à éviter (préférences personnelles, digestion, etc.)")
     medical_conditions: list[MedicalCondition] = Field(default_factory=list, description="Pathologies médicales")
     weekly_presence: WeeklyPresencePattern = Field(default_factory=WeeklyPresencePattern)
     custom_targets: MacroTargets = Field(default_factory=MacroTargets)

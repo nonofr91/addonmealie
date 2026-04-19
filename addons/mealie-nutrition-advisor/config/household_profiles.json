@@ -11,6 +11,7 @@
       "goal": "maintien",
       "dietary_restrictions": [],
       "allergies": [],
+      "foods_to_avoid": [],
       "medical_conditions": [],
       "weekly_presence": {
         "presence": {
@@ -130,6 +131,7 @@
       "goal": "maintien",
       "dietary_restrictions": [],
       "allergies": [],
+      "foods_to_avoid": [],
       "medical_conditions": [],
       "weekly_presence": {
         "presence": {
