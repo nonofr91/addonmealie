@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Rate limiting pour Mistral (compte free)
 _last_mistral_request = 0
-_MISTRAL_RATE_LIMIT = 0.5  # secondes entre chaque requête (2 req/s)
+_MISTRAL_RATE_LIMIT = 1.0  # secondes entre chaque requête (1 req/s)
 
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "mock")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
