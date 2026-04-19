@@ -5,7 +5,8 @@ import threading
 
 # Rate limiting pour Mistral (compte free)
 # D'après la doc Mistral, le compte free a une limite de 1 req/s
-_MISTRAL_RATE_LIMIT = 1.0  # secondes entre chaque requête (1 req/s)
+# On utilise 2.0s pour avoir une marge de sécurité et éviter les erreurs 503
+_MISTRAL_RATE_LIMIT = 2.0  # secondes entre chaque requête (0.5 req/s)
 _last_mistral_request = 0
 _lock = threading.Lock()
 
