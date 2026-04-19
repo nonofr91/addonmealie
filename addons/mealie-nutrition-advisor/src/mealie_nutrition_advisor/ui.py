@@ -46,6 +46,26 @@ def _map_goal(value: str) -> str:
     }
     return mapping.get(value, value)
 
+def _map_activity_level_to_english(value: str) -> str:
+    """Map French activity levels to English."""
+    mapping = {
+        "sédentaire": "sedentary",
+        "peu_actif": "lightly_active",
+        "modérément_actif": "moderately_active",
+        "très_actif": "very_active",
+        "extra_actif": "extra_active",
+    }
+    return mapping.get(value, value)
+
+def _map_goal_to_english(value: str) -> str:
+    """Map French goals to English."""
+    mapping = {
+        "perte_de_poids": "weight_loss",
+        "maintien": "maintenance",
+        "prise_de_masse": "muscle_gain",
+    }
+    return mapping.get(value, value)
+
 
 def _api(method: str, path: str, **kwargs) -> dict:
     try:
@@ -301,8 +321,8 @@ if ENABLE_PROFILE_UI:
                             "sex": sex,
                             "weight_kg": weight,
                             "height_cm": height,
-                            "activity_level": activity,
-                            "goal": goal,
+                            "activity_level": _map_activity_level_to_english(activity),
+                            "goal": _map_goal_to_english(goal),
                             "medical_conditions": conditions,
                             "dietary_restrictions": restrictions,
                             "allergies": allergies,
