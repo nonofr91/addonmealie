@@ -5,16 +5,12 @@ from __future__ import annotations
 import json
 import logging
 import os
-import time
 from typing import Optional
 
 from ..models.nutrition import NutritionFacts, NutritionSource
+from .mistral_rate_limiter import wait_for_mistral_rate_limit
 
 logger = logging.getLogger(__name__)
-
-# Rate limiting pour Mistral (compte free)
-_last_mistral_request = 0
-_MISTRAL_RATE_LIMIT = 1.0  # secondes entre chaque requête (1 req/s)
 
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "mock")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -160,13 +156,8 @@ class AIEstimator:
             return self._mock_estimate(ingredient_name)
 
         try:
-            # Rate limiting pour Mistral (compte free)
-            global _last_mistral_request
-            current_time = time.time()
-            time_since_last = current_time - _last_mistral_request
-            if time_since_last < _MISTRAL_RATE_LIMIT:
-                time.sleep(_MISTRAL_RATE_LIMIT - time_since_last)
-            _last_mistral_request = time.time()
+            # Rate limiting partagé pour Mistral (compte free)
+            wait_for_mistral_rate_limit()
 
             client = Mistral(api_key=MISTRAL_API_KEY)
             prompt = ESTIMATION_PROMPT.format(ingredient=ingredient_name)
