@@ -12,7 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY . /app
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir .[mistral]
 RUN pip install --no-cache-dir fastapi uvicorn[standard] streamlit requests
 
 RUN mkdir -p /app/data/menu_plans
