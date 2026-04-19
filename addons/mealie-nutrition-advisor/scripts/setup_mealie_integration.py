@@ -145,8 +145,27 @@ def create_nutrition_advisor_recipe(tag_id: str) -> dict:
             break
     
     if existing_slug:
-        print(f"⚠ La recette existe déjà. Supprimez-la d'abord dans Mealie ou utilisez un autre nom.")
-        return {"slug": existing_slug, "name": RECIPE_NAME}
+        print(f"✓ Recette existante trouvée (slug: {existing_slug})")
+        print(f"Mise à jour de la description avec la nouvelle URL...")
+        
+        # Mettre à jour la description de la recette existante
+        headers = {
+            "Authorization": f"Bearer {MEALIE_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        update_response = requests.patch(
+            f"{MEALIE_BASE_URL}/api/recipes/{existing_slug}",
+            headers=headers,
+            json={"description": RECIPE_DESCRIPTION}
+        )
+        
+        if update_response.status_code in [200, 201]:
+            print(f"✓ Description mise à jour avec succès")
+            return {"slug": existing_slug, "name": RECIPE_NAME}
+        else:
+            print(f"⚠ Échec de la mise à jour: {update_response.status_code}")
+            return {"slug": existing_slug, "name": RECIPE_NAME}
     
     # Créer la recette via mcp_auth_wrapper
     print(f"Création de la recette '{RECIPE_NAME}' avec description et tag...")
