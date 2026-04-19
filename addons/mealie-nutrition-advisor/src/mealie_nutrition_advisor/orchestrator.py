@@ -60,7 +60,33 @@ class NutritionOrchestrator:
                     nutrition = recipe.get("nutrition", {})
                     
                     # Check if nutrition data exists and is meaningful
-                    has_nutrition = bool(nutrition.get("calories") and float(nutrition.get("calories", 0)) > 0)
+                    # Vérifier plusieurs champs pour une détection plus robuste
+                    def parse_nutrition_value(value):
+                        """Parse nutrition value from various formats (number, string with units, etc)."""
+                        if not value:
+                            return 0
+                        try:
+                            # Si c'est déjà un nombre
+                            if isinstance(value, (int, float)):
+                                return float(value)
+                            # Si c'est une chaîne, essayer de convertir
+                            str_val = str(value).strip()
+                            # Extraire le nombre (ex: "3387 kcal" -> 3387)
+                            import re
+                            match = re.search(r'[\d.]+', str_val)
+                            if match:
+                                return float(match.group())
+                            return 0
+                        except (ValueError, TypeError):
+                            return 0
+                    
+                    # Vérifier si au moins un champ nutritionnel significatif existe
+                    calories = parse_nutrition_value(nutrition.get("calories"))
+                    protein = parse_nutrition_value(nutrition.get("proteinContent"))
+                    fat = parse_nutrition_value(nutrition.get("fatContent"))
+                    carbs = parse_nutrition_value(nutrition.get("carbohydrateContent"))
+                    
+                    has_nutrition = any([calories > 0, protein > 0, fat > 0, carbs > 0])
                     
                     if has_nutrition:
                         with_nutrition.append({"slug": slug, "name": name})
