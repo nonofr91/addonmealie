@@ -83,7 +83,7 @@ services:
       - 'ENABLE_PROFILE_UI=${ENABLE_PROFILE_UI:-true}'
       - 'ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}'
       - 'ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}'
-    entrypoint: ["streamlit", "run", "mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
+    entrypoint: ["streamlit", "run", "/app/src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
     depends_on:
       nutrition-api:
         condition: service_started
