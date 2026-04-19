@@ -73,7 +73,7 @@ services:
         condition: service_started
 
   nutrition-ui:
-    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.1.4'
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.1.5'
     environment:
       - SERVICE_FQDN_NUTRITIONUI_8502
       - 'ADDON_API_URL=${SERVICE_URL_NUTRITIONAPI}'
