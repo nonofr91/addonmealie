@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   nutrition-api:
-    build:
-      context: ..
-      dockerfile: addons/mealie-nutrition-advisor/Dockerfile
+    build: .
     container_name: mealie-nutrition-api
     environment:
       - MEALIE_BASE_URL=${SERVICE_URL_MEALIE:-http://mealie:9000}
@@ -23,34 +21,39 @@ services:
       - ADDON_API_PORT=8001
       - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENABLE_PROFILE_UI=${ENABLE_PROFILE_UI:-true}
+      - ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}
+      - ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}
+      - ENABLE_CONFLICT_DETECTION=${ENABLE_CONFLICT_DETECTION:-true}
     ports:
       - "8001:8001"
     volumes:
-      - ../addons/mealie-nutrition-advisor/data:/app/addons/mealie-nutrition-advisor/data
+      - ./data:/app/data
     restart: unless-stopped
-    command: ["python", "-m", "mealie_nutrition_advisor.api", "start"]
+    command: ["uvicorn", "mealie_nutrition_advisor.api:app", "--host", "0.0.0.0", "--port", "8001"]
     networks:
-      - mealie-network
+      - mealie-dev
 
   nutrition-ui:
-    build:
-      context: ..
-      dockerfile: addons/mealie-nutrition-advisor/Dockerfile
+    build: .
     container_name: mealie-nutrition-ui
     environment:
       - ADDON_API_URL=http://nutrition-api:8001
       - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
       - MEALIE_BASE_URL=${SERVICE_URL_MEALIE:-http://mealie:9000}
       - ADDON_UI_PORT=8502
+      - ENABLE_PROFILE_UI=${ENABLE_PROFILE_UI:-true}
+      - ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}
+      - ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}
     ports:
       - "8502:8502"
     depends_on:
       - nutrition-api
     restart: unless-stopped
-    command: ["python", "-m", "mealie_nutrition_advisor.ui"]
+    command: ["streamlit", "run", "src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
     networks:
-      - mealie-network
+      - mealie-dev
 
 networks:
-  mealie-network:
+  mealie-dev:
     external: true

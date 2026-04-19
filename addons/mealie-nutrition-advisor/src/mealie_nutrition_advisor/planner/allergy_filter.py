@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from difflib import SequenceMatcher
 
 from ..models.profile import DietaryRestriction, HouseholdProfile, MemberProfile, MedicalCondition
 
@@ -45,6 +46,25 @@ MEDICAL_KEYWORDS: dict[MedicalCondition, list[str]] = {
         "banane", "avocat", "épinard", "pomme de terre",
         "noix", "amande", "cacahuète",
     ],
+    MedicalCondition.fatty_liver: [
+        "gras", "beurre", "crème", "fromage", "charcuterie",
+        "friture", "huile", "foie", "abats", "alcool",
+        "viande grasse", "saucisse", "bacon", "lard",
+    ],
+    MedicalCondition.irritable_bowel: [
+        "chou", "brocoli", "chou-fleur", "chou de bruxelles",
+        "légumineuse", "haricot", "lentille", "pois chiche",
+        "oignon", "ail", "échalote", "poireau",
+        "pain complet", "son", "fibres insolubles",
+        "produit laitier", "lait", "fromage", "yaourt",
+        "café", "alcool", "épice forte", "piment",
+    ],
+    MedicalCondition.high_cholesterol: [
+        "gras saturé", "beurre", "crème", "fromage",
+        "viande grasse", "charcuterie", "saucisse", "bacon",
+        "foie", "abats", "œuf", "crevette", "crabe",
+        "friture", "huile de palme", "huile de coco",
+    ],
 }
 
 
@@ -67,6 +87,25 @@ def _contains(texts: list[str], keywords: list[str]) -> list[str]:
         pattern = re.compile(r"\b" + re.escape(kw) + r"(s|es|ée|er)?\b", re.IGNORECASE)
         if any(pattern.search(t) for t in texts):
             found.append(kw)
+    return found
+
+
+def _fuzzy_match(texts: list[str], keywords: list[str], threshold: float = 0.8) -> list[str]:
+    """Retourne les keywords trouvés avec matching flou (Levenshtein)."""
+    found = []
+    for kw in keywords:
+        kw_lower = kw.lower()
+        for text in texts:
+            text_lower = text.lower()
+            # Recherche exacte d'abord
+            if kw_lower in text_lower:
+                found.append(kw)
+                break
+            # Matching flou avec SequenceMatcher
+            similarity = SequenceMatcher(None, kw_lower, text_lower).ratio()
+            if similarity >= threshold:
+                found.append(kw)
+                break
     return found
 
 
@@ -95,7 +134,7 @@ class AllergyFilter:
     def is_safe_for_member(self, recipe: dict, member: MemberProfile) -> tuple[bool, str]:
         """
         Retourne (safe, reason).
-        safe=False si la recette contient un allergène, restriction alimentaire ou ingrédient incompatible avec une pathologie.
+        safe=False si la recette contient un allergène, restriction alimentaire, aliment à éviter ou ingrédient incompatible avec une pathologie.
         """
         texts = _ingredient_texts(recipe)
         full_text = " ".join(texts)
@@ -110,6 +149,12 @@ class AllergyFilter:
             found = _contains(texts, keywords)
             if found:
                 return False, f"restriction {restriction.value}: {', '.join(found[:3])}"
+
+        # Filtrage strict des aliments à éviter avec matching flou
+        if member.foods_to_avoid:
+            found_avoid = _fuzzy_match(texts, member.foods_to_avoid, threshold=0.8)
+            if found_avoid:
+                return False, f"aliment à éviter détecté: {', '.join(found_avoid[:3])}"
 
         medical_safe, medical_reason = self.is_safe_for_medical_conditions(recipe, member)
         if not medical_safe:

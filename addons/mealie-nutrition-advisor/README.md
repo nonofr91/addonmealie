@@ -31,7 +31,28 @@ pip install fastapi uvicorn[standard] streamlit requests
 ```bash
 cp addons/mealie-nutrition-advisor/.env.template .env
 # Remplir MEALIE_BASE_URL et MEALIE_API_KEY
+# Configurer les feature flags si nécessaire
 ```
+
+### Feature Flags
+
+L'addon supporte des feature flags pour activer/désactiver des fonctionnalités spécifiques :
+
+| Flag | Description | Défaut |
+|---|---|---|
+| `ENABLE_PROFILE_UI` | Active la gestion des profils (UI + API) | `true` |
+| `ENABLE_MENU_PLANNER` | Active la planification de menus | `true` |
+| `ENABLE_NUTRITION_ANALYSIS` | Active l'analyse et l'enrichissement nutritionnel | `true` |
+| `ENABLE_CONFLICT_DETECTION` | Active la détection de conflits multi-profils | `true` |
+
+Pour désactiver une fonctionnalité, définir le flag à `false` dans `.env` :
+
+```bash
+# Exemple : désactiver la gestion des profils
+ENABLE_PROFILE_UI=false
+```
+
+Voir [FEATURE_FLAGS.md](FEATURE_FLAGS.md) pour plus de détails sur l'utilisation des feature flags.
 
 ## Utilisation
 
@@ -122,6 +143,29 @@ NUTRITION_API_URL=http://nutrition-api:8001
 
 Lors de l'import d'une recette, l'addon nutrition sera appelé automatiquement pour calculer les valeurs nutritionnelles.
 
+### Intégration UI dans Mealie
+
+Pour intégrer l'UI de l'addon dans Mealie, utilisez le script d'automatisation :
+
+```bash
+# Configurer les variables d'environnement
+export MEALIE_BASE_URL=http://votre-mealie:9000
+export MEALIE_API_KEY=votre_token_api
+export ADDON_UI_URL=http://localhost:8502
+
+# Exécuter le script
+python3 addons/mealie-nutrition-advisor/scripts/setup_mealie_integration.py
+```
+
+Ce script utilise `mcp_auth_wrapper` (depuis `mealie-workflow`) pour créer automatiquement :
+- Un cookbook dédié "🔬 Nutrition Advisor" avec un queryFilter pour le tag `nutrition-addon`
+- Un tag `nutrition-addon` pour filtrer les recettes
+- Une recette spéciale "🔬 Nutrition Advisor" avec un lien markdown vers l'UI
+
+**Note** : L'approche est identique au cookbook "📥 Import Recettes" - le cookbook utilise un queryFilter pour afficher automatiquement toutes les recettes taguées `nutrition-addon`. Le lien vers l'UI est ajouté dans la description de la recette spéciale au format markdown : `**[Ouvrir Nutrition Advisor →](URL)**.
+
+Vous pouvez ensuite trouver ce cookbook dans Mealie et cliquer sur le lien dans la description pour ouvrir l'UI de l'addon.
+
 ## Sources nutritionnelles
 
 1. **Open Food Facts** — base mondiale gratuite, sans clé API
@@ -181,6 +225,10 @@ src/mealie_nutrition_advisor/
 | `ADDON_UI_PORT` | — | Port UI (défaut: `8502`) |
 | `ADDON_API_URL` | — | URL API pour UI (défaut: `http://localhost:8001`) |
 | `LOG_LEVEL` | — | Niveau de log (défaut: `INFO`) |
+| `ENABLE_PROFILE_UI` | — | Active la gestion des profils (défaut: `true`) |
+| `ENABLE_MENU_PLANNER` | — | Active la planification de menus (défaut: `true`) |
+| `ENABLE_NUTRITION_ANALYSIS` | — | Active l'analyse nutritionnelle (défaut: `true`) |
+| `ENABLE_CONFLICT_DETECTION` | — | Active la détection de conflits (défaut: `true`) |
 
 ## Déploiement
 

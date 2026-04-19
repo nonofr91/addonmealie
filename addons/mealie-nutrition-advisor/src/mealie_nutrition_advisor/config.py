@@ -24,7 +24,7 @@ class NutritionConfig:
         self._mealie_api_key = os.environ.get("MEALIE_API_KEY", "")
         self._ai_provider = os.environ.get("AI_PROVIDER", "mock")
         self._use_ai_estimation = os.environ.get("USE_AI_ESTIMATION", "false").lower() == "true"
-        
+
         # AI provider keys
         self._openai_api_key = os.environ.get("OPENAI_API_KEY", "")
         self._openai_model = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
@@ -32,21 +32,27 @@ class NutritionConfig:
         self._anthropic_model = os.environ.get("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
         self._mistral_api_key = os.environ.get("MISTRAL_API_KEY", "")
         self._mistral_model = os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
-        
+
         # Open Food Facts
         self._off_base_url = os.environ.get("OFF_BASE_URL", "https://world.openfoodfacts.org")
-        
+
         # Cache
         self._cache_ttl_days = int(os.environ.get("NUTRITION_CACHE_TTL_DAYS", "30"))
-        
+
         # API server config
         self._api_host = os.environ.get("ADDON_API_HOST", "0.0.0.0")
         self._api_port = int(os.environ.get("ADDON_API_PORT", "8001"))
         self._api_secret_key = os.environ.get("ADDON_SECRET_KEY", "")
-        
+
         # UI server config
         self._ui_port = int(os.environ.get("ADDON_UI_PORT", "8502"))
-        
+
+        # Feature flags
+        self._enable_profile_ui = os.environ.get("ENABLE_PROFILE_UI", "true").lower() == "true"
+        self._enable_menu_planner = os.environ.get("ENABLE_MENU_PLANNER", "true").lower() == "true"
+        self._enable_nutrition_analysis = os.environ.get("ENABLE_NUTRITION_ANALYSIS", "true").lower() == "true"
+        self._enable_conflict_detection = os.environ.get("ENABLE_CONFLICT_DETECTION", "true").lower() == "true"
+
         self._validate()
 
     def _validate(self) -> None:
@@ -119,6 +125,22 @@ class NutritionConfig:
     @property
     def ui_port(self) -> int:
         return self._ui_port
+
+    @property
+    def enable_profile_ui(self) -> bool:
+        return self._enable_profile_ui
+
+    @property
+    def enable_menu_planner(self) -> bool:
+        return self._enable_menu_planner
+
+    @property
+    def enable_nutrition_analysis(self) -> bool:
+        return self._enable_nutrition_analysis
+
+    @property
+    def enable_conflict_detection(self) -> bool:
+        return self._enable_conflict_detection
 
     @classmethod
     def load(cls) -> "NutritionConfig":

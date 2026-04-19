@@ -61,6 +61,8 @@ class MedicalCondition(str, Enum):
     gout = "gout"
     gerd = "gerd"  # Reflux gastrique
     kidney_disease = "kidney_disease"
+    fatty_liver = "fatty_liver"  # Foie gras
+    irritable_bowel = "irritable_bowel"  # Colon irritable
 
 
 class MacroTargets(BaseModel):
@@ -120,6 +122,7 @@ class MemberProfile(BaseModel):
     goal: Goal = Goal.maintenance
     dietary_restrictions: list[DietaryRestriction] = Field(default_factory=list)
     allergies: list[str] = Field(default_factory=list, description="Liste d'allergènes en texte libre")
+    foods_to_avoid: list[str] = Field(default_factory=list, description="Liste d'aliments à éviter (préférences personnelles, digestion, etc.)")
     medical_conditions: list[MedicalCondition] = Field(default_factory=list, description="Pathologies médicales")
     weekly_presence: WeeklyPresencePattern = Field(default_factory=WeeklyPresencePattern)
     custom_targets: MacroTargets = Field(default_factory=MacroTargets)

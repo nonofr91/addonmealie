@@ -50,6 +50,14 @@ def _check_key(key: str | None = Security(_API_KEY_HEADER)) -> None:
 
 _orchestrator: NutritionOrchestrator | None = None
 _profile_manager: ProfileManager | None = None
+_config: NutritionConfig | None = None
+
+
+def _get_config() -> NutritionConfig:
+    global _config
+    if _config is None:
+        _config = NutritionConfig()
+    return _config
 
 
 def _get_orchestrator() -> NutritionOrchestrator:
@@ -117,6 +125,9 @@ def get_status(_: None = Security(_check_key)) -> dict[str, Any]:
 @app.get("/nutrition/scan", tags=["nutrition"])
 def scan_recipes(_: None = Security(_check_key)) -> dict[str, Any]:
     """Scan Mealie recipes to find those without nutrition data."""
+    config = _get_config()
+    if not config.enable_nutrition_analysis:
+        raise HTTPException(status_code=503, detail="Nutrition analysis feature is disabled")
     orch = _get_orchestrator()
     try:
         return orch.scan_recipes()
@@ -127,6 +138,9 @@ def scan_recipes(_: None = Security(_check_key)) -> dict[str, Any]:
 @app.post("/nutrition/enrich", tags=["nutrition"])
 def enrich_recipes(req: EnrichRequest, _: None = Security(_check_key)) -> dict[str, Any]:
     """Enrich all recipes without nutrition (or all if force=True)."""
+    config = _get_config()
+    if not config.enable_nutrition_analysis:
+        raise HTTPException(status_code=503, detail="Nutrition analysis feature is disabled")
     orch = _get_orchestrator()
     try:
         return orch.enrich_all(force=req.force)
@@ -139,6 +153,9 @@ def enrich_recipes(req: EnrichRequest, _: None = Security(_check_key)) -> dict[s
 @app.post("/nutrition/recipe/{slug}", tags=["nutrition"])
 def enrich_recipe(slug: str, _: None = Security(_check_key)) -> dict[str, Any]:
     """Enrich a single recipe by slug."""
+    config = _get_config()
+    if not config.enable_nutrition_analysis:
+        raise HTTPException(status_code=503, detail="Nutrition analysis feature is disabled")
     orch = _get_orchestrator()
     try:
         return orch.enrich_recipe(slug)
@@ -151,6 +168,9 @@ def enrich_recipe(slug: str, _: None = Security(_check_key)) -> dict[str, Any]:
 @app.get("/profiles", tags=["profiles"])
 def get_profiles(_: None = Security(_check_key)) -> dict[str, Any]:
     """List all household profiles."""
+    config = _get_config()
+    if not config.enable_profile_ui:
+        raise HTTPException(status_code=503, detail="Profile UI feature is disabled")
     pm = _get_profile_manager()
     try:
         household = pm.household
@@ -166,6 +186,9 @@ def get_profiles(_: None = Security(_check_key)) -> dict[str, Any]:
 @app.get("/profiles/{name}", tags=["profiles"])
 def get_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
     """Get a specific member profile by name."""
+    config = _get_config()
+    if not config.enable_profile_ui:
+        raise HTTPException(status_code=503, detail="Profile UI feature is disabled")
     pm = _get_profile_manager()
     try:
         member = pm.get_member(name)
@@ -181,6 +204,9 @@ def get_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
 @app.post("/profiles", tags=["profiles"])
 def create_profile(req: ProfileCreateRequest, _: None = Security(_check_key)) -> dict[str, Any]:
     """Create a new member profile."""
+    config = _get_config()
+    if not config.enable_profile_ui:
+        raise HTTPException(status_code=503, detail="Profile UI feature is disabled")
     pm = _get_profile_manager()
     try:
         pm.add_member(req.member)
@@ -192,6 +218,9 @@ def create_profile(req: ProfileCreateRequest, _: None = Security(_check_key)) ->
 @app.put("/profiles/{name}", tags=["profiles"])
 def update_profile(name: str, req: ProfileUpdateRequest, _: None = Security(_check_key)) -> dict[str, Any]:
     """Update an existing member profile."""
+    config = _get_config()
+    if not config.enable_profile_ui:
+        raise HTTPException(status_code=503, detail="Profile UI feature is disabled")
     pm = _get_profile_manager()
     try:
         existing = pm.get_member(name)
@@ -208,6 +237,9 @@ def update_profile(name: str, req: ProfileUpdateRequest, _: None = Security(_che
 @app.delete("/profiles/{name}", tags=["profiles"])
 def delete_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
     """Delete a member profile."""
+    config = _get_config()
+    if not config.enable_profile_ui:
+        raise HTTPException(status_code=503, detail="Profile UI feature is disabled")
     pm = _get_profile_manager()
     try:
         deleted = pm.remove_member(name)
@@ -223,6 +255,9 @@ def delete_profile(name: str, _: None = Security(_check_key)) -> dict[str, Any]:
 @app.post("/profiles/{name}/presence", tags=["profiles"])
 def update_presence(name: str, req: PresenceUpdateRequest, _: None = Security(_check_key)) -> dict[str, Any]:
     """Update the weekly presence pattern for a member."""
+    config = _get_config()
+    if not config.enable_profile_ui:
+        raise HTTPException(status_code=503, detail="Profile UI feature is disabled")
     pm = _get_profile_manager()
     try:
         pm.set_weekly_presence(name, req.presence)
