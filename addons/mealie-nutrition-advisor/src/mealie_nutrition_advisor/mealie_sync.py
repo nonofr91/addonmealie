@@ -84,13 +84,15 @@ class MealieClient:
     def patch_nutrition(self, slug: str, nutrition_payload: dict) -> bool:
         """Patch le champ nutrition d'une recette."""
         try:
-            # Ajouter l'unité "kcal" à la valeur calories pour l'affichage correct
-            if "calories" in nutrition_payload:
-                calories_value = nutrition_payload["calories"]
-                if isinstance(calories_value, (int, float)):
-                    nutrition_payload["calories"] = f"{calories_value} kcal"
-                elif isinstance(calories_value, str) and calories_value.replace(".", "").isdigit():
-                    nutrition_payload["calories"] = f"{calories_value} kcal"
+            # Convertir les valeurs string en float pour scan_recipes
+            for key, value in nutrition_payload.items():
+                if value is None:
+                    continue
+                if isinstance(value, str):
+                    try:
+                        nutrition_payload[key] = float(value)
+                    except ValueError:
+                        pass
             
             # Patch uniquement nutrition pour ne pas affecter l'affichage des autres champs
             resp = self._client.patch(
