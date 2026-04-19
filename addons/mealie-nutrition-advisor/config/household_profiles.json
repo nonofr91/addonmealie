@@ -7,8 +7,8 @@
       "sex": "female",
       "weight_kg": 65.0,
       "height_cm": 168.0,
-      "activity_level": "modérément_actif",
-      "goal": "maintien",
+      "activity_level": "moderately_active",
+      "goal": "maintenance",
       "dietary_restrictions": [],
       "allergies": [],
       "foods_to_avoid": [],
@@ -67,8 +67,8 @@
       "sex": "male",
       "weight_kg": 80.0,
       "height_cm": 178.0,
-      "activity_level": "peu_actif",
-      "goal": "perte_de_poids",
+      "activity_level": "lightly_active",
+      "goal": "weight_loss",
       "dietary_restrictions": [],
       "allergies": [
         "cacahuètes"
@@ -127,8 +127,8 @@
       "sex": "female",
       "weight_kg": 35.0,
       "height_cm": 140.0,
-      "activity_level": "très_actif",
-      "goal": "maintien",
+      "activity_level": "very_active",
+      "goal": "maintenance",
       "dietary_restrictions": [],
       "allergies": [],
       "foods_to_avoid": [],
@@ -185,20 +185,18 @@
       "sex": "male",
       "weight_kg": 75.0,
       "height_cm": 175.0,
-      "activity_level": "modérément_actif",
-      "goal": "maintien",
+      "activity_level": "moderately_active",
+      "goal": "maintenance",
       "dietary_restrictions": [],
       "allergies": [
         "noix"
       ],
       "medical_conditions": [
-        "diabète",
+        "diabetes",
         "hypertension",
-        "foie_gras",
-        "colon_irritable",
-        "cholestérol_élevé",
-        "intolérance_lactose",
-        "intolérance_gluten"
+        "fatty_liver",
+        "irritable_bowel",
+        "high_cholesterol"
       ],
       "weekly_presence": {
         "presence": {
