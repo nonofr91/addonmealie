@@ -18,6 +18,10 @@ Ce document décrit les précautions d'usage pour le déploiement de l'addon nut
 - `ENABLE_NUTRITION` : Activer l'intégration avec mealie-import-orchestrator (défaut: `true`)
 - `AI_PROVIDER` : Provider IA (défaut: `mock`)
 - `USE_AI_ESTIMATION` : Activer l'estimation IA des quantités (défaut: `false`)
+- `ENABLE_PROFILE_UI` : Active la gestion des profils (défaut: `true`)
+- `ENABLE_MENU_PLANNER` : Active la planification de menus (défaut: `true`)
+- `ENABLE_NUTRITION_ANALYSIS` : Active l'analyse nutritionnelle (défaut: `true`)
+- `ENABLE_CONFLICT_DETECTION` : Active la détection de conflits (défaut: `true`)
 
 ### Fichiers sensibles protégés par .gitignore
 
@@ -77,6 +81,10 @@ Dans Coolify, configurer les variables d'environnement :
 - `ENABLE_NUTRITION=true`
 - `AI_PROVIDER=mock` (ou autre provider)
 - `USE_AI_ESTIMATION=false`
+- `ENABLE_PROFILE_UI=true` (optionnel, pour désactiver la gestion des profils)
+- `ENABLE_MENU_PLANNER=true` (optionnel, pour désactiver la planification de menus)
+- `ENABLE_NUTRITION_ANALYSIS=true` (optionnel, pour désactiver l'analyse nutritionnelle)
+- `ENABLE_CONFLICT_DETECTION=true` (optionnel, pour désactiver la détection de conflits)
 
 ### 3. Build Docker sur Coolify
 
