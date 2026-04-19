@@ -66,8 +66,26 @@ services:
       - 'ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}'
       - 'ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}'
       - 'ENABLE_CONFLICT_DETECTION=${ENABLE_CONFLICT_DETECTION:-true}'
+      - 'ADDON_API_HOST=0.0.0.0'
+      - 'ADDON_API_PORT=8001'
     depends_on:
       mealie:
+        condition: service_started
+
+  nutrition-ui:
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:latest'
+    environment:
+      - SERVICE_FQDN_NUTRITIONUI_8502
+      - 'ADDON_API_URL=${SERVICE_URL_NUTRITIONAPI}'
+      - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
+      - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
+      - 'ADDON_UI_PORT=8502'
+      - 'ENABLE_PROFILE_UI=${ENABLE_PROFILE_UI:-true}'
+      - 'ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}'
+      - 'ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}'
+    command: ["streamlit", "run", "src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
+    depends_on:
+      nutrition-api:
         condition: service_started
 
 volumes:
