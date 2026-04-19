@@ -119,7 +119,7 @@ def get_or_create_cookbook(name: str, description: str, slug: str, tag_slug: str
             "description": description,
             "slug": slug,
             "position": 0,
-            "public": False,
+            "public": True,
             "queryFilterString": f'tags.slug IN ["{tag_slug}"]'
         }
     )
