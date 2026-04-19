@@ -29,13 +29,13 @@ COOKBOOK_DESCRIPTION = "Gestionnaire de profils nutritionnels et planificateur d
 COOKBOOK_SLUG = "nutrition-advisor"
 
 RECIPE_NAME = "🔬 Nutrition Advisor"
-RECIPE_DESCRIPTION = """
+RECIPE_DESCRIPTION = f"""
 Gestionnaire de profils nutritionnels et planificateur de menus.
 
 Cette recette spéciale fournit un lien vers l'interface de gestion des profils 
 nutritionnels de l'addon mealie-nutrition-advisor.
 
-**[Ouvrir Nutrition Advisor →](http://localhost:8502)**
+**[Ouvrir Nutrition Advisor →]({ADDON_UI_URL})**
 
 Fonctionnalités :
 - Gestion des profils des membres du foyer
