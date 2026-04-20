@@ -6,6 +6,7 @@ from typing import Type
 from .base import AIProvider
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.cascade_provider import CascadeProvider
+from .providers.mistral_provider import MistralProvider
 from .providers.openai_provider import OpenAIProvider
 from .providers.mock_provider import MockProvider
 
@@ -27,6 +28,7 @@ def create_ai_provider() -> AIProvider:
     providers: dict[str, Type[AIProvider]] = {
         "anthropic": AnthropicProvider,
         "cascade": CascadeProvider,
+        "mistral": MistralProvider,
         "openai": OpenAIProvider,
         "mock": MockProvider,
     }
