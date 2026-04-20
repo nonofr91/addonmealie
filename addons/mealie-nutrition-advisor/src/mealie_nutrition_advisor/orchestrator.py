@@ -57,7 +57,12 @@ class NutritionOrchestrator:
                     if "nutrition-addon" in tag_slugs or "addon-import" in tag_slugs:
                         continue
                     
-                    nutrition = recipe.get("nutrition", {})
+                    # Récupérer les détails complets pour avoir le champ nutrition
+                    recipe_detail = client.get_recipe(slug)
+                    if not recipe_detail:
+                        continue
+                    
+                    nutrition = recipe_detail.get("nutrition", {})
                     
                     # Check if nutrition data exists and is meaningful
                     # Vérifier plusieurs champs pour une détection plus robuste

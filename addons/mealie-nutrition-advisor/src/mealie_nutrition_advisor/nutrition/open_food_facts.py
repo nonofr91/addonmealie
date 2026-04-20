@@ -9,6 +9,7 @@ from typing import Any, Optional
 import httpx
 
 from ..models.nutrition import NutritionFacts, NutritionSource
+from .off_rate_limiter import wait_for_off_rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,9 @@ class OpenFoodFactsClient:
         Retourne (None, None) si aucun résultat ou si l'appel échoue.
         """
         try:
+            # Rate limiting partagé pour OFF
+            wait_for_off_rate_limit()
+            
             params = {
                 "search_terms": ingredient_name,
                 "search_simple": 1,
