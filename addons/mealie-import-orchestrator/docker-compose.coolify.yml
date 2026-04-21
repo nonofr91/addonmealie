@@ -38,7 +38,7 @@ services:
       - 'MISTRAL_API_KEY=${MISTRAL_API_KEY}'
       - 'MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}'
       - 'OFF_BASE_URL=${OFF_BASE_URL:-https://world.openfoodfacts.org}'
-      - 'USDA_API_KEY=${USDA_API_KEY:-fTZBVOkzqg8k5kNK4tKEiJ0GrlLDGbTMoqyfvNvl}'
+      - 'USDA_API_KEY=${USDA_API_KEY}'
       - 'NUTRITION_CACHE_TTL_DAYS=${NUTRITION_CACHE_TTL_DAYS:-30}'
       - 'LOG_LEVEL=${LOG_LEVEL:-DEBUG}'
     depends_on:
@@ -61,7 +61,7 @@ services:
       - 'MISTRAL_API_KEY=${MISTRAL_API_KEY}'
       - 'MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}'
       - 'OFF_BASE_URL=${OFF_BASE_URL:-https://world.openfoodfacts.org}'
-      - 'USDA_API_KEY=${USDA_API_KEY:-fTZBVOkzqg8k5kNK4tKEiJ0GrlLDGbTMoqyfvNvl}'
+      - 'USDA_API_KEY=${USDA_API_KEY}'
       - 'NUTRITION_CACHE_TTL_DAYS=${NUTRITION_CACHE_TTL_DAYS:-30}'
       - 'LOG_LEVEL=${LOG_LEVEL:-DEBUG}'
       - 'ENABLE_PROFILE_UI=${ENABLE_PROFILE_UI:-true}'
@@ -77,15 +77,15 @@ services:
   nutrition-ui:
     image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.8'
     environment:
-      - SERVICE_FQDN_NUTRITIONUI_8502
+      - SERVICE_FQDN_NUTRITIONUI_8503
       - 'ADDON_API_URL=${SERVICE_URL_NUTRITIONAPI}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
-      - 'ADDON_UI_PORT=8502'
+      - 'ADDON_UI_PORT=${ADDON_UI_PORT:-8503}'
       - 'ENABLE_PROFILE_UI=${ENABLE_PROFILE_UI:-true}'
       - 'ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}'
       - 'ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}'
-    entrypoint: ["streamlit", "run", "/app/src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
+    entrypoint: ["sh", "-c", "streamlit run /app/src/mealie_nutrition_advisor/ui.py --server.port=$ADDON_UI_PORT --server.address=0.0.0.0"]
     depends_on:
       nutrition-api:
         condition: service_started
