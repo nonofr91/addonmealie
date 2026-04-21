@@ -48,7 +48,7 @@ services:
         condition: service_started
 
   nutrition-api:
-    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.8'
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.9'
     environment:
       - SERVICE_FQDN_NUTRITIONAPI_8001
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
@@ -72,12 +72,13 @@ services:
       - 'ENABLE_CONFLICT_DETECTION=${ENABLE_CONFLICT_DETECTION:-true}'
       - 'ADDON_API_HOST=0.0.0.0'
       - 'ADDON_API_PORT=8001'
+    entrypoint: ["uvicorn", "mealie_nutrition_advisor.api:app", "--host", "0.0.0.0", "--port", "8001"]
     depends_on:
       mealie:
         condition: service_started
 
   nutrition-ui:
-    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.8'
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.9'
     environment:
       - SERVICE_FQDN_NUTRITIONUI_8502
       - SERVICE_URL_NUTRITIONUI_8502
