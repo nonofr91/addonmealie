@@ -78,6 +78,7 @@ services:
     image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.8'
     environment:
       - SERVICE_FQDN_NUTRITIONUI_8503
+      - SERVICE_URL_NUTRITIONUI_8503
       - 'ADDON_API_URL=${SERVICE_URL_NUTRITIONAPI}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
