@@ -20,15 +20,18 @@ from mcp_auth_wrapper import *
 try:
     from .ingredient_normalizer import IngredientNormalizer
     from .ingredient_matcher import IngredientMatcher
+    from .ingredient_parser import IngredientParser
 except ImportError:
     try:
         from ingredient_normalizer import IngredientNormalizer
         from ingredient_matcher import IngredientMatcher
+        from ingredient_parser import IngredientParser
     except ImportError:
         # Si les imports échouent, définir des classes vides pour éviter l'erreur
         print("⚠️ Modules de déduplication non disponibles, fonctionnalité désactivée")
         IngredientNormalizer = None
         IngredientMatcher = None
+        IngredientParser = None
 
 # MCP mealie-test disponibles via wrapper
 MCP_AVAILABLE = True  # Les MCP mealie-test sont disponibles via le wrapper
@@ -39,7 +42,7 @@ CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "mealie_config.js
 class MealieImporterMCP:
     """Importateur de recettes pour Mealie avec MCP réels"""
     
-    def __init__(self):
+    def __init__(self, use_parser: bool = False, ai_client=None):
         self.config = self.load_config()
         self.imported_recipes = []
         self.import_errors = []
@@ -47,12 +50,19 @@ class MealieImporterMCP:
         # Initialiser les modules de déduplication si disponibles
         if IngredientNormalizer and IngredientMatcher:
             self.normalizer = IngredientNormalizer()
-            self.matcher = IngredientMatcher(similarity_threshold=0.85)
+            # Utiliser le parser hybride si activé
+            self.matcher = IngredientMatcher(
+                similarity_threshold=0.85,
+                use_parser=use_parser,
+                ai_client=ai_client
+            )
             self.deduplication_enabled = True
+            self.use_parser = use_parser
         else:
             self.normalizer = None
             self.matcher = None
             self.deduplication_enabled = False
+            self.use_parser = False
         
         # Cache des foods/units existants
         self.existing_foods = []
