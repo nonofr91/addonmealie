@@ -16,6 +16,10 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from mcp_auth_wrapper import *
 
+# Importer les modules de déduplication des ingrédients
+from .ingredient_normalizer import IngredientNormalizer
+from .ingredient_matcher import IngredientMatcher
+
 # MCP mealie-test disponibles via wrapper
 MCP_AVAILABLE = True  # Les MCP mealie-test sont disponibles via le wrapper
 
@@ -30,6 +34,14 @@ class MealieImporterMCP:
         self.imported_recipes = []
         self.import_errors = []
         
+        # Initialiser les modules de déduplication
+        self.normalizer = IngredientNormalizer()
+        self.matcher = IngredientMatcher(similarity_threshold=0.85)
+        
+        # Cache des foods/units existants
+        self.existing_foods = []
+        self.existing_units = []
+        
     def load_config(self) -> Dict:
         """Charge la configuration Mealie"""
         try:
@@ -38,6 +50,36 @@ class MealieImporterMCP:
         except Exception as e:
             print(f"❌ Erreur chargement config: {e}")
             return {}
+    
+    def load_existing_ingredients(self) -> None:
+        """
+        Charge les foods et units existants depuis Mealie via MCP
+        Cette méthode doit être appelée avant l'import pour initialiser le cache
+        """
+        try:
+            print("🔍 Chargement des ingrédients existants depuis Mealie...")
+            
+            # Charger les foods existants
+            foods_result = mcp3_get_foods()
+            if foods_result and isinstance(foods_result, list):
+                self.existing_foods = foods_result
+                self.matcher.load_existing_foods(self.existing_foods)
+                print(f"   ✅ {len(self.existing_foods)} foods chargés")
+            else:
+                print(f"   ⚠️ Impossible de charger les foods")
+            
+            # Charger les units existants
+            units_result = mcp3_get_units()
+            if units_result and isinstance(units_result, list):
+                self.existing_units = units_result
+                self.matcher.load_existing_units(self.existing_units)
+                print(f"   ✅ {len(self.existing_units)} units chargés")
+            else:
+                print(f"   ⚠️ Impossible de charger les units")
+                
+        except Exception as e:
+            print(f"   ❌ Erreur chargement ingrédients existants: {e}")
+            # Continuer sans cache (les ingrédients seront créés mais pas dédupliqués)
     
     def import_recipe_to_mealie(self, structured_recipe: Dict) -> Optional[str]:
         """
@@ -177,6 +219,43 @@ class MealieImporterMCP:
                             mid = len(text_parts) // 2
                             if text_parts[:mid] == text_parts[mid:]:
                                 display_text = ' '.join(text_parts[:mid])
+                    
+                    # DÉDUPLICATION DES INGRÉDIENTS
+                    # Normaliser et traduire le food
+                    if food:
+                        translated_food = self.normalizer.translate_to_french(food)
+                        # Chercher si le food existe déjà dans Mealie
+                        if self.existing_foods:
+                            food_match = self.matcher.find_existing_food(translated_food)
+                            if food_match.matched and food_match.match_id:
+                                # Utiliser l'ID du food existant
+                                food = food_match.match_id
+                                print(f"      🔄 Food matché: {translated_food} → ID existant")
+                            else:
+                                # Utiliser le nom traduit pour création
+                                food = translated_food
+                                print(f"      ➕ Nouveau food: {translated_food}")
+                        else:
+                            # Pas de cache, utiliser le nom traduit
+                            food = translated_food
+                    
+                    # Standardiser l'unité
+                    if unit:
+                        standardized_unit = self.normalizer.standardize_unit(unit)
+                        # Chercher si l'unité existe déjà dans Mealie
+                        if self.existing_units:
+                            unit_match = self.matcher.find_existing_unit(standardized_unit)
+                            if unit_match.matched and unit_match.match_id:
+                                # Utiliser l'ID de l'unité existante
+                                unit = unit_match.match_id
+                                print(f"      🔄 Unit matchée: {standardized_unit} → ID existant")
+                            else:
+                                # Utiliser le nom standardisé pour création
+                                unit = standardized_unit
+                                print(f"      ➕ Nouvelle unit: {standardized_unit}")
+                        else:
+                            # Pas de cache, utiliser le nom standardisé
+                            unit = standardized_unit
                     
                     # unit/food transmis comme strings → résolus en objets Mealie dans mcp_auth_wrapper
                     formatted_ingredients.append({
