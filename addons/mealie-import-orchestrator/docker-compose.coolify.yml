@@ -24,10 +24,12 @@ services:
     image: 'ghcr.io/nonofr91/mealie-import-addon:0.4.15'
     environment:
       - SERVICE_FQDN_MEALIEADDON_8501
+      - SERVICE_URL_MEALIEADDON_8501
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
       - 'MEALIE_API_KEY=${MEALIE_API_KEY}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
-      - 'ADDON_API_URL=http://localhost:8000'
+      - 'ADDON_API_URL=http://localhost:8501'
+      - 'ADDON_UI_PORT=8501'
       - 'ENABLE_NUTRITION=${ENABLE_NUTRITION:-true}'
       - 'AI_PROVIDER=${AI_PROVIDER:-mock}'
       - 'USE_AI_ESTIMATION=${USE_AI_ESTIMATION:-false}'
@@ -41,6 +43,7 @@ services:
       - 'USDA_API_KEY=${USDA_API_KEY}'
       - 'NUTRITION_CACHE_TTL_DAYS=${NUTRITION_CACHE_TTL_DAYS:-30}'
       - 'LOG_LEVEL=${LOG_LEVEL:-DEBUG}'
+    entrypoint: ["sh", "-c", "streamlit run /app/src/ui.py --server.port=$ADDON_UI_PORT --server.address=0.0.0.0"]
     depends_on:
       mealie:
         condition: service_started
