@@ -33,6 +33,27 @@ except ImportError:
             def __init__(self):
                 pass
 
+try:
+    from .ingredient_parser import IngredientParser
+except ImportError:
+    try:
+        from ingredient_parser import IngredientParser
+    except ImportError:
+        # Si l'import échoue, définir une classe vide pour éviter l'erreur
+        class IngredientParser:
+            def __init__(self, use_ai=False, ai_client=None):
+                pass
+            def parse(self, ingredient):
+                from dataclasses import dataclass
+                @dataclass
+                class ParsedIngredient:
+                    original: str
+                    base: str
+                    modifiers: list
+                    confidence: float
+                    method: str
+                return ParsedIngredient(original=ingredient, base=ingredient, modifiers=[], confidence=0.5, method="none")
+
 
 @dataclass
 class MatchResult:
@@ -46,17 +67,21 @@ class MatchResult:
 class IngredientMatcher:
     """Matcher d'ingrédients avec fuzzy matching"""
     
-    def __init__(self, similarity_threshold: float = 0.85):
+    def __init__(self, similarity_threshold: float = 0.85, use_parser: bool = False, ai_client=None):
         """
         Initialise le matcher
         
         Args:
             similarity_threshold: Seuil de similarité (0-1)
+            use_parser: Utiliser le parser hybride pour extraire base/modifiers
+            ai_client: Client IA pour le parser (optionnel)
         """
         self.similarity_threshold = similarity_threshold
         self.normalizer = IngredientNormalizer()
         self.foods_cache: List[Dict] = []
         self.units_cache: List[Dict] = []
+        self.use_parser = use_parser
+        self.parser = IngredientParser(use_ai=use_parser, ai_client=ai_client) if use_parser else None
         
     def load_existing_foods(self, foods: List[Dict]) -> None:
         """
@@ -173,12 +198,18 @@ class IngredientMatcher:
         if not name or not self.foods_cache:
             return MatchResult(matched=False, matched_item=None, similarity=0.0)
         
-        # Normaliser et traduire le nom
-        normalized_name = self.normalizer.normalize_ingredient_name(name)
-        translated_name = self.normalizer.translate_to_french(name)
-        
-        # Préparer les noms à comparer
-        names_to_match = [normalized_name, translated_name, name.lower()]
+        # Utiliser le parser si disponible pour extraire la base
+        if self.use_parser and self.parser:
+            parsed = self.parser.parse(name)
+            # Utiliser la base extraite pour le matching
+            names_to_match = [parsed.base, name.lower()]
+        else:
+            # Normaliser et traduire le nom
+            normalized_name = self.normalizer.normalize_ingredient_name(name)
+            translated_name = self.normalizer.translate_to_french(name)
+            
+            # Préparer les noms à comparer
+            names_to_match = [normalized_name, translated_name, name.lower()]
         
         if RAPIDFUZZ_AVAILABLE and process is not None:
             # Utiliser rapidfuzz pour le matching

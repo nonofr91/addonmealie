@@ -65,9 +65,9 @@ def main():
 
         # For SSE transport, we need to specify host and port
         if mcp_transport == "sse":
-            mcp.run(transport="sse", host="0.0.0.0", port=int(os.getenv("MCP_PORT", "8000")), dns_rebinding_protection=True)
+            mcp.run(transport="sse", host="0.0.0.0", port=int(os.getenv("MCP_PORT", "8000")))
         else:
-            mcp.run(transport=mcp_transport, dns_rebinding_protection=True)
+            mcp.run(transport=mcp_transport)
     except Exception as e:
         logger.critical(
             {"message": "Fatal error in Mealie MCP Server", "error": str(e)}
