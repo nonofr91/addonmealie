@@ -43,7 +43,6 @@ services:
       - 'USDA_API_KEY=${USDA_API_KEY}'
       - 'NUTRITION_CACHE_TTL_DAYS=${NUTRITION_CACHE_TTL_DAYS:-30}'
       - 'LOG_LEVEL=${LOG_LEVEL:-DEBUG}'
-    entrypoint: ["sh", "-c", "streamlit run /app/src/ui.py --server.port=$ADDON_UI_PORT --server.address=0.0.0.0"]
     depends_on:
       mealie:
         condition: service_started
