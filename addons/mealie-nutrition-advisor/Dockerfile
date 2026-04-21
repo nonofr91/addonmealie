@@ -16,6 +16,3 @@ RUN pip install --no-cache-dir .[mistral]
 RUN pip install --no-cache-dir fastapi uvicorn[standard] streamlit requests
 
 RUN mkdir -p /app/data/menu_plans
-
-# Default to API server
-ENTRYPOINT ["uvicorn", "mealie_nutrition_advisor.api:app", "--host", "0.0.0.0", "--port", "8001"]
