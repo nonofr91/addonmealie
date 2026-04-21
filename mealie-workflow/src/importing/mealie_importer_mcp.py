@@ -17,8 +17,18 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 from mcp_auth_wrapper import *
 
 # Importer les modules de déduplication des ingrédients
-from .ingredient_normalizer import IngredientNormalizer
-from .ingredient_matcher import IngredientMatcher
+try:
+    from .ingredient_normalizer import IngredientNormalizer
+    from .ingredient_matcher import IngredientMatcher
+except ImportError:
+    try:
+        from ingredient_normalizer import IngredientNormalizer
+        from ingredient_matcher import IngredientMatcher
+    except ImportError:
+        # Si les imports échouent, définir des classes vides pour éviter l'erreur
+        print("⚠️ Modules de déduplication non disponibles, fonctionnalité désactivée")
+        IngredientNormalizer = None
+        IngredientMatcher = None
 
 # MCP mealie-test disponibles via wrapper
 MCP_AVAILABLE = True  # Les MCP mealie-test sont disponibles via le wrapper
@@ -34,9 +44,15 @@ class MealieImporterMCP:
         self.imported_recipes = []
         self.import_errors = []
         
-        # Initialiser les modules de déduplication
-        self.normalizer = IngredientNormalizer()
-        self.matcher = IngredientMatcher(similarity_threshold=0.85)
+        # Initialiser les modules de déduplication si disponibles
+        if IngredientNormalizer and IngredientMatcher:
+            self.normalizer = IngredientNormalizer()
+            self.matcher = IngredientMatcher(similarity_threshold=0.85)
+            self.deduplication_enabled = True
+        else:
+            self.normalizer = None
+            self.matcher = None
+            self.deduplication_enabled = False
         
         # Cache des foods/units existants
         self.existing_foods = []
@@ -56,6 +72,10 @@ class MealieImporterMCP:
         Charge les foods et units existants depuis Mealie via MCP
         Cette méthode doit être appelée avant l'import pour initialiser le cache
         """
+        if not self.deduplication_enabled:
+            print("⚠️ Déduplication désactivée (modules non disponibles)")
+            return
+            
         try:
             print("🔍 Chargement des ingrédients existants depuis Mealie...")
             
@@ -222,7 +242,7 @@ class MealieImporterMCP:
                     
                     # DÉDUPLICATION DES INGRÉDIENTS
                     # Normaliser et traduire le food
-                    if food:
+                    if food and self.deduplication_enabled:
                         translated_food = self.normalizer.translate_to_french(food)
                         # Chercher si le food existe déjà dans Mealie
                         if self.existing_foods:
@@ -240,7 +260,7 @@ class MealieImporterMCP:
                             food = translated_food
                     
                     # Standardiser l'unité
-                    if unit:
+                    if unit and self.deduplication_enabled:
                         standardized_unit = self.normalizer.standardize_unit(unit)
                         # Chercher si l'unité existe déjà dans Mealie
                         if self.existing_units:
