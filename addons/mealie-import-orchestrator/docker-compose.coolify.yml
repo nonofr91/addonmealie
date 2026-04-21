@@ -21,7 +21,7 @@ services:
       start_period: 120s
 
   mealie-addon:
-    image: 'ghcr.io/nonofr91/mealie-import-addon:0.4.14'
+    image: 'ghcr.io/nonofr91/mealie-import-addon:0.4.15'
     environment:
       - SERVICE_FQDN_MEALIEADDON_8501
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
@@ -45,7 +45,7 @@ services:
         condition: service_started
 
   nutrition-api:
-    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.2'
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.7'
     environment:
       - SERVICE_FQDN_NUTRITIONAPI_8001
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
@@ -73,7 +73,7 @@ services:
         condition: service_started
 
   nutrition-ui:
-    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.2'
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:0.2.7'
     environment:
       - SERVICE_FQDN_NUTRITIONUI_8502
       - 'ADDON_API_URL=${SERVICE_URL_NUTRITIONAPI}'
