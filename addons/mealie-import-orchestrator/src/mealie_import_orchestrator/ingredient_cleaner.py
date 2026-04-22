@@ -32,7 +32,7 @@ import requests
 # ---------------------------------------------------------------------------
 
 _UNIT_PREFIX = re.compile(
-    r"^(\d+[\.,]?\d*\s*)?(g|kg|ml|cl|dl|l|oz|lb|lbs)\s+d[e']?\s+(.+)$",
+    r"^(\d+[\.,]?\d*\s*)?(g|kg|ml|cl|dl|l|oz|lb|lbs)\s+(?:de\s+|d')(.+)$",
     re.IGNORECASE,
 )
 
@@ -58,6 +58,8 @@ _MODIFIER_PATTERNS = [
     (re.compile(r"\s+tranché[es]?", re.IGNORECASE), "tranché"),
     # En dés/julienne/etc
     (re.compile(r"\s+en\s+(dés|julienne|lamelles|rondelles|brunoise)", re.IGNORECASE), lambda m: f"en {m.group(1)}"),
+    # Bouteilles (pour vin, huile, etc.)
+    (re.compile(r"\s+bouteille[s]?\s+de\s+", re.IGNORECASE), "bouteilles"),
 ]
 
 _PARENTHESIS = re.compile(r"\s*\([^)]*\)", re.IGNORECASE)
@@ -441,10 +443,19 @@ def _update_recipe_ingredient(
     if unit_entry:
         updated_ing["unit"] = {"id": unit_entry["id"], "name": unit_entry["name"]}
 
-    # Mettre à jour la note si fournie (ajouter à la note existante)
+    # Mettre à jour la note si fournie
+    # Si la note existante ressemble à de l'originalText (contient l'unité ou "de"),
+    # on la remplace par le modificateur. Sinon on ajoute.
     if note:
         existing_note = updated_ing.get("note", "") or ""
-        if existing_note:
+        # Détecter si la note ressemble à de l'originalText
+        # (contient une unité ou le mot "de" au début)
+        looks_like_original = any(
+            u in existing_note.lower() for u in ["g ", "kg ", "ml ", "cl ", "l ", "de "]
+        ) or existing_note.lower().startswith(("g ", "kg ", "ml ", "cl ", "l "))
+        if looks_like_original:
+            updated_ing["note"] = note
+        elif existing_note:
             updated_ing["note"] = f"{existing_note}, {note}"
         else:
             updated_ing["note"] = note
