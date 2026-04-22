@@ -79,34 +79,56 @@ class MealieImporterMCP:
     
     def load_existing_ingredients(self) -> None:
         """
-        Charge les foods et units existants depuis Mealie via MCP
+        Charge les foods et units existants depuis Mealie via API directe
         Cette méthode doit être appelée avant l'import pour initialiser le cache
         """
         if not self.deduplication_enabled:
             print("⚠️ Déduplication désactivée (modules non disponibles)")
             return
-            
+
+        import requests
+        import os
+
+        # Récupérer la configuration Mealie depuis les variables d'environnement
+        api_url = os.getenv("MEALIE_BASE_URL", "")
+        token = os.getenv("MEALIE_API_KEY", "")
+
+        if not api_url or not token:
+            print("⚠️ Configuration Mealie manquante, impossible de charger les foods/units")
+            return
+
+        # Ajouter /api si non présent
+        if not api_url.endswith("/api"):
+            api_url = f"{api_url.rstrip('/')}/api"
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+
         try:
             print("🔍 Chargement des ingrédients existants depuis Mealie...")
-            
+
             # Charger les foods existants
-            foods_result = mcp3_get_foods()
-            if foods_result and isinstance(foods_result, list):
-                self.existing_foods = foods_result
+            foods_response = requests.get(f"{api_url}/foods?page=1&perPage=500", headers=headers, timeout=10)
+            if foods_response.status_code == 200:
+                foods_data = foods_response.json()
+                self.existing_foods = foods_data.get("items", [])
                 self.matcher.load_existing_foods(self.existing_foods)
                 print(f"   ✅ {len(self.existing_foods)} foods chargés")
             else:
-                print(f"   ⚠️ Impossible de charger les foods")
-            
+                print(f"   ⚠️ Impossible de charger les foods: {foods_response.status_code}")
+
             # Charger les units existants
-            units_result = mcp3_get_units()
-            if units_result and isinstance(units_result, list):
-                self.existing_units = units_result
+            units_response = requests.get(f"{api_url}/units?page=1&perPage=500", headers=headers, timeout=10)
+            if units_response.status_code == 200:
+                units_data = units_response.json()
+                self.existing_units = units_data.get("items", [])
                 self.matcher.load_existing_units(self.existing_units)
                 print(f"   ✅ {len(self.existing_units)} units chargés")
             else:
-                print(f"   ⚠️ Impossible de charger les units")
-                
+                print(f"   ⚠️ Impossible de charger les units: {units_response.status_code}")
+
         except Exception as e:
             print(f"   ❌ Erreur chargement ingrédients existants: {e}")
             # Continuer sans cache (les ingrédients seront créés mais pas dédupliqués)
@@ -253,21 +275,27 @@ class MealieImporterMCP:
                     # DÉDUPLICATION DES INGRÉDIENTS
                     # Normaliser et traduire le food
                     if food and self.deduplication_enabled:
-                        translated_food = self.normalizer.translate_to_french(food)
+                        # Si le parser hybride est activé, passer le texte original
+                        # Sinon, traduire d'abord
+                        if self.use_parser:
+                            food_to_match = food
+                        else:
+                            food_to_match = self.normalizer.translate_to_french(food)
+                        
                         # Chercher si le food existe déjà dans Mealie
                         if self.existing_foods:
-                            food_match = self.matcher.find_existing_food(translated_food)
+                            food_match = self.matcher.find_existing_food(food_to_match)
                             if food_match.matched and food_match.match_id:
                                 # Utiliser l'ID du food existant
                                 food = food_match.match_id
-                                print(f"      🔄 Food matché: {translated_food} → ID existant")
+                                print(f"      🔄 Food matché: {food_to_match} → ID existant")
                             else:
-                                # Utiliser le nom traduit pour création
-                                food = translated_food
-                                print(f"      ➕ Nouveau food: {translated_food}")
+                                # Utiliser le nom pour création
+                                food = food_to_match
+                                print(f"      ➕ Nouveau food: {food_to_match}")
                         else:
-                            # Pas de cache, utiliser le nom traduit
-                            food = translated_food
+                            # Pas de cache, utiliser le nom
+                            food = food_to_match
                     
                     # Standardiser l'unité
                     if unit and self.deduplication_enabled:
@@ -648,6 +676,9 @@ class MealieImporterMCP:
         print("🎯 WORKFLOW D'IMPORT MEALIE MCP")
         print("📋 Import des recettes structurées dans Mealie")
         print("=" * 60)
+        
+        # Étape 0: Charger les foods/units existants pour la déduplication
+        self.load_existing_ingredients()
         
         # Étape 1: Charger les données structurées
         structured_recipes = self.load_structured_data(structured_filename)

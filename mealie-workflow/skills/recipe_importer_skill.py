@@ -18,7 +18,19 @@ class RecipeImporterSkill:
     """Skill MCP pour l'import de recettes dans Mealie"""
     
     def __init__(self):
-        self.importer = MealieImporterMCP()
+        # Initialiser le client IA via la factory
+        try:
+            sys.path.append(str(Path(__file__).parent.parent / "src" / "ai"))
+            from ai.factory import create_ai_provider
+            ai_client = create_ai_provider()
+            use_parser = True
+            print("✅ Client IA initialisé avec succès")
+        except Exception as e:
+            print(f"⚠️ Impossible d'initialiser le client IA: {e}")
+            ai_client = None
+            use_parser = False
+        
+        self.importer = MealieImporterMCP(use_parser=use_parser, ai_client=ai_client)
         self.last_import_results = None
     
     def import_structured_recipes(self, structured_filename: str) -> Dict:
