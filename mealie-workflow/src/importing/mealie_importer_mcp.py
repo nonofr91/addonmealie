@@ -297,9 +297,14 @@ class MealieImporterMCP:
                             # Pas de cache, utiliser le nom
                             food = food_to_match
                     
-                    # Standardiser l'unité
+                    # Standardiser l'unité et convertir en métrique si besoin
                     if unit and self.deduplication_enabled:
-                        standardized_unit = self.normalizer.standardize_unit(unit)
+                        converted_qty, standardized_unit = self.normalizer.convert_to_metric(
+                            quantity if quantity else 0, unit
+                        )
+                        if converted_qty != (quantity if quantity else 0) or standardized_unit != unit:
+                            print(f"      📐 Conversion: {quantity} {unit} → {converted_qty} {standardized_unit}")
+                            quantity = converted_qty
                         # Chercher si l'unité existe déjà dans Mealie
                         if self.existing_units:
                             unit_match = self.matcher.find_existing_unit(standardized_unit)

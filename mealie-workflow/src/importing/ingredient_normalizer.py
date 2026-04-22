@@ -130,34 +130,35 @@ UNIT_MAPPINGS = {
     "teaspoon": "cuillère à café",
     "teaspoons": "cuillères à café",
     "tsp": "cuillère à café",
-    "fluid ounce": "once liquide",
-    "fl oz": "once liquide",
-    "pint": "pinte",
-    "quart": "quart",
-    "gallon": "gallon",
-    "liter": "litre",
-    "liters": "litres",
+    "fluid ounce": "cl",
+    "fl oz": "cl",
+    "pint": "ml",
+    "quart": "ml",
+    "gallon": "l",
+    "liter": "l",
+    "liters": "l",
     "ml": "ml",
-    "milliliter": "millilitre",
-    "milliliters": "millilitres",
+    "milliliter": "ml",
+    "milliliters": "ml",
     "l": "l",
+    "cl": "cl",
     
-    # Poids
-    "ounce": "once",
-    "ounces": "onces",
-    "oz": "once",
-    "pound": "livre",
-    "pounds": "livres",
-    "lb": "livre",
-    "lbs": "livres",
-    "gram": "gramme",
-    "grams": "grammes",
+    # Poids - conversion impériale → métrique
+    "ounce": "g",
+    "ounces": "g",
+    "oz": "g",
+    "pound": "g",
+    "pounds": "g",
+    "lb": "g",
+    "lbs": "g",
+    "gram": "g",
+    "grams": "g",
     "g": "g",
     "kg": "kg",
-    "kilogram": "kilogramme",
-    "kilograms": "kilogrammes",
-    "milligram": "milligramme",
-    "milligrams": "milligrammes",
+    "kilogram": "kg",
+    "kilograms": "kg",
+    "milligram": "mg",
+    "milligrams": "mg",
     "mg": "mg",
     
     # Unités spécifiques
@@ -193,14 +194,32 @@ UNIT_MAPPINGS = {
     "tasse": "tasse",
     "cuillère à soupe": "cuillère à soupe",
     "cuillère à café": "cuillère à café",
-    "litre": "litre",
-    "ml": "ml",
-    "gramme": "gramme",
-    "g": "g",
-    "kg": "kg",
+    "litre": "l",
+    "gramme": "g",
     "pièce": "pièce",
     "tranche": "tranche",
     "gousse": "gousse",
+}
+
+# Facteurs de conversion vers l'unité métrique cible
+# (quantité_originale * facteur = quantité_métrique)
+UNIT_CONVERSION_FACTORS = {
+    # Poids impérial → grammes
+    "ounce": 28.35,
+    "ounces": 28.35,
+    "oz": 28.35,
+    "pound": 453.59,
+    "pounds": 453.59,
+    "lb": 453.59,
+    "lbs": 453.59,
+    # Volume impérial → ml
+    "fluid ounce": 29.57,
+    "fl oz": 29.57,
+    "pint": 473.18,
+    "quart": 946.35,
+    "gallon": 3785.41,
+    # Volume impérial → cl
+    # (déjà en ml, ajustement via unité cible)
 }
 
 
@@ -284,22 +303,64 @@ class IngredientNormalizer:
         
         # Si pas trouvé, retourner l'unité originale
         return unit
-    
-    def normalize_ingredient(self, name: str, unit: Optional[str] = None) -> Dict[str, str]:
+
+    def convert_to_metric(self, quantity: float, unit: str) -> tuple:
         """
-        Normalise complètement un ingrédient (nom + unité)
+        Convertit une quantité depuis une unité impériale vers l'unité métrique.
+        
+        Args:
+            quantity: La quantité numérique
+            unit: L'unité d'origine (ex: "lb", "oz", "pound")
+            
+        Returns:
+            Tuple (quantité_convertie, unité_métrique) ou (quantity, unit) si pas de conversion
+        """
+        if not unit:
+            return quantity, unit
+        
+        normalized = unit.lower().strip()
+        
+        if normalized not in UNIT_CONVERSION_FACTORS:
+            # Pas de conversion numérique, retourner avec unité traduite
+            return quantity, self.standardize_unit(unit)
+        
+        factor = UNIT_CONVERSION_FACTORS[normalized]
+        converted_qty = quantity * factor
+        metric_unit = self.unit_mappings.get(normalized, unit)
+        
+        # Si le résultat est >= 1000g, convertir en kg
+        if metric_unit == "g" and converted_qty >= 1000:
+            return round(converted_qty / 1000, 3), "kg"
+        
+        # Si le résultat est >= 1000ml, convertir en l
+        if metric_unit == "ml" and converted_qty >= 1000:
+            return round(converted_qty / 1000, 3), "l"
+        
+        return round(converted_qty, 1), metric_unit
+    
+    def normalize_ingredient(self, name: str, unit: Optional[str] = None, quantity: Optional[float] = None) -> Dict:
+        """
+        Normalise complètement un ingrédient (nom + unité + quantité avec conversion métrique)
         
         Args:
             name: Nom de l'ingrédient
             unit: Unité optionnelle
+            quantity: Quantité optionnelle pour la conversion métrique
             
         Returns:
-            Dict avec 'name' et 'unit' normalisés
+            Dict avec 'name', 'unit' et 'quantity' normalisés
         """
         result = {
             'name': self.translate_to_french(name),
-            'unit': self.standardize_unit(unit) if unit else ""
+            'unit': self.standardize_unit(unit) if unit else "",
+            'quantity': quantity
         }
+        
+        # Appliquer la conversion métrique si quantité fournie
+        if quantity is not None and unit:
+            converted_qty, converted_unit = self.convert_to_metric(quantity, unit)
+            result['quantity'] = converted_qty
+            result['unit'] = converted_unit
         
         return result
 
@@ -339,3 +400,17 @@ if __name__ == "__main__":
     for unit in test_units:
         standardized = normalizer.standardize_unit(unit)
         print(f"{unit} -> {standardized}")
+    
+    print("\n=== Tests de conversion métrique ===")
+    conversions = [
+        (1, "pound"),
+        (2, "lbs"),
+        (8, "oz"),
+        (0.5, "lb"),
+        (16, "ounces"),
+        (2, "fluid ounce"),
+        (1, "pint"),
+    ]
+    for qty, unit in conversions:
+        new_qty, new_unit = normalizer.convert_to_metric(qty, unit)
+        print(f"{qty} {unit} -> {new_qty} {new_unit}")
