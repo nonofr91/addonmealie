@@ -41,8 +41,9 @@ _UNIT_PREFIX = re.compile(
 _MODIFIER_PATTERNS = [
     # Très finement + verbe
     (re.compile(r"\s+(très\s+)?finement\s+(\w+)", re.IGNORECASE), lambda m: f"finement {m.group(2)}"),
-    # Grossièrement + verbe
-    (re.compile(r"\s+(grossièrement\s+)?(\w+)[eé]s?\b", re.IGNORECASE), lambda m: m.group(2)),
+    # Grossièrement + verbe (grossièrement OBLIGATOIRE pour éviter les faux positifs
+    # sur tout mot finissant en -e/-é comme 'de', 'thym', etc.)
+    (re.compile(r"\s+grossièrement\s+(\w+)", re.IGNORECASE), lambda m: f"grossièrement {m.group(1)}"),
     # Coupé en...
     (re.compile(r"\s+coupé[es]?(?:\s+en\s+(\w+))?", re.IGNORECASE), lambda m: f"coupé en {m.group(1)}" if m.group(1) else "coupé"),
     # Haché
