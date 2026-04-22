@@ -473,7 +473,20 @@ class MealieImporterMCP:
             
             if recipe_id:
                 print(f"   ✅ Importé avec succès! ID: {recipe_id}")
-                
+
+                # Étape 3: Nettoyage automatique des foods mal formés
+                print(f"   🔧 Nettoyage automatique des foods...")
+                try:
+                    from mealie_import_orchestrator.ingredient_cleaner import IngredientCleaner
+                    cleaner = IngredientCleaner()
+                    report = cleaner.fix()
+                    if report.fixed_count > 0:
+                        print(f"   ✅ {report.fixed_count} foods corrigés automatiquement")
+                    else:
+                        print(f"   ℹ️  Aucun food à corriger")
+                except Exception as e:
+                    print(f"   ⚠️ Erreur nettoyage automatique: {e}")
+
                 # Ajouter à la liste des recettes importées
                 import_info = {
                     "name": structured_recipe['name'],
