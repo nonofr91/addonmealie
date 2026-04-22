@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'feature/**', 'fix/**' ]
   pull_request:
     branches: [ main ]
 
@@ -103,3 +103,52 @@ jobs:
         run: |
           cd mealie-mcp-server
           python3 -c "from src.server import main; print('Server import successful')"
+
+  addon-import-test:
+    name: Addon Package Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install addon package
+        run: |
+          pip install --upgrade pip
+          pip install "./addons/mealie-import-orchestrator" mistralai rapidfuzz requests 2>/dev/null || \
+          pip install "./addons/mealie-import-orchestrator" rapidfuzz requests
+
+      - name: Validate package imports
+        run: |
+          python3 -c "
+          from mealie_import_orchestrator.api import app
+          from mealie_import_orchestrator.ingredient_cleaner import IngredientCleaner
+          routes = [r.path for r in app.routes]
+          assert '/ingredients/scan' in routes, f'Route manquante: /ingredients/scan — routes: {routes}'
+          assert '/ingredients/fix' in routes, f'Route manquante: /ingredients/fix — routes: {routes}'
+          assert '/audit' in routes, f'Route manquante: /audit — routes: {routes}'
+          assert '/nutrition/scan' in routes, f'Route manquante: /nutrition/scan — routes: {routes}'
+          print('✅ Tous les endpoints sont enregistrés:', [r for r in routes if not r.startswith('/openapi')])
+          "
+
+      - name: Validate ingredient_cleaner detection
+        run: |
+          python3 -c "
+          from mealie_import_orchestrator.ingredient_cleaner import _detect_issues
+          tests = [
+              ({'id': '1', 'name': 'g de beurre'}, 'unit_in_name'),
+              ({'id': '2', 'name': 'oignons finement émincés'}, 'modifier_in_name'),
+              ({'id': '3', 'name': 'poivrons'}, None),
+          ]
+          for food, expected_type in tests:
+              issues = _detect_issues(food)
+              if expected_type:
+                  assert issues, f'Aucun problème détecté pour: {food[\"name\"]}'
+                  assert issues[0].issue_type == expected_type, f'Type attendu {expected_type}, obtenu {issues[0].issue_type}'
+              else:
+                  assert not issues, f'Faux positif pour: {food[\"name\"]}'
+          print('✅ Détection des problèmes validée')
+          "
