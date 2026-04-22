@@ -97,6 +97,10 @@ class IngredientFixRequest(BaseModel):
     update_recipe_units: bool = True  # Met à jour les unités dans les ingrédients de recettes
 
 
+class RecipeUnitsFixRequest(BaseModel):
+    reference_ids: list[str] | None = None  # Si None, corrige tous les issues
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -186,6 +190,41 @@ def ingredients_fix(req: IngredientFixRequest, _: None = Security(_check_key)) -
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Erreur correction ingrédients: {exc}") from exc
+
+
+@app.get("/ingredients/scan-recipe-units", tags=["ingredients"])
+def ingredients_scan_recipe_units(_: None = Security(_check_key)) -> dict[str, Any]:
+    """
+    Analyse les ingrédients de recettes et détecte ceux dont l'unité est manquante
+    mais extractible depuis le texte original (ex: '500 g de julienne de légumes').
+    Complémentaire à /ingredients/scan qui porte sur les noms de foods.
+    """
+    try:
+        cleaner = IngredientCleaner()
+        report = cleaner.scan_recipe_units()
+        return report.to_dict()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Erreur scan unités recettes: {exc}") from exc
+
+
+@app.post("/ingredients/fix-recipe-units", tags=["ingredients"])
+def ingredients_fix_recipe_units(
+    req: RecipeUnitsFixRequest, _: None = Security(_check_key)
+) -> dict[str, Any]:
+    """
+    Applique les corrections d'unités manquantes dans les ingrédients de recettes.
+    Si reference_ids est fourni, ne corrige que ces ingrédients. Sinon corrige tout.
+    """
+    try:
+        cleaner = IngredientCleaner()
+        report = cleaner.fix_recipe_units(reference_ids=req.reference_ids)
+        return report.to_dict()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Erreur correction unités recettes: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------

@@ -265,6 +265,66 @@ with tab_ingredients:
                         st.session_state["ing_report"] = result
                         st.rerun()
 
+    # -----------------------------------------------------------------------
+    # Sous-section : Unités manquantes dans les ingrédients de recettes
+    # (orthogonal au scanner de foods ci-dessus)
+    # -----------------------------------------------------------------------
+    st.divider()
+    st.subheader("🧪 Unités manquantes dans les recettes")
+    st.caption(
+        "Détecte les ingrédients de recettes où l'unité n'a pas été extraite "
+        "par le parser Mealie (ex: `500 g de julienne de légumes` sans unité)."
+    )
+
+    col_scan_ru, col_fix_ru = st.columns(2)
+    with col_scan_ru:
+        if st.button("🔍 Scanner les recettes", type="secondary", key="ru_scan_btn"):
+            with st.spinner("Scan des recettes en cours (peut prendre 1 min)…"):
+                ru_report = _api("GET", "/ingredients/scan-recipe-units", timeout=600)
+            st.session_state["ru_report"] = ru_report
+
+    with col_fix_ru:
+        if st.button("🔧 Corriger toutes les unités", type="primary", key="ru_fix_all_btn"):
+            with st.spinner("Corrections en cours…"):
+                ru_report = _api(
+                    "POST", "/ingredients/fix-recipe-units",
+                    timeout=600, json={"reference_ids": None}
+                )
+            st.session_state["ru_report"] = ru_report
+
+    ru_report = st.session_state.get("ru_report")
+    if ru_report:
+        if not ru_report.get("success", True) and ru_report.get("error"):
+            st.error(ru_report["error"])
+        else:
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Recettes scannées", ru_report.get("total_recipes", 0))
+            c2.metric("Ingrédients", ru_report.get("total_ingredients", 0))
+            c3.metric("Unités manquantes", ru_report.get("issues_count", 0))
+
+            if ru_report.get("fixed"):
+                st.success(f"✅ {len(ru_report['fixed'])} corrections appliquées")
+                with st.expander("Voir les corrections"):
+                    for f in ru_report["fixed"]:
+                        st.markdown(f"- {f}")
+
+            if ru_report.get("errors"):
+                with st.expander(f"⚠️ {len(ru_report['errors'])} erreurs"):
+                    for e in ru_report["errors"]:
+                        st.markdown(f"- {e}")
+
+            issues = ru_report.get("issues", [])
+            if issues and not ru_report.get("fixed"):
+                st.markdown(f"**{len(issues)} ingrédients à corriger :**")
+                for i, issue in enumerate(issues[:50]):
+                    st.markdown(
+                        f"- **{issue['food_name']}** → unité `{issue['extracted_unit']}` "
+                        f"(recette *{issue['recipe_name']}*)  \n"
+                        f"  `{issue['original_text']}`"
+                    )
+                if len(issues) > 50:
+                    st.caption(f"… et {len(issues) - 50} autres")
+
 
 # ---------------------------------------------------------------------------
 # Tab 4 — Nutrition

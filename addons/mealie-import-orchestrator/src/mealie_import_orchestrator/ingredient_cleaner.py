@@ -62,6 +62,15 @@ _MODIFIER_PATTERNS = [
 
 _PARENTHESIS = re.compile(r"\s*\([^)]*\)", re.IGNORECASE)
 
+# Pattern pour extraire l'unité depuis le texte original d'un ingrédient de recette.
+# Ex: "500 g de julienne de légumes" → unité "g"
+# Ex: "2 cl de vinaigre" → unité "cl"
+# On cherche "<nombre> <unité> [de|d'] <reste>" au début du texte.
+_RECIPE_UNIT_EXTRACTOR = re.compile(
+    r"^\s*\d+[\.,]?\d*\s+(g|kg|mg|ml|cl|dl|l|oz|lb|lbs)\s+d[e'\s]",
+    re.IGNORECASE,
+)
+
 # Unités extraites du nom → mapping vers l'unité Mealie cible
 _UNIT_NAME_MAP = {
     "g": "g",
@@ -89,6 +98,50 @@ class FoodIssue:
     extracted_unit: str = ""           # Unité extraite du nom (ex: "g", "ml")
     extracted_modifier: str = ""       # Préparation extraite (ex: "haché", "émincé")
     description: str = ""
+
+
+@dataclass
+class RecipeIngredientIssue:
+    """Ingrédient de recette avec unité manquante mais extractible du texte original."""
+    recipe_slug: str
+    recipe_name: str
+    reference_id: str
+    original_text: str
+    current_quantity: float
+    food_name: str
+    extracted_unit: str
+
+
+@dataclass
+class RecipeUnitsReport:
+    total_recipes: int = 0
+    total_ingredients: int = 0
+    issues: list[RecipeIngredientIssue] = field(default_factory=list)
+    fixed: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "total_recipes": self.total_recipes,
+            "total_ingredients": self.total_ingredients,
+            "issues_count": len(self.issues),
+            "fixed_count": len(self.fixed),
+            "errors_count": len(self.errors),
+            "issues": [
+                {
+                    "recipe_slug": i.recipe_slug,
+                    "recipe_name": i.recipe_name,
+                    "reference_id": i.reference_id,
+                    "original_text": i.original_text,
+                    "current_quantity": i.current_quantity,
+                    "food_name": i.food_name,
+                    "extracted_unit": i.extracted_unit,
+                }
+                for i in self.issues
+            ],
+            "fixed": self.fixed,
+            "errors": self.errors,
+        }
 
 
 @dataclass
@@ -326,7 +379,7 @@ def _find_recipes_using_food(api_url: str, headers: dict, food_id: str) -> list[
             )
             detail_resp.raise_for_status()
             detail = detail_resp.json()
-            ingredients = detail.get("recipeIngredients", [])
+            ingredients = detail.get("recipeIngredient", [])
             for ing in ingredients:
                 ing_food = ing.get("food")
                 if ing_food and ing_food.get("id") == food_id:
@@ -346,7 +399,7 @@ def _update_recipe_ingredient(
     api_url: str,
     headers: dict,
     recipe_slug: str,
-    ingredient_id: str,
+    ingredient_ref_id: str,
     unit_id: str | None,
     note: str | None,
     original_ingredient: dict,
@@ -380,10 +433,10 @@ def _update_recipe_ingredient(
         r.raise_for_status()
         recipe = r.json()
 
-        # Mettre à jour l'ingrédient spécifique
-        ingredients = recipe.get("recipeIngredients", [])
+        # Mettre à jour l'ingrédient spécifique (Mealie utilise referenceId)
+        ingredients = recipe.get("recipeIngredient", [])
         for i, ing in enumerate(ingredients):
-            if ing.get("id") == ingredient_id:
+            if ing.get("referenceId") == ingredient_ref_id:
                 ingredients[i] = updated_ing
                 break
 
@@ -391,7 +444,7 @@ def _update_recipe_ingredient(
         r = requests.patch(
             f"{api_url}/recipes/{recipe_slug}",
             headers=headers,
-            json={"recipeIngredients": ingredients},
+            json={"recipeIngredient": ingredients},
             timeout=30,
         )
         r.raise_for_status()
@@ -495,7 +548,7 @@ class IngredientCleaner:
                                     self._api_url,
                                     self._headers,
                                     rec["slug"],
-                                    rec["ingredient"]["id"],
+                                    rec["ingredient"]["referenceId"],
                                     unit_id,
                                     issue.extracted_modifier or None,
                                     rec["ingredient"],
@@ -542,6 +595,143 @@ class IngredientCleaner:
             except Exception as exc:
                 report.errors.append(
                     f"❌ Erreur sur '{issue.food_name}': {exc}"
+                )
+
+        return report
+
+    # -----------------------------------------------------------------------
+    # Scanner complémentaire : unités manquantes dans les ingrédients
+    # -----------------------------------------------------------------------
+
+    def scan_recipe_units(self) -> RecipeUnitsReport:
+        """
+        Parcourt toutes les recettes et détecte les ingrédients où :
+        - `unit` est absent (None)
+        - `originalText` contient une unité extractible (ex: "500 g de ...")
+
+        N'affecte pas les foods, seulement les ingrédients des recettes.
+        """
+        report = RecipeUnitsReport()
+        units_map = _load_all_units(self._api_url, self._headers)
+
+        page = 1
+        while True:
+            r = requests.get(
+                f"{self._api_url}/recipes",
+                headers=self._headers,
+                params={"page": page, "perPage": 100},
+                timeout=30,
+            )
+            r.raise_for_status()
+            data = r.json()
+            for recipe_summary in data.get("items", []):
+                slug = recipe_summary.get("slug")
+                if not slug:
+                    continue
+                try:
+                    detail_resp = requests.get(
+                        f"{self._api_url}/recipes/{slug}",
+                        headers=self._headers,
+                        timeout=15,
+                    )
+                    detail_resp.raise_for_status()
+                    detail = detail_resp.json()
+                except Exception:
+                    continue
+
+                report.total_recipes += 1
+                ingredients = detail.get("recipeIngredient", [])
+                for ing in ingredients:
+                    report.total_ingredients += 1
+                    # Déjà une unité ? skip
+                    if ing.get("unit"):
+                        continue
+                    original = ing.get("originalText") or ing.get("note") or ""
+                    m = _RECIPE_UNIT_EXTRACTOR.match(original)
+                    if not m:
+                        continue
+                    unit_raw = m.group(1).lower()
+                    # L'unité doit exister côté Mealie
+                    if unit_raw not in units_map:
+                        continue
+                    food = ing.get("food") or {}
+                    ref_id = ing.get("referenceId")
+                    if not ref_id:
+                        continue
+                    report.issues.append(RecipeIngredientIssue(
+                        recipe_slug=slug,
+                        recipe_name=detail.get("name", slug),
+                        reference_id=ref_id,
+                        original_text=original,
+                        current_quantity=ing.get("quantity") or 0,
+                        food_name=food.get("name", ""),
+                        extracted_unit=unit_raw,
+                    ))
+            if not data.get("next"):
+                break
+            page += 1
+        return report
+
+    def fix_recipe_units(
+        self, reference_ids: list[str] | None = None
+    ) -> RecipeUnitsReport:
+        """
+        Applique les corrections d'unités manquantes détectées par scan_recipe_units.
+
+        Args:
+            reference_ids: si fourni, ne corrige que ces `referenceId` d'ingrédients.
+                           Sinon corrige tous les issues détectés.
+        """
+        report = self.scan_recipe_units()
+        units_map = _load_all_units(self._api_url, self._headers)
+
+        to_fix = [
+            i for i in report.issues
+            if reference_ids is None or i.reference_id in reference_ids
+        ]
+
+        # Regrouper par slug pour ne charger/patcher chaque recette qu'une fois
+        by_slug: dict[str, list[RecipeIngredientIssue]] = {}
+        for issue in to_fix:
+            by_slug.setdefault(issue.recipe_slug, []).append(issue)
+
+        for slug, issues in by_slug.items():
+            try:
+                r = requests.get(
+                    f"{self._api_url}/recipes/{slug}",
+                    headers=self._headers,
+                    timeout=15,
+                )
+                r.raise_for_status()
+                recipe = r.json()
+                ingredients = recipe.get("recipeIngredient", [])
+                applied_here = 0
+                for issue in issues:
+                    unit_id = units_map.get(issue.extracted_unit.lower())
+                    if not unit_id:
+                        continue
+                    for ing in ingredients:
+                        if ing.get("referenceId") == issue.reference_id:
+                            ing["unit"] = {"id": unit_id}
+                            applied_here += 1
+                            report.fixed.append(
+                                f"'{issue.recipe_name}' — "
+                                f"'{issue.food_name}' : unité '{issue.extracted_unit}' ajoutée"
+                            )
+                            break
+                if applied_here == 0:
+                    continue
+                # PATCH la recette une seule fois avec tous les changements
+                r = requests.patch(
+                    f"{self._api_url}/recipes/{slug}",
+                    headers=self._headers,
+                    json={"recipeIngredient": ingredients},
+                    timeout=30,
+                )
+                r.raise_for_status()
+            except Exception as exc:
+                report.errors.append(
+                    f"❌ Recette '{slug}' : {exc}"
                 )
 
         return report
