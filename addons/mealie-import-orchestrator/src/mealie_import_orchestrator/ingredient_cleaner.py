@@ -102,11 +102,16 @@ class FoodIssue:
 
 @dataclass
 class RecipeIngredientIssue:
-    """Ingrédient de recette avec unité manquante mais extractible du texte original."""
+    """Ingrédient de recette avec unité manquante mais extractible du texte original.
+
+    Note: Mealie régénère `referenceId` à chaque GET, il n'est donc pas utilisable
+    comme identifiant stable. On identifie un ingrédient par (food_id, originalText).
+    """
     recipe_slug: str
     recipe_name: str
-    reference_id: str
-    original_text: str
+    reference_id: str           # Informatif uniquement (peut changer entre GET)
+    food_id: str                # Identifiant stable du food (UUID Mealie)
+    original_text: str          # Identifiant stable de l'ingrédient dans la recette
     current_quantity: float
     food_name: str
     extracted_unit: str
@@ -132,6 +137,7 @@ class RecipeUnitsReport:
                     "recipe_slug": i.recipe_slug,
                     "recipe_name": i.recipe_name,
                     "reference_id": i.reference_id,
+                    "food_id": i.food_id,
                     "original_text": i.original_text,
                     "current_quantity": i.current_quantity,
                     "food_name": i.food_name,
@@ -306,11 +312,18 @@ def _merge_food(api_url: str, headers: dict, from_food_id: str, to_food_id: str)
     r.raise_for_status()
 
 
-def _load_all_units(api_url: str, headers: dict) -> dict[str, str]:
+def _load_all_units(api_url: str, headers: dict) -> dict[str, dict]:
     """
-    Charge toutes les unités depuis Mealie et retourne un dict {name_lower: id}.
+    Charge toutes les unités depuis Mealie et retourne un dict {name_lower: {id, name}}.
+
+    Mealie exige que le payload PATCH d'une recette contienne `name` en plus de `id`
+    dans les objets `unit` et `food` (validation stricte v3.15+).
+
+    Résolution d'alias : si Mealie a à la fois `l` et `litre` (doublons fréquents),
+    l'alias court `l` pointe en priorité sur l'unité dont le name est exactement `l`
+    (pas sur `litre`). Sinon, on prend l'alias long comme fallback.
     """
-    units = {}
+    raw_units: list[dict] = []
     page = 1
     while True:
         r = requests.get(
@@ -322,21 +335,32 @@ def _load_all_units(api_url: str, headers: dict) -> dict[str, str]:
         data = r.json()
         for unit in data.get("items", []):
             unit_id = unit.get("id")
-            unit_name = unit.get("name", "").lower()
-            if unit_id and unit_name:
-                units[unit_name] = unit_id
-                # Alias pour les unités courantes
-                if unit_name in ["gramme", "grammes"]:
-                    units["g"] = unit_id
-                elif unit_name in ["kilogramme", "kilogrammes"]:
-                    units["kg"] = unit_id
-                elif unit_name in ["millilitre", "millilitres"]:
-                    units["ml"] = unit_id
-                elif unit_name in ["litre", "litres"]:
-                    units["l"] = unit_id
+            unit_name_raw = unit.get("name", "")
+            if unit_id and unit_name_raw:
+                raw_units.append({"id": unit_id, "name": unit_name_raw})
         if not data.get("next"):
             break
         page += 1
+
+    # 1re passe : indexation par nom exact (lowercase)
+    units: dict[str, dict] = {
+        u["name"].lower(): u for u in raw_units
+    }
+
+    # 2e passe : résolution d'alias sans écraser un nom exact déjà présent
+    alias_fallbacks = {
+        "g": ["gramme", "grammes"],
+        "kg": ["kilogramme", "kilogrammes"],
+        "ml": ["millilitre", "millilitres"],
+        "l": ["litre", "litres"],
+    }
+    for alias, long_names in alias_fallbacks.items():
+        if alias in units:
+            continue  # Nom exact déjà présent — ne pas l'écraser
+        for long_name in long_names:
+            if long_name in units:
+                units[alias] = units[long_name]
+                break
     return units
 
 
@@ -400,20 +424,22 @@ def _update_recipe_ingredient(
     headers: dict,
     recipe_slug: str,
     ingredient_ref_id: str,
-    unit_id: str | None,
+    unit_entry: dict | None,
     note: str | None,
     original_ingredient: dict,
 ) -> bool:
     """
     Met à jour l'unité et/ou la note d'un ingrédient dans une recette.
     Préserve toutes les autres propriétés de l'ingrédient.
+
+    unit_entry doit être un dict {id, name} (format exigé par Mealie v3.15+).
     """
     # Construire le payload PATCH pour la recette
     updated_ing = dict(original_ingredient)
 
     # Mettre à jour l'unité si fournie
-    if unit_id:
-        updated_ing["unit"] = {"id": unit_id}
+    if unit_entry:
+        updated_ing["unit"] = {"id": unit_entry["id"], "name": unit_entry["name"]}
 
     # Mettre à jour la note si fournie (ajouter à la note existante)
     if note:
@@ -538,9 +564,9 @@ class IngredientCleaner:
                         recipes_for_update = _find_recipes_using_food(
                             self._api_url, self._headers, issue.food_id
                         )
-                        unit_id = None
+                        unit_entry = None
                         if issue.extracted_unit and units_map:
-                            unit_id = units_map.get(issue.extracted_unit.lower())
+                            unit_entry = units_map.get(issue.extracted_unit.lower())
                         updated_count = 0
                         for rec in recipes_for_update:
                             try:
@@ -549,7 +575,7 @@ class IngredientCleaner:
                                     self._headers,
                                     rec["slug"],
                                     rec["ingredient"]["referenceId"],
-                                    unit_id,
+                                    unit_entry,
                                     issue.extracted_modifier or None,
                                     rec["ingredient"],
                                 )
@@ -655,13 +681,14 @@ class IngredientCleaner:
                     if unit_raw not in units_map:
                         continue
                     food = ing.get("food") or {}
-                    ref_id = ing.get("referenceId")
-                    if not ref_id:
+                    food_id = food.get("id")
+                    if not food_id:
                         continue
                     report.issues.append(RecipeIngredientIssue(
                         recipe_slug=slug,
                         recipe_name=detail.get("name", slug),
-                        reference_id=ref_id,
+                        reference_id=ing.get("referenceId", "") or "",
+                        food_id=food_id,
                         original_text=original,
                         current_quantity=ing.get("quantity") or 0,
                         food_name=food.get("name", ""),
@@ -673,21 +700,25 @@ class IngredientCleaner:
         return report
 
     def fix_recipe_units(
-        self, reference_ids: list[str] | None = None
+        self, issue_keys: list[str] | None = None
     ) -> RecipeUnitsReport:
         """
         Applique les corrections d'unités manquantes détectées par scan_recipe_units.
 
         Args:
-            reference_ids: si fourni, ne corrige que ces `referenceId` d'ingrédients.
-                           Sinon corrige tous les issues détectés.
+            issue_keys: si fourni, ne corrige que ces issues identifiés par la clé
+                        "<food_id>|<original_text>" (stable entre scan et fix).
+                        Sinon corrige tous les issues détectés.
         """
         report = self.scan_recipe_units()
         units_map = _load_all_units(self._api_url, self._headers)
 
+        def _key(i: RecipeIngredientIssue) -> str:
+            return f"{i.food_id}|{i.original_text}"
+
         to_fix = [
             i for i in report.issues
-            if reference_ids is None or i.reference_id in reference_ids
+            if issue_keys is None or _key(i) in issue_keys
         ]
 
         # Regrouper par slug pour ne charger/patcher chaque recette qu'une fois
@@ -707,12 +738,18 @@ class IngredientCleaner:
                 ingredients = recipe.get("recipeIngredient", [])
                 applied_here = 0
                 for issue in issues:
-                    unit_id = units_map.get(issue.extracted_unit.lower())
-                    if not unit_id:
+                    unit_entry = units_map.get(issue.extracted_unit.lower())
+                    if not unit_entry:
                         continue
                     for ing in ingredients:
-                        if ing.get("referenceId") == issue.reference_id:
-                            ing["unit"] = {"id": unit_id}
+                        ing_food = ing.get("food") or {}
+                        # Match stable: food_id + originalText (referenceId change entre GETs)
+                        if (
+                            ing_food.get("id") == issue.food_id
+                            and (ing.get("originalText") or "") == issue.original_text
+                            and not ing.get("unit")
+                        ):
+                            ing["unit"] = {"id": unit_entry["id"], "name": unit_entry["name"]}
                             applied_here += 1
                             report.fixed.append(
                                 f"'{issue.recipe_name}' — "

@@ -98,7 +98,9 @@ class IngredientFixRequest(BaseModel):
 
 
 class RecipeUnitsFixRequest(BaseModel):
-    reference_ids: list[str] | None = None  # Si None, corrige tous les issues
+    # Clés d'identification stable : "<food_id>|<original_text>".
+    # Si None, corrige tous les issues détectés.
+    issue_keys: list[str] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -219,7 +221,7 @@ def ingredients_fix_recipe_units(
     """
     try:
         cleaner = IngredientCleaner()
-        report = cleaner.fix_recipe_units(reference_ids=req.reference_ids)
+        report = cleaner.fix_recipe_units(issue_keys=req.issue_keys)
         return report.to_dict()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
