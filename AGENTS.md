@@ -103,6 +103,24 @@ Avant de conclure une tâche, vérifier :
 - Pour les fichiers non versionnés, utiliser `mv` puis `git add`
 - Vérifier si un fichier est dans `.gitignore` avant de tenter de le lire
 
+### Release et tags Docker
+- **Toujours committer ET pousser AVANT de créer le tag** — le tag doit pointer sur HEAD
+- **Séquence obligatoire** : `git add` → `git commit` → `git push` → `git tag` → `git push origin <tag>`
+- Ne jamais créer un tag sur un commit intermédiaire si d'autres commits de la même feature sont en attente
+- Après un tag, vérifier avec `git log --oneline -3` que le tag pointe bien sur le bon commit
+- Le docker-compose doit être mis à jour dans le même commit que le bump de version (pas avant, pas après)
+
+### Packages Python et addons Docker
+- **Ne jamais utiliser `sys.path.insert` pour importer un module frère** dans un package installé
+- Dans un package installable (`pyproject.toml`, `setup.py`), toujours utiliser des imports relatifs (`from .module import ...`)
+- Quand un module est partagé entre `mealie-workflow` et un addon, copier le fichier dans le package addon — c'est la source de vérité dans le conteneur
+- Vérifier avec `git status` après un `cp` qu'un nouveau fichier est bien staged avant le commit
+
+### Streamlit en conteneur
+- Toujours passer `--server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none` dans tout entrypoint Streamlit Docker
+- Sans ces flags, Streamlit lance un watcher et un thread de stats qui tentent de rebinder le port → conflit au démarrage
+- Ces flags doivent être dans l'entrypoint docker-compose ou le script de lancement, pas dans le code Python
+
 ### Gouvernance
 - Préférer les MCP disponibles avant d'écrire une logique ad hoc
 - Ne jamais hardcoder de secrets, tokens ou URLs sensibles
