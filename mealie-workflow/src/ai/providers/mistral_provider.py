@@ -25,17 +25,17 @@ class MistralProvider(AIProvider):
     
     def complete(self, prompt: str, **kwargs) -> str:
         """Complete a text prompt using Mistral.
-        
+
         Args:
             prompt: The text prompt to complete
             **kwargs: Additional parameters (temperature, max_tokens, etc.)
-            
+
         Returns:
             The completed text
         """
         try:
             from mistralai import Mistral
-            
+
             client = Mistral(api_key=self.api_key)
             response = client.chat.complete(
                 model=self.model,
@@ -47,6 +47,18 @@ class MistralProvider(AIProvider):
             raise ImportError(
                 "Mistral package not installed. Install it with: pip install mistralai"
             )
+
+    def generate(self, prompt: str, **kwargs) -> str:
+        """Generate text using Mistral (alias for complete).
+
+        Args:
+            prompt: The text prompt to complete
+            **kwargs: Additional parameters (temperature, max_tokens, etc.)
+
+        Returns:
+            The generated text
+        """
+        return self.complete(prompt, **kwargs)
     
     def analyze_ingredient(self, ingredient_text: str) -> Dict[str, Any]:
         """Analyze an ingredient text using Mistral.

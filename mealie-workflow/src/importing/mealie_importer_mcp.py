@@ -110,7 +110,7 @@ class MealieImporterMCP:
             print("🔍 Chargement des ingrédients existants depuis Mealie...")
 
             # Charger les foods existants
-            foods_response = requests.get(f"{api_url}/foods?page=1&perPage=500", headers=headers, timeout=10)
+            foods_response = requests.get(f"{api_url}/foods?page=1&perPage=500", headers=headers, timeout=30)
             if foods_response.status_code == 200:
                 foods_data = foods_response.json()
                 self.existing_foods = foods_data.get("items", [])
@@ -120,7 +120,7 @@ class MealieImporterMCP:
                 print(f"   ⚠️ Impossible de charger les foods: {foods_response.status_code}")
 
             # Charger les units existants
-            units_response = requests.get(f"{api_url}/units?page=1&perPage=500", headers=headers, timeout=10)
+            units_response = requests.get(f"{api_url}/units?page=1&perPage=500", headers=headers, timeout=30)
             if units_response.status_code == 200:
                 units_data = units_response.json()
                 self.existing_units = units_data.get("items", [])

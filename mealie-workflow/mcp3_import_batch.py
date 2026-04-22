@@ -126,7 +126,7 @@ def import_batch(recipes_list: List[Dict[str, Any]], batch_size: int = 5, delay:
                     }
                     
                     # Importer la recette
-                    response = requests.post(f"{api_url}/recipes", headers=headers, json=payload, timeout=10)
+                    response = requests.post(f"{api_url}/recipes", headers=headers, json=payload, timeout=60)
                     
                     if response.status_code in [200, 201]:
                         result = response.json()
