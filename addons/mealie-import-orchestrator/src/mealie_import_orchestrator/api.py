@@ -13,6 +13,15 @@ from .config import AddonConfig, AddonConfigurationError
 from .orchestrator import AddonExecutionError, MealieImportOrchestrator
 from .nutrition_orchestrator import NutritionOrchestrator, NutritionOrchestratorError
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "mealie-workflow", "src", "importing"))
+try:
+    from ingredient_cleaner import IngredientCleaner
+    _CLEANER_AVAILABLE = True
+except ImportError:
+    _CLEANER_AVAILABLE = False
+
 # ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
@@ -90,6 +99,10 @@ class EnrichRequest(BaseModel):
     force: bool = False
 
 
+class IngredientFixRequest(BaseModel):
+    food_ids: list[str] | None = None
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -140,6 +153,45 @@ def audit_fix(_: None = Security(_check_key)) -> dict[str, Any]:
         return orch.audit(fix=True)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Internal server error during audit fix") from exc
+
+
+# ---------------------------------------------------------------------------
+# Ingredients cleanup endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get("/ingredients/scan", tags=["ingredients"])
+def ingredients_scan(_: None = Security(_check_key)) -> dict[str, Any]:
+    """Analyse les foods Mealie et détecte les noms mal formés (sans modifier)."""
+    if not _CLEANER_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Module ingredient_cleaner non disponible")
+    try:
+        cleaner = IngredientCleaner()
+        report = cleaner.scan()
+        return report.to_dict()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Erreur scan ingrédients: {exc}") from exc
+
+
+@app.post("/ingredients/fix", tags=["ingredients"])
+def ingredients_fix(req: IngredientFixRequest, _: None = Security(_check_key)) -> dict[str, Any]:
+    """
+    Corrige les foods mal formés.
+    Si food_ids est fourni, ne corrige que ces IDs. Sinon corrige tout.
+    Sécurité : Mealie met à jour automatiquement les recettes référençant ces foods.
+    """
+    if not _CLEANER_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Module ingredient_cleaner non disponible")
+    try:
+        cleaner = IngredientCleaner()
+        report = cleaner.fix(issue_ids=req.food_ids)
+        return report.to_dict()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Erreur correction ingrédients: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------

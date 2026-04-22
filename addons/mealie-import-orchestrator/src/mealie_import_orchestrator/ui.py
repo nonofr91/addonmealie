@@ -69,7 +69,7 @@ with col_btn:
             unsafe_allow_html=True,
         )
 
-tab_import, tab_audit, tab_nutrition, tab_status = st.tabs(["📥 Import", "🔍 Audit", "🥗 Nutrition", "📊 Statut"])
+tab_import, tab_audit, tab_ingredients, tab_nutrition, tab_status = st.tabs(["📥 Import", "🔍 Audit", "� Ingrédients", "�🥗 Nutrition", "📊 Statut"])
 
 # ---------------------------------------------------------------------------
 # Tab 1 — Import
@@ -152,7 +152,86 @@ with tab_audit:
                     st.success(f"✅ {fix}")
 
 # ---------------------------------------------------------------------------
-# Tab 3 — Nutrition
+# Tab 3 — Ingredients cleanup
+# ---------------------------------------------------------------------------
+with tab_ingredients:
+    st.header("Nettoyage des ingrédients")
+    st.caption(
+        "Détecte et corrige les foods mal formés : unité incluse dans le nom, "
+        "modificateurs de préparation (émincé, coupé…), commentaires entre parenthèses. "
+        "**Les recettes existantes sont préservées** : Mealie met à jour automatiquement "
+        "les références quand un food est renommé."
+    )
+
+    col_scan_i, col_fix_i = st.columns(2)
+    with col_scan_i:
+        if st.button("🔍 Scanner les ingrédients", type="secondary", key="ing_scan_btn"):
+            with st.spinner("Analyse en cours…"):
+                report = _api("GET", "/ingredients/scan")
+            st.session_state["ing_report"] = report
+
+    with col_fix_i:
+        if st.button("🔧 Corriger automatiquement", type="primary", key="ing_fix_all_btn"):
+            with st.spinner("Corrections en cours…"):
+                report = _api("POST", "/ingredients/fix", json={"food_ids": None})
+            st.session_state["ing_report"] = report
+
+    report = st.session_state.get("ing_report")
+    if report:
+        if not report.get("success", True) and report.get("error"):
+            st.error(report["error"])
+        else:
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Foods analysés", report.get("total_scanned", 0))
+            col2.metric("Problèmes détectés", report.get("issues_count", 0))
+            col3.metric("Corrections appliquées", report.get("fixed_count", 0))
+
+            errors = report.get("errors", [])
+            if errors:
+                with st.expander(f"⚠️ {len(errors)} avertissements"):
+                    for e in errors:
+                        st.warning(e)
+
+            fixed = report.get("fixed", [])
+            if fixed:
+                with st.expander(f"✅ {len(fixed)} corrections appliquées", expanded=True):
+                    for f in fixed:
+                        st.success(f)
+
+            issues = report.get("issues", [])
+            if issues:
+                st.subheader("Foods problématiques")
+                st.caption("Sélectionne les foods à corriger individuellement ou utilise 'Corriger automatiquement' pour tout traiter.")
+
+                selected_ids = []
+                for i, issue in enumerate(issues):
+                    issue_type_label = {
+                        "unit_in_name": "🔴 Unité dans le nom",
+                        "modifier_in_name": "🟡 Modificateur de préparation",
+                    }.get(issue["issue_type"], "⚪ Autre")
+
+                    col_cb, col_info = st.columns([1, 8])
+                    with col_cb:
+                        checked = st.checkbox("", key=f"ing_cb_{i}", value=False)
+                        if checked:
+                            selected_ids.append(issue["food_id"])
+                    with col_info:
+                        st.markdown(
+                            f"{issue_type_label} — "
+                            f"`{issue['food_name']}` → **`{issue['suggested_name']}`**"
+                            + (f" *(unité extraite : {issue['extracted_unit']})*" if issue.get("extracted_unit") else "")
+                        )
+
+                if selected_ids:
+                    if st.button(f"🔧 Corriger la sélection ({len(selected_ids)} foods)", type="primary", key="ing_fix_sel_btn"):
+                        with st.spinner("Corrections en cours…"):
+                            result = _api("POST", "/ingredients/fix", json={"food_ids": selected_ids})
+                        st.session_state["ing_report"] = result
+                        st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Tab 4 — Nutrition
 # ---------------------------------------------------------------------------
 with tab_nutrition:
     st.header("Enrichissement nutritionnel")
