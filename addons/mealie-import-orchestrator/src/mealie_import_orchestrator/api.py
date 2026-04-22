@@ -13,14 +13,7 @@ from .config import AddonConfig, AddonConfigurationError
 from .orchestrator import AddonExecutionError, MealieImportOrchestrator
 from .nutrition_orchestrator import NutritionOrchestrator, NutritionOrchestratorError
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "mealie-workflow", "src", "importing"))
-try:
-    from ingredient_cleaner import IngredientCleaner
-    _CLEANER_AVAILABLE = True
-except ImportError:
-    _CLEANER_AVAILABLE = False
+from .ingredient_cleaner import IngredientCleaner
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -163,8 +156,6 @@ def audit_fix(_: None = Security(_check_key)) -> dict[str, Any]:
 @app.get("/ingredients/scan", tags=["ingredients"])
 def ingredients_scan(_: None = Security(_check_key)) -> dict[str, Any]:
     """Analyse les foods Mealie et détecte les noms mal formés (sans modifier)."""
-    if not _CLEANER_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Module ingredient_cleaner non disponible")
     try:
         cleaner = IngredientCleaner()
         report = cleaner.scan()
@@ -182,8 +173,6 @@ def ingredients_fix(req: IngredientFixRequest, _: None = Security(_check_key)) -
     Si food_ids est fourni, ne corrige que ces IDs. Sinon corrige tout.
     Sécurité : Mealie met à jour automatiquement les recettes référençant ces foods.
     """
-    if not _CLEANER_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Module ingredient_cleaner non disponible")
     try:
         cleaner = IngredientCleaner()
         report = cleaner.fix(issue_ids=req.food_ids)
