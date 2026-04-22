@@ -50,7 +50,7 @@ services:
     depends_on:
       - nutrition-api
     restart: unless-stopped
-    command: ["streamlit", "run", "src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0"]
+    command: ["streamlit", "run", "src/mealie_nutrition_advisor/ui.py", "--server.port=8502", "--server.address=0.0.0.0", "--server.headless=true", "--browser.gatherUsageStats=false", "--server.fileWatcherType=none"]
     networks:
       - mealie-dev
 

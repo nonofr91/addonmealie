@@ -1,19 +1,24 @@
 # Environnement de dev local qui simule exactement Coolify.
-# Pointe vers ton Mealie réel (Coolify) — pas de Mealie local.
+# Pointe vers ton Mealie local (mealie-local-dev sur réseau mealie-dev).
 #
 # Usage :
-#   cp .env.template .env.dev  # puis remplir MEALIE_BASE_URL et MEALIE_API_KEY
-#   docker compose -f docker-compose.dev.yml build
-#   docker compose -f docker-compose.dev.yml up
+#   cp .env.template .env.dev  # puis remplir MEALIE_BASE_URL=http://mealie-local-dev:9000 + MEALIE_API_KEY
+#   docker compose --env-file .env.dev -f docker-compose.dev.yml build
+#   docker compose --env-file .env.dev -f docker-compose.dev.yml up
 #
 # Smoke test :
-#   curl http://localhost:8000/health
-#   curl http://localhost:8000/openapi.json | python3 -c "import sys,json; print(list(json.load(sys.stdin)['paths'].keys()))"
+#   curl http://localhost:18000/health
+#   curl http://localhost:18000/openapi.json | python3 -c "import sys,json; print(list(json.load(sys.stdin)['paths'].keys()))"
 #
-# Équivalence Coolify :
-#   mealie-addon    → port 8501 (UI) + 8000 (API interne)
-#   nutrition-api   → port 8001
-#   nutrition-ui    → port 8502
+# Ports externes remappés (18xxx) pour éviter les conflits avec d'autres conteneurs :
+#   mealie-addon    → 18000 (API) + 18501 (UI Streamlit)
+#   nutrition-api   → 18001
+#   nutrition-ui    → 18502
+
+networks:
+  default:
+  mealie-dev:
+    external: true
 
 services:
   mealie-addon:
@@ -21,8 +26,11 @@ services:
       context: ../..
       dockerfile: addons/mealie-import-orchestrator/Dockerfile
     env_file: .env.dev
+    networks:
+      - default
+      - mealie-dev
     environment:
-      ADDON_API_URL: "http://nutrition-api:8001"
+      ADDON_API_URL: "http://mealie-addon:8000"
       MEALIE_BASE_URL: "${MEALIE_BASE_URL}"
       MEALIE_API_KEY: "${MEALIE_API_KEY}"
       ADDON_SECRET_KEY: ""
@@ -36,8 +44,8 @@ services:
       MISTRAL_API_KEY: "${MISTRAL_API_KEY:-}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     ports:
-      - "8000:8000"
-      - "8501:8501"
+      - "18000:8000"
+      - "18501:8501"
     depends_on:
       - nutrition-api
 
@@ -61,7 +69,7 @@ services:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     entrypoint: ["uvicorn", "mealie_nutrition_advisor.api:app", "--host", "0.0.0.0", "--port", "8001"]
     ports:
-      - "8001:8001"
+      - "18001:8001"
 
   nutrition-ui:
     build:
@@ -84,6 +92,6 @@ services:
         --browser.gatherUsageStats=false
         --server.fileWatcherType=none
     ports:
-      - "8502:8502"
+      - "18502:8502"
     depends_on:
       - nutrition-api

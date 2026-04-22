@@ -158,10 +158,24 @@ with tab_ingredients:
     st.header("Nettoyage des ingrédients")
     st.caption(
         "Détecte et corrige les foods mal formés : unité incluse dans le nom, "
-        "modificateurs de préparation (émincé, coupé…), commentaires entre parenthèses. "
-        "**Les recettes existantes sont préservées** : Mealie met à jour automatiquement "
-        "les références quand un food est renommé."
+        "modificateurs de préparation (haché, émincé…), commentaires entre parenthèses. "
+        "**Séparation matière/préparation** : le modificateur est transféré dans le champ "
+        "'note' de l'ingrédient (ex: 'persil haché' → food 'persil' + note 'haché'). "
+        "Cela permet une nutrition précise et le regroupement des ingrédients en courses."
     )
+
+    # Option pour mettre à jour les unités dans les recettes
+    update_units = st.checkbox(
+        "✅ Mettre à jour les unités dans les recettes (recommandé pour nutrition et courses)",
+        value=True,
+        key="ing_update_units"
+    )
+    if update_units:
+        st.info(
+            "Les ingrédients des recettes seront mis à jour : "
+            "• Unité extraite (ex: 'g de beurre' → food 'beurre' + unité 'g') "
+            "• Préparation conservée (ex: 'persil haché' → food 'persil' + note 'haché')"
+        )
 
     col_scan_i, col_fix_i = st.columns(2)
     with col_scan_i:
@@ -173,7 +187,10 @@ with tab_ingredients:
     with col_fix_i:
         if st.button("🔧 Corriger automatiquement", type="primary", key="ing_fix_all_btn"):
             with st.spinner("Corrections en cours…"):
-                report = _api("POST", "/ingredients/fix", json={"food_ids": None})
+                report = _api("POST", "/ingredients/fix", json={
+                    "food_ids": None,
+                    "update_recipe_units": update_units
+                })
             st.session_state["ing_report"] = report
 
     report = st.session_state.get("ing_report")
@@ -216,16 +233,30 @@ with tab_ingredients:
                         if checked:
                             selected_ids.append(issue["food_id"])
                     with col_info:
+                        # Construire les détails des extractions
+                        details = []
+                        if issue.get("extracted_unit"):
+                            details.append(f"unité: {issue['extracted_unit']}")
+                        if issue.get("extracted_modifier"):
+                            details.append(f"préparation: {issue['extracted_modifier']}")
+
+                        detail_str = ""
+                        if details:
+                            detail_str = f" *(" + ", ".join(details) + ")*"
+
                         st.markdown(
                             f"{issue_type_label} — "
                             f"`{issue['food_name']}` → **`{issue['suggested_name']}`**"
-                            + (f" *(unité extraite : {issue['extracted_unit']})*" if issue.get("extracted_unit") else "")
+                            + detail_str
                         )
 
                 if selected_ids:
                     if st.button(f"🔧 Corriger la sélection ({len(selected_ids)} foods)", type="primary", key="ing_fix_sel_btn"):
                         with st.spinner("Corrections en cours…"):
-                            result = _api("POST", "/ingredients/fix", json={"food_ids": selected_ids})
+                            result = _api("POST", "/ingredients/fix", json={
+                                "food_ids": selected_ids,
+                                "update_recipe_units": update_units
+                            })
                         st.session_state["ing_report"] = result
                         st.rerun()
 
