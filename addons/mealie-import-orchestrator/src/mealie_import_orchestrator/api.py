@@ -94,6 +94,7 @@ class EnrichRequest(BaseModel):
 
 class IngredientFixRequest(BaseModel):
     food_ids: list[str] | None = None
+    update_recipe_units: bool = True  # Met à jour les unités dans les ingrédients de recettes
 
 
 # ---------------------------------------------------------------------------
@@ -169,13 +170,17 @@ def ingredients_scan(_: None = Security(_check_key)) -> dict[str, Any]:
 @app.post("/ingredients/fix", tags=["ingredients"])
 def ingredients_fix(req: IngredientFixRequest, _: None = Security(_check_key)) -> dict[str, Any]:
     """
-    Corrige les foods mal formés.
+    Corrige les foods mal formés et met à jour les unités dans les recettes.
     Si food_ids est fourni, ne corrige que ces IDs. Sinon corrige tout.
+    update_recipe_units=True : ajoute l'unité extraite aux ingrédients des recettes.
     Sécurité : Mealie met à jour automatiquement les recettes référençant ces foods.
     """
     try:
         cleaner = IngredientCleaner()
-        report = cleaner.fix(issue_ids=req.food_ids)
+        report = cleaner.fix(
+            issue_ids=req.food_ids,
+            update_recipe_units=req.update_recipe_units
+        )
         return report.to_dict()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
