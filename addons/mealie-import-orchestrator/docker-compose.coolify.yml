@@ -21,14 +21,14 @@ services:
       start_period: 120s
 
   mealie-addon:
-    image: 'ghcr.io/nonofr91/mealie-import-addon:0.4.18'
+    image: 'ghcr.io/nonofr91/mealie-import-addon:0.5.0'
     environment:
       - SERVICE_FQDN_MEALIEADDON_8501
       - SERVICE_URL_MEALIEADDON_8501
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
       - 'MEALIE_API_KEY=${MEALIE_API_KEY}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
-      - 'ADDON_API_URL=http://nutrition-api:8001'
+      - 'ADDON_API_URL=http://mealie-addon:8000'
       - 'ADDON_UI_PORT=${ADDON_UI_PORT_IMPORT:-8501}'
       - 'ENABLE_NUTRITION=${ENABLE_NUTRITION:-true}'
       - 'AI_PROVIDER=${AI_PROVIDER:-mock}'
