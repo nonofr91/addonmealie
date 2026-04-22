@@ -290,48 +290,55 @@ def _load_all_units(api_url: str, headers: dict) -> dict[str, str]:
 def _find_recipes_using_food(api_url: str, headers: dict, food_id: str) -> list[dict]:
     """
     Trouve toutes les recettes qui utilisent un food donné.
-    Retourne la liste des recettes avec leurs ingrédients.
+
+    Utilise le filtre natif Mealie `?foods=<id>` pour éviter de parcourir
+    toutes les recettes. On ne charge ensuite que le détail des recettes
+    réellement concernées (en général quelques unités, pas des milliers).
     """
-    recipes = []
+    # 1. Récupérer uniquement les slugs des recettes utilisant ce food
+    matching_slugs: list[str] = []
     page = 1
     while True:
         r = requests.get(
-            f"{api_url}/recipes?page={page}&perPage=100",
+            f"{api_url}/recipes",
             headers=headers,
+            params={"foods": food_id, "page": page, "perPage": 100},
             timeout=30,
         )
         r.raise_for_status()
         data = r.json()
         for recipe in data.get("items", []):
             slug = recipe.get("slug")
-            if not slug:
-                continue
-            # Charger les détails de la recette pour voir les ingrédients
-            try:
-                detail_resp = requests.get(
-                    f"{api_url}/recipes/{slug}",
-                    headers=headers,
-                    timeout=15,
-                )
-                detail_resp.raise_for_status()
-                detail = detail_resp.json()
-                # Vérifier si un ingrédient utilise ce food
-                ingredients = detail.get("recipeIngredients", [])
-                for ing in ingredients:
-                    ing_food = ing.get("food")
-                    if ing_food and ing_food.get("id") == food_id:
-                        recipes.append({
-                            "slug": slug,
-                            "name": detail.get("name", slug),
-                            "ingredient": ing,
-                            "ingredients": ingredients,
-                        })
-                        break  # Une recette peut apparaître une seule fois
-            except Exception:
-                continue
+            if slug:
+                matching_slugs.append(slug)
         if not data.get("next"):
             break
         page += 1
+
+    # 2. Charger le détail de chaque recette trouvée pour identifier l'ingrédient
+    recipes = []
+    for slug in matching_slugs:
+        try:
+            detail_resp = requests.get(
+                f"{api_url}/recipes/{slug}",
+                headers=headers,
+                timeout=15,
+            )
+            detail_resp.raise_for_status()
+            detail = detail_resp.json()
+            ingredients = detail.get("recipeIngredients", [])
+            for ing in ingredients:
+                ing_food = ing.get("food")
+                if ing_food and ing_food.get("id") == food_id:
+                    recipes.append({
+                        "slug": slug,
+                        "name": detail.get("name", slug),
+                        "ingredient": ing,
+                        "ingredients": ingredients,
+                    })
+                    break
+        except Exception:
+            continue
     return recipes
 
 

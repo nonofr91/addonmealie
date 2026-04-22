@@ -22,13 +22,13 @@ if _SECRET:
 # ---------------------------------------------------------------------------
 
 
-def _api(method: str, path: str, **kwargs) -> dict:
+def _api(method: str, path: str, *, timeout: int = 120, **kwargs) -> dict:
     try:
         r = requests.request(
             method,
             f"{API_URL}{path}",
             headers=_HEADERS,
-            timeout=120,
+            timeout=timeout,
             **kwargs,
         )
         r.raise_for_status()
@@ -181,13 +181,13 @@ with tab_ingredients:
     with col_scan_i:
         if st.button("🔍 Scanner les ingrédients", type="secondary", key="ing_scan_btn"):
             with st.spinner("Analyse en cours…"):
-                report = _api("GET", "/ingredients/scan")
+                report = _api("GET", "/ingredients/scan", timeout=600)
             st.session_state["ing_report"] = report
 
     with col_fix_i:
         if st.button("🔧 Corriger automatiquement", type="primary", key="ing_fix_all_btn"):
             with st.spinner("Corrections en cours…"):
-                report = _api("POST", "/ingredients/fix", json={
+                report = _api("POST", "/ingredients/fix", timeout=600, json={
                     "food_ids": None,
                     "update_recipe_units": update_units
                 })
@@ -229,7 +229,12 @@ with tab_ingredients:
 
                     col_cb, col_info = st.columns([1, 8])
                     with col_cb:
-                        checked = st.checkbox("", key=f"ing_cb_{i}", value=False)
+                        checked = st.checkbox(
+                            f"Sélectionner {issue['food_name']}",
+                            key=f"ing_cb_{i}",
+                            value=False,
+                            label_visibility="collapsed",
+                        )
                         if checked:
                             selected_ids.append(issue["food_id"])
                     with col_info:
@@ -253,7 +258,7 @@ with tab_ingredients:
                 if selected_ids:
                     if st.button(f"🔧 Corriger la sélection ({len(selected_ids)} foods)", type="primary", key="ing_fix_sel_btn"):
                         with st.spinner("Corrections en cours…"):
-                            result = _api("POST", "/ingredients/fix", json={
+                            result = _api("POST", "/ingredients/fix", timeout=600, json={
                                 "food_ids": selected_ids,
                                 "update_recipe_units": update_units
                             })
