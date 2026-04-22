@@ -214,14 +214,41 @@ def _load_all_foods(api_url: str, headers: dict) -> list[dict]:
 
 def _rename_food(api_url: str, headers: dict, food_id: str, new_name: str) -> None:
     """
-    Renomme un food via PATCH /api/foods/{id}.
+    Renomme un food via PUT /api/foods/{id}.
     Mealie met à jour automatiquement les références dans les recettes.
+
+    Note : Mealie n'accepte que PUT (pas PATCH) sur cet endpoint.
+    On charge d'abord le food pour préserver tous ses champs (labelId, aliases, etc.).
     """
-    r = requests.patch(
+    # GET pour récupérer l'état actuel
+    r = requests.get(f"{api_url}/foods/{food_id}", headers=headers, timeout=10)
+    r.raise_for_status()
+    food = r.json()
+
+    # Modifier uniquement le nom
+    food["name"] = new_name
+
+    # PUT avec le payload complet
+    r = requests.put(
         f"{api_url}/foods/{food_id}",
         headers=headers,
-        json={"name": new_name},
+        json=food,
         timeout=10,
+    )
+    r.raise_for_status()
+
+
+def _merge_food(api_url: str, headers: dict, from_food_id: str, to_food_id: str) -> None:
+    """
+    Fusionne deux foods via PUT /api/foods/merge.
+    Toutes les recettes utilisant `from_food_id` seront transférées vers `to_food_id`,
+    puis `from_food_id` sera supprimé par Mealie.
+    """
+    r = requests.put(
+        f"{api_url}/foods/merge",
+        headers=headers,
+        json={"fromFood": from_food_id, "toFood": to_food_id},
+        timeout=30,
     )
     r.raise_for_status()
 
@@ -428,37 +455,34 @@ class IngredientCleaner:
             except Exception as exc:
                 report.errors.append(f"⚠️ Impossible de charger les unités: {exc}")
 
-        # Vérifier les conflits de noms : si le suggested_name existe déjà,
-        # on ne renomme pas (éviter les doublons)
-        existing_names = {
-            f["name"].lower()
-            for f in _load_all_foods(self._api_url, self._headers)
+        # Charger tous les foods pour gérer les doublons par fusion
+        all_foods = _load_all_foods(self._api_url, self._headers)
+        existing_by_name: dict[str, str] = {
+            f["name"].lower(): f["id"] for f in all_foods
         }
 
         for issue in to_fix:
             target = issue.suggested_name
-            if target.lower() in existing_names and target.lower() != issue.food_name.lower():
-                report.errors.append(
-                    f"⚠️ '{issue.food_name}' → '{target}' ignoré : le food cible existe déjà"
-                )
-                continue
-            try:
-                # 1. Renommer le food
-                _rename_food(self._api_url, self._headers, issue.food_id, target)
-                fix_msg = f"'{issue.food_name}' → '{target}'"
+            target_lower = target.lower()
+            source_lower = issue.food_name.lower()
+            is_duplicate = (
+                target_lower in existing_by_name
+                and target_lower != source_lower
+            )
 
-                # 2. Mettre à jour les ingrédients des recettes concernées
+            try:
+                # 1. Mise à jour des ingrédients des recettes AVANT merge/rename
+                #    (on a besoin des références au food source actuel)
                 if update_recipe_units:
                     try:
-                        recipes = _find_recipes_using_food(
+                        recipes_for_update = _find_recipes_using_food(
                             self._api_url, self._headers, issue.food_id
                         )
-                        updated_count = 0
                         unit_id = None
                         if issue.extracted_unit and units_map:
                             unit_id = units_map.get(issue.extracted_unit.lower())
-
-                        for rec in recipes:
+                        updated_count = 0
+                        for rec in recipes_for_update:
                             try:
                                 _update_recipe_ingredient(
                                     self._api_url,
@@ -474,21 +498,40 @@ class IngredientCleaner:
                                 report.errors.append(
                                     f"❌ Recette '{rec['name']}' - ingrédient non mis à jour: {ing_exc}"
                                 )
-                        if updated_count > 0:
-                            updates = []
-                            if issue.extracted_unit:
-                                updates.append(f"unité '{issue.extracted_unit}'")
-                            if issue.extracted_modifier:
-                                updates.append(f"note '{issue.extracted_modifier}'")
-                            if updates:
-                                fix_msg += f" (+{updated_count} recettes avec {', '.join(updates)})"
                     except Exception as rec_exc:
                         report.errors.append(
                             f"⚠️ Erreur recherche recettes pour '{target}': {rec_exc}"
                         )
+                        updated_count = 0
+                else:
+                    updated_count = 0
+
+                # 2. Rename ou Merge selon l'existence du food cible
+                if is_duplicate:
+                    to_food_id = existing_by_name[target_lower]
+                    _merge_food(
+                        self._api_url, self._headers, issue.food_id, to_food_id
+                    )
+                    fix_msg = f"🔀 '{issue.food_name}' fusionné avec '{target}'"
+                else:
+                    _rename_food(
+                        self._api_url, self._headers, issue.food_id, target
+                    )
+                    fix_msg = f"'{issue.food_name}' → '{target}'"
+                    # Le food renommé remplace désormais le source dans l'index
+                    existing_by_name[target_lower] = issue.food_id
+
+                # 3. Résumé : ajouter le compte de recettes mises à jour
+                if updated_count > 0:
+                    updates = []
+                    if issue.extracted_unit:
+                        updates.append(f"unité '{issue.extracted_unit}'")
+                    if issue.extracted_modifier:
+                        updates.append(f"note '{issue.extracted_modifier}'")
+                    if updates:
+                        fix_msg += f" (+{updated_count} recettes avec {', '.join(updates)})"
 
                 report.fixed.append(fix_msg)
-                existing_names.add(target.lower())
             except Exception as exc:
                 report.errors.append(
                     f"❌ Erreur sur '{issue.food_name}': {exc}"
