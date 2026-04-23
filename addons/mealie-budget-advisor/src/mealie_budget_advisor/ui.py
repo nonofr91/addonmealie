@@ -67,7 +67,7 @@ with col_btn:
         )
 
 # Onglets
-tabs = st.tabs(["📊 Statut", "💰 Budget", "🏷️ Prix", "📈 Coûts"])
+tabs = st.tabs(["📊 Statut", "💰 Budget", "� Planning", "�️ Prix", "📈 Coûts"])
 
 # Tab Statut
 with tabs[0]:
@@ -162,8 +162,81 @@ with tabs[1]:
             else:
                 st.error(f"Erreur: {resp.get('error')}")
 
-# Tab Prix
+# Tab Planning
 with tabs[2]:
+    st.header("🎯 Planning budget-aware")
+    st.caption("Suggestions d'alternatives respectant votre budget")
+
+    # Vérifier si un budget est défini
+    current_budget = _api("GET", "/budget")
+    if not current_budget.get("success") or not current_budget.get("budget"):
+        st.warning("⚠️ Définissez d'abord un budget dans l'onglet 💰 Budget")
+        st.stop()
+
+    budget = current_budget.get("budget", {})
+    budget_per_meal = budget.get("budget_per_meal", 0)
+
+    # Suggestion d'alternatives
+    st.subheader("💡 Suggérer des alternatives moins chères")
+    col_slug, col_limit = st.columns([3, 1])
+    with col_slug:
+        slug = st.text_input("Slug de la recette actuelle", placeholder="ex: carbonara-marmiton")
+    with col_limit:
+        limit = st.number_input("Max suggestions", min_value=1, max_value=20, value=5)
+
+    if slug and st.button("🔍 Chercher des alternatives", type="primary"):
+        with st.spinner("Recherche en cours..."):
+            resp = _api("GET", "/planning/suggest-alternatives", params={"current_slug": slug, "limit": limit})
+        if resp.get("success"):
+            current = resp.get("current_recipe", {})
+            suggestions = resp.get("suggestions", [])
+
+            st.info(f"Budget par repas: {budget_per_meal:.2f} €")
+            st.caption(f"Coût actuel: {current.get('cost_per_serving', 0):.2f} €")
+
+            if suggestions:
+                st.success(f"✅ {len(suggestions)} alternatives respectant le budget trouvées")
+                for s in suggestions:
+                    with st.expander(f"{s.get('slug')} - {s.get('cost_per_serving'):.2f} €/portion"):
+                        st.write(f"Économie: {s.get('savings', 0):.2f} € par portion")
+                        st.write(f"Coût: {s.get('cost_per_serving', 0):.2f} €")
+            else:
+                st.warning("Aucune alternative moins chère trouvée")
+        else:
+            st.error(f"Erreur: {resp.get('error')}")
+
+    # Rapport coût vs budget
+    st.divider()
+    st.subheader("📊 Rapport coût vs budget")
+    st.caption("Analysez plusieurs recettes par rapport à votre budget")
+    slugs_input = st.text_input("Slugs des recettes (séparés par des virgules)", placeholder="ex: carbonara, bolognese, pizza")
+
+    if slugs_input and st.button("Générer le rapport"):
+        slugs = [s.strip() for s in slugs_input.split(",") if s.strip()]
+        with st.spinner("Calcul en cours..."):
+            resp = _api("GET", "/planning/cost-report", params={"slugs": slugs})
+        if resp.get("success"):
+            report = resp.get("report", {})
+
+            # Métriques principales
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Recettes analysées", report.get("total_recipes", 0))
+            col2.metric("Coût moyen", f"{report.get('avg_cost_per_serving', 0):.2f} €")
+            col3.metric("Dans le budget", f"{report.get('within_budget_pct', 0):.0f}%")
+            col4.metric("Repas possibles", report.get("meals_possible", 0))
+
+            # Détails
+            st.divider()
+            col_wb, col_ob = st.columns(2)
+            with col_wb:
+                st.metric("Recettes dans le budget", report.get("within_budget_count", 0))
+            with col_ob:
+                st.metric("Recettes hors budget", report.get("over_budget_count", 0))
+        else:
+            st.error(f"Erreur: {resp.get('error')}")
+
+# Tab Prix
+with tabs[3]:
     st.header("🏷️ Gestion des prix")
     st.caption("Prix manuels et recherche Open Prices")
 
@@ -240,7 +313,7 @@ with tabs[2]:
         st.error(f"Erreur: {prices_resp.get('error')}")
 
 # Tab Coûts
-with tabs[3]:
+with tabs[4]:
     st.header("📈 Coût des recettes")
     st.caption("Calculez le coût de vos recettes Mealie")
 

@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import BudgetConfigError, get_config
 from .mealie_sync import MealieClient
 from .models.budget import BudgetPeriod, BudgetSettings
+from .models.cost import RecipeCost
+from .planning.budget_aware_planner import BudgetAwarePlanner
 from .planning.budget_manager import BudgetManager
 from .pricing.cost_calculator import CostCalculator
 from .pricing.manual_pricer import ManualPricer
@@ -20,6 +22,7 @@ cost_calculator = CostCalculator(
 )
 manual_pricer = ManualPricer()
 budget_manager = BudgetManager(config_dir=config.config_dir)
+budget_planner = BudgetAwarePlanner()
 
 
 @asynccontextmanager
@@ -265,4 +268,81 @@ async def compare_recipe_costs(
             {"slug": slug, "cost": cost, "per_serving": per_serving}
             for slug, cost in sorted_costs
         ],
+    }
+
+
+@app.get("/planning/suggest-alternatives")
+async def suggest_alternatives(
+    current_slug: str = Query(..., description="Slug de la recette actuelle"),
+    limit: int = Query(5, ge=1, le=20),
+):
+    """Suggère des alternatives moins chères respectant le budget."""
+    # Récupérer le budget actuel
+    budget = budget_manager.get_current_budget()
+    if not budget:
+        raise HTTPException(status_code=404, detail="Aucun budget défini")
+
+    # Récupérer toutes les recettes
+    recipes = mealie_client.get_all_recipes()
+    all_slugs = [r.get("slug") for r in recipes if r.get("slug")]
+
+    # Filtrer la recette actuelle
+    if current_slug in all_slugs:
+        all_slugs.remove(current_slug)
+
+    # Calculer les coûts
+    costs = cost_calculator.calculate_batch_costs(all_slugs[:50], use_open_prices=True)
+
+    # Récupérer le coût de la recette actuelle
+    current_cost = cost_calculator.calculate_cost(current_slug, use_open_prices=True)
+
+    if not current_cost:
+        raise HTTPException(status_code=404, detail=f"Recette {current_slug} non trouvée")
+
+    # Suggérer des alternatives
+    alternatives = budget_planner.suggest_cheaper_alternatives(
+        current_cost=current_cost.cost_per_serving,
+        budget_per_meal=budget.budget_per_meal,
+        alternatives=costs,
+        limit=limit,
+    )
+
+    return {
+        "success": True,
+        "current_recipe": {
+            "slug": current_slug,
+            "cost_per_serving": current_cost.cost_per_serving,
+        },
+        "budget_per_meal": budget.budget_per_meal,
+        "suggestions": [
+            {
+                "slug": r.recipe_slug,
+                "cost_per_serving": r.cost_per_serving,
+                "savings": round(budget.budget_per_meal - r.cost_per_serving, 2),
+            }
+            for r in alternatives
+        ],
+    }
+
+
+@app.get("/planning/cost-report")
+async def generate_cost_report(
+    slugs: list[str] = Query(..., description="Liste des slugs à analyser"),
+):
+    """Génère un rapport coût vs budget pour plusieurs recettes."""
+    # Récupérer le budget actuel
+    budget = budget_manager.get_current_budget()
+    if not budget:
+        raise HTTPException(status_code=404, detail="Aucun budget défini")
+
+    # Calculer les coûts
+    costs = cost_calculator.calculate_batch_costs(slugs, use_open_prices=True)
+
+    # Générer le rapport
+    report = budget_planner.generate_cost_report(costs, budget)
+
+    return {
+        "success": True,
+        "budget": budget.model_dump(),
+        "report": report,
     }
