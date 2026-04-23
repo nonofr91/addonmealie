@@ -1,34 +1,4 @@
 services:
-  mealie:
-    image: ghcr.io/mealie-organization/mealie:v1.12.0
-    environment:
-      - ALLOW_SIGNUP=${ALLOW_SIGNUP:-true}
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Paris}
-      - MAX_WORKERS=${MAX_WORKERS:-10}
-      - WEB_CONCURRENCY=${WEB_CONCURRENCY:-1}
-      - BASE_URL=${BASE_URL}
-    volumes:
-      - mealie_data:/app/data
-    depends_on:
-      mealie-db:
-        condition: service_healthy
-
-  mealie-db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-mealie}
-      - POSTGRES_USER=${POSTGRES_USER:-mealie}
-      - POSTGRES_DB=${POSTGRES_DB:-mealie}
-    volumes:
-      - mealie_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mealie"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   mealie-addon:
     image: ghcr.io/nonofr91/mealie-addon:v1.0.2
     environment:
@@ -53,9 +23,6 @@ services:
       - ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}
       - ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}
       - ENABLE_CONFLICT_DETECTION=${ENABLE_CONFLICT_DETECTION:-true}
-    depends_on:
-      mealie:
-        condition: service_started
 
   nutrition-api:
     image: ghcr.io/nonofr91/mealie-nutrition-api:v1.0.2
@@ -148,7 +115,5 @@ services:
         condition: service_started
 
 volumes:
-  mealie_data: null
-  mealie_db_data: null
   budget_data: null
   budget_config: null
