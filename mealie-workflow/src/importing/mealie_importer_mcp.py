@@ -263,7 +263,7 @@ class MealieImporterMCP:
 
                     # Texte complet pour le champ note (fallback si unit/food non résolus)
                     display_text = ingredient.get('display') or ingredient.get('originalText') or display_note or ''
-                    
+
                     # Déduplication : si display contient le même texte deux fois, le nettoyer
                     if display_text and isinstance(display_text, str):
                         text_parts = display_text.strip().split()
@@ -271,6 +271,17 @@ class MealieImporterMCP:
                             mid = len(text_parts) // 2
                             if text_parts[:mid] == text_parts[mid:]:
                                 display_text = ' '.join(text_parts[:mid])
+
+                    # Extraire uniquement le modificateur de préparation pour le note (pas le texte complet)
+                    # Si on a quantity/unit/food structurés, le note ne doit contenir que le modificateur
+                    preparation_note = ''
+                    if display_text and isinstance(display_text, str):
+                        # Chercher des modificateurs de préparation courants
+                        modifiers = ['haché', 'émincé', 'coupé', 'tranché', 'râpé', 'écrasé', 'pressé', 'ciselé']
+                        for mod in modifiers:
+                            if mod in display_text.lower():
+                                preparation_note = mod
+                                break
                     
                     # DÉDUPLICATION DES INGRÉDIENTS
                     # Normaliser et traduire le food
@@ -325,7 +336,7 @@ class MealieImporterMCP:
                         "quantity": quantity,
                         "unit": unit if unit else None,
                         "food": food if food else None,
-                        "note": display_text if isinstance(display_text, str) else '',
+                        "note": preparation_note if preparation_note else '',  # Note minimal (modificateur uniquement)
                         "display": display_text,
                         "title": ingredient.get('title'),
                         "originalText": display_text,
