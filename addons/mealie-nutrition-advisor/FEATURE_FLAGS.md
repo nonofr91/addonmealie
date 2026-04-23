@@ -82,6 +82,42 @@ Enables or disables the multi-profile conflict detection in menu planning.
 
 ---
 
+### `ENABLE_SEASONALITY` (default: `true`)
+
+Enables or disables seasonality scoring for ingredients.
+
+**When enabled:**
+- Recipes with in-season ingredients get bonus points
+- API endpoints for seasonality are accessible
+- Seasonal calendar data is loaded
+
+**When disabled:**
+- Seasonality scoring returns neutral (0.5) for all ingredients
+- Seasonality API endpoints return 503
+- Reduced variety scoring quality
+
+**Use case:** Disable if you don't have seasonal calendar data or don't care about seasonality.
+
+---
+
+### `ENABLE_VARIETY_SCORING` (default: `true`)
+
+Enables or disables anti-boredom variety scoring.
+
+**When enabled:**
+- Recently used recipes get penalty scores
+- Recipe family diversity is tracked (e.g., pasta, rice, soup)
+- History is fetched from Mealie mealplan API
+
+**When disabled:**
+- Variety scoring returns neutral values
+- No history tracking or family penalties
+- More repetitive menus may be generated
+
+**Use case:** Disable if you prefer simple random selection without variety constraints.
+
+---
+
 ## Configuration
 
 ### Environment Variables
@@ -94,12 +130,16 @@ ENABLE_PROFILE_UI=true
 ENABLE_MENU_PLANNER=true
 ENABLE_NUTRITION_ANALYSIS=true
 ENABLE_CONFLICT_DETECTION=true
+ENABLE_SEASONALITY=true
+ENABLE_VARIETY_SCORING=true
 
 # Disable specific features
 ENABLE_PROFILE_UI=false
 ENABLE_MENU_PLANNER=false
 ENABLE_NUTRITION_ANALYSIS=false
 ENABLE_CONFLICT_DETECTION=false
+ENABLE_SEASONALITY=false
+ENABLE_VARIETY_SCORING=false
 ```
 
 ### Docker Compose

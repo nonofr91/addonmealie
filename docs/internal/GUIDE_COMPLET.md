@@ -1,5 +1,12 @@
 # 🎯 Guide Complet : Scraper & Importer les Recettes Marmiton dans Mealie
 
+> ⚠️ **DEPRECATED** - Ce guide est obsolète. Les outils référencés (`simple_scraper.py`, `import_to_mealie.py`, `mealie_mcp_test`) ont été déplacés ou remplacés.
+>
+> **Documentation actuelle :**
+> - Import hybride : `mealie-workflow/docs/README.md`
+> - MCP Mealie : `mealie-mcp-server/README.md` et `mealie-mcp-server/API_COVERAGE.md`
+> - Architecture : `docs/ARCHITECTURE.md`
+
 ## 📋 Vue d'ensemble
 
 Ce système complet vous permet de :
@@ -59,25 +66,30 @@ recipe_urls = scrape_pages(1, 20)  # Pages 1 à 20
 
 ### Import manuel (une recette)
 ```python
-from mealie_mcp_test import mcp3_create_recipe_from_url
+# Utiliser le MCP Mealie ou le module d'import canonique
+# Le MCP Mealie est disponible dans mealie-mcp-server/
+# Voir mealie-mcp-server/README.md pour la configuration
 
-# Import d'une recette spécifique
-mcp3_create_recipe_from_url(
-    url="https://www.marmiton.org/recettes/recette_blanquette-de-veau-facile_19219.aspx",
-    include_tags=True
-)
+# Exemple avec le MCP :
+# from mealie_mcp_package import create_recipe_from_url
+# create_recipe_from_url(
+#     url="https://www.marmiton.org/recettes/recette_blanquette-de-veau-facile_19219.aspx"
+# )
 ```
 
-### Import batch avec le script
+### Import batch
+Utiliser le workflow d'import dans `mealie-workflow/` :
 ```bash
-python3 import_to_mealie.py
+cd mealie-workflow
+python3 import_hybrid.py --limit 20
 ```
 
 Options disponibles :
-1. **Test** : 5 recettes
-2. **Petit** : 20 recettes  
-3. **Moyen** : 50 recettes
-4. **Complet** : Toutes les recettes
+- `--limit N` : Limiter à N recettes
+- `--source marmiton` : Source des recettes
+- `--dry-run` : Simulation sans import
+
+Documentation complète : `mealie-workflow/docs/README.md`
 
 ---
 
@@ -92,10 +104,12 @@ Le parser reconnaît maintenant :
 
 ### Validation automatique
 ```python
-from mealie_mcp_test import mcp3_validate_ingredients_structure
+# Validation via MCP Mealie
+# Voir mealie-mcp-server/API_COVERAGE.md pour les outils disponibles
 
-# Vérifie qu'une recette est 100% structurée
-mcp3_validate_ingredients_structure(slug="nom-de-recette")
+# Ou utiliser le module d'import hybride :
+from mealie_workflow.importing.validator import validate_recipe_structure
+validate_recipe_structure(slug="nom-de-recette")
 ```
 
 ---
@@ -128,8 +142,15 @@ python3 import_to_mealie.py
 # Choix : 1 (5 recettes)
 
 # 3. Vérifier une recette
-from mealie_mcp_test import mcp3_get_recipe_details
-mcp3_get_recipe_details(slug="blanquette-de-veau-facile")
+# Utiliser le MCP Mealie
+# mcp3_get_recipe_detailed(slug="blanquette-de-veau-facile")
+
+# Ou l'API REST de Mealie directement
+import requests
+response = requests.get(
+    f"{MEALIE_BASE_URL}/api/recipes/blanquette-de-veau-facile",
+    headers={"Authorization": f"Bearer {MEALIE_API_KEY}"}
+)
 ```
 
 ### Scénario 2 : Import moyen
@@ -212,9 +233,12 @@ python3 simple_scraper.py
 
 ### Nettoyer les imports
 ```python
-# Supprimer les recettes en double
-from mealie_mcp_test import mcp3_cleanup_duplicates
-mcp3_cleanup_duplicates()
+# Déduplication via le workflow
+from mealie_workflow.cleaning.deduplicator import RecipeDeduplicator
+
+dedup = RecipeDeduplicator()
+duplicates = dedup.find_duplicates()
+dedup.merge_duplicates(duplicates)
 ```
 
 ---
