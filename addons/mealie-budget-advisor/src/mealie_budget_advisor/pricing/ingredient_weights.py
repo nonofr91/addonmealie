@@ -2,10 +2,23 @@
 
 Utilisée pour convertir des quantités en "unit" (pièces) vers kg/l
 pour le calcul des coûts.
+
+Charge d'abord le fichier généré par IA s'il existe, sinon utilise
+la base manuelle.
 """
 
-# Poids moyens en kg par unité/pièce
-INGREDIENT_WEIGHTS = {
+import json
+import logging
+import os
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+# Chemin du fichier généré par IA
+IA_WEIGHTS_FILE = Path(__file__).parent / "ingredient_weights_ia.json"
+
+# Poids moyens en kg par unité/pièce (base manuelle)
+MANUAL_WEIGHTS = {
     # Légumes
     "courgette": 0.25,
     "courgettes": 0.25,
@@ -123,6 +136,19 @@ INGREDIENT_WEIGHTS = {
     "gingembre": 0.02,
     "piment": 0.01,
 }
+
+
+# Charger les poids IA si disponibles
+INGREDIENT_WEIGHTS = MANUAL_WEIGHTS.copy()
+
+if IA_WEIGHTS_FILE.exists():
+    try:
+        with open(IA_WEIGHTS_FILE, "r", encoding="utf-8") as f:
+            ia_weights = json.load(f)
+            INGREDIENT_WEIGHTS.update(ia_weights)
+            logger.info(f"Chargé {len(ia_weights)} poids depuis {IA_WEIGHTS_FILE}")
+    except Exception as e:
+        logger.warning(f"Erreur chargement fichier IA: {e}, utilisation base manuelle")
 
 
 def get_ingredient_weight(ingredient_name: str) -> float:
