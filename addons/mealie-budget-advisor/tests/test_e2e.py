@@ -74,21 +74,23 @@ def test_budget_crud():
 
 def test_manual_prices():
     """Test 4: Manual prices management."""
-    # Ajouter un prix manuel
-    price_data = {
-        "ingredient_name": "tomate",
-        "price": 2.50,
-        "unit": "kg",
-        "source": "manual",
-    }
-    response = requests.post(f"{API_BASE_URL}/prices/manual", json=price_data, timeout=5)
+    # Ajouter un prix manuel (note: utilise query params)
+    response = requests.post(
+        "http://localhost:8003/prices/manual",
+        params={
+            "ingredient_name": "tomate",
+            "price_per_unit": 2.50,
+            "unit": "kg",
+        },
+        timeout=5,
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
     print("✅ Manual price creation OK")
 
     # Lister les prix manuels
-    response = requests.get(f"{API_BASE_URL}/prices/manual", timeout=5)
+    response = requests.get("http://localhost:8003/prices/manual", timeout=5)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True

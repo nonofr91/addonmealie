@@ -2,13 +2,14 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import BudgetConfigError, get_config
 from .mealie_sync import MealieClient
 from .models.budget import BudgetPeriod, BudgetSettings
 from .models.cost import RecipeCost
+from .models.pricing import ManualPrice
 from .planning.budget_aware_planner import BudgetAwarePlanner
 from .planning.budget_manager import BudgetManager
 from .pricing.cost_calculator import CostCalculator
@@ -245,29 +246,29 @@ async def list_manual_prices(search: str = ""):
 
 @app.post("/prices/manual")
 async def add_manual_price(
-    ingredient_name: str,
-    price_per_unit: float,
-    unit: str,
-    store: str = "",
-    location: str = "",
-    notes: str = "",
+    ingredient_name: str = Query(..., description="Nom de l'ingrédient"),
+    price_per_unit: float = Query(..., gt=0, description="Prix par unité"),
+    unit: str = Query(..., description="Unité (kg, g, l, ml, unit)"),
+    store: str = Query("", description="Magasin (optionnel)"),
+    location: str = Query("", description="Localisation (optionnel)"),
+    notes: str = Query("", description="Notes (optionnel)"),
 ):
     """Ajoute ou met à jour un prix manuel."""
     if not config.enable_manual_prices:
         raise HTTPException(status_code=503, detail="Prix manuels désactivés")
 
-    price = manual_pricer.set_price(
+    manual_price = manual_pricer.set_price(
         ingredient_name=ingredient_name,
         price_per_unit=price_per_unit,
         unit=unit,
-        store=store or None,
-        location=location or None,
-        notes=notes or None,
+        store=store if store else None,
+        location=location if location else None,
+        notes=notes if notes else None,
     )
 
     return {
         "success": True,
-        "price": price.model_dump(),
+        "price": manual_price.model_dump(),
     }
 
 
