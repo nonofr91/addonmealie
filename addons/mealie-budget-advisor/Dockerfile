@@ -7,15 +7,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copie et installation des dépendances Python
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e "."
+# Copie du code source, README et pyproject.toml
+COPY pyproject.toml README.md src/ ./
 
-# Copie du code source
-COPY src/ ./src/
-
-# Réinstallation avec le code
-RUN pip install --no-cache-dir -e "."
+# Installation des dépendances Python (non-editable pour éviter le problème egg_base)
+RUN pip install --no-cache-dir "."
 
 # Port exposés
 EXPOSE 8003 8503

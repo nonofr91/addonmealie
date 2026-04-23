@@ -46,10 +46,7 @@ budget-api = "mealie_budget_advisor.api:main"
 budget-ui = "mealie_budget_advisor.ui:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
 
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.ruff]
 line-length = 100
