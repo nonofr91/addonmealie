@@ -6,6 +6,7 @@ from typing import Optional
 
 from rapidfuzz import fuzz, process
 
+from .ingredient_weights import get_ingredient_weight
 from .manual_pricer import ManualPricer
 from .open_prices_client import OpenPricesClient
 
@@ -163,6 +164,11 @@ class IngredientMatcher:
             Tuple (prix_total, source, confiance)
         """
         normalized_name = ingredient_name.lower().strip()
+        
+        # Ingrédients gratuits (eau, sel de table, etc.)
+        free_ingredients = ["eau", "water", "sel de table", "table salt"]
+        if any(free in normalized_name for free in free_ingredients):
+            return 0.0, "free", 1.0
 
         # 1. Chercher dans les prix manuels
         manual_price = self.manual.get_price(normalized_name)
@@ -184,12 +190,13 @@ class IngredientMatcher:
                 qty_base, unit_base = self.normalize_quantity(quantity, unit)
                 
                 # Conversion intelligente: le prix Open Prices est en €/kg ou €/l
-                # Si l'ingrédient est en unités, on estime un poids moyen
+                # Si l'ingrédient est en unités, on utilise le poids moyen spécifique
                 if unit_base == "unit":
-                    # Estimation: 1 unité ≈ 0.1kg pour les légumes, 0.2kg pour la viande
-                    # Pour simplifier, on utilise 0.15kg comme moyenne
-                    estimated_kg = qty_base * 0.15
+                    # Utiliser la base de données de poids moyens par type d'ingrédient
+                    weight_per_unit = get_ingredient_weight(ingredient_name)
+                    estimated_kg = qty_base * weight_per_unit
                     total_price = estimated_kg * median_price
+                    logger.debug(f"Conversion {ingredient_name}: {qty_base} unit × {weight_per_unit}kg/unit = {estimated_kg}kg × {median_price}€/kg = {total_price}€")
                 elif unit_base == "kg" or unit_base == "l":
                     # Prix déjà dans la bonne unité
                     total_price = qty_base * median_price
