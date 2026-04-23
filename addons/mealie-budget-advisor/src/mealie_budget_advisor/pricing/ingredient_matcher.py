@@ -65,33 +65,56 @@ class IngredientMatcher:
         Returns:
             Tuple (quantité, unité, nom_ingrédient)
         """
-        # Patterns communs
+        note = note.strip()
+
+        # Helper: convertir virgule française en point décimal
+        def parse_qty(qty_str: str) -> float:
+            qty_str = qty_str.replace(",", ".")
+            try:
+                return float(qty_str)
+            except ValueError:
+                return 1.0
+
+        # Patterns communs (ordre important: du plus spécifique au moins)
         patterns = [
-            # "2 cuillères à soupe d'huile"
-            r"^(?P<qty>\d+(?:\.\d+)?)\s+(?P<unit>cuillères?\s+à\s+(?:soupe|café)|c\.\s*(?:à|a)\.\s*s\.?|c\.\s*(?:à|a)\.\s*c\.?)\s+d['e]?(?P<name>.+)$",
-            # "200g de farine" ou "200 g farine"
-            r"^(?P<qty>\d+(?:\.\d+)?)\s*(?P<unit>g|kg|ml|l|cl|mg|tasses?|cups?)\s+(?:de\s+)?(?P<name>.+)$",
-            # "2 pommes"
-            r"^(?P<qty>\d+(?:\.\d+)?)\s+(?P<name>\w+(?:\s+\w+){0,3})$",
-            # Juste le nom
-            r"^(?P<name>.+)$",
+            # Fractions: "1/2 tasse de lait", "3/4 cup sugar"
+            r"^(?P<qty>\d+/\d+)\s+(?P<unit>tasse?|cup|cuill[èe]res?\s+à\s+(?:soupe|café)|tsp|tbsp|g|kg|ml|l|cl)\s+(?:de\s+)?(?P<name>.+)$",
+            # "2 cuillères à soupe d'huile" ou "2 c. à s. huile"
+            r"^(?P<qty>\d+(?:[,.]\d+)?)\s+(?P<unit>cuill[èe]res?\s+à\s+(?:soupe|café)|c\.\s*(?:à|a)\.\s*s\.?|c\.\s*(?:à|a)\.\s*c\.?|tbsp|tsp)\s+d['e]?(?P<name>.+)$",
+            # "200g de farine", "200 g farine", "200g farine"
+            r"^(?P<qty>\d+(?:[,.]\d+)?)\s*(?P<unit>g|kg|ml|l|cl|mg|tasses?|cups?|oz|lb)\s+(?:de\s+)?(?P<name>.+)$",
+            # "2 pommes", "3 oeufs"
+            r"^(?P<qty>\d+(?:[,.]\d+)?)\s+(?P<name>[a-zA-ZàâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\w\s\-']+)$",
+            # "huile d'olive" (pas de quantité explicite)
+            r"^(?P<name>[a-zA-ZàâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\w\s\-']+)$",
         ]
 
         for pattern in patterns:
-            match = re.match(pattern, note.strip(), re.IGNORECASE)
+            match = re.match(pattern, note, re.IGNORECASE)
             if match:
                 groups = match.groupdict()
-                qty = float(groups.get("qty", 1) or 1)
+                qty_str = groups.get("qty", "1") or "1"
                 unit_raw = groups.get("unit", "unit") or "unit"
                 name = groups.get("name", note).strip()
+
+                # Parser la quantité (gère fractions)
+                if "/" in qty_str:
+                    num, den = qty_str.split("/")
+                    qty = float(num) / float(den)
+                else:
+                    qty = parse_qty(qty_str)
 
                 # Normaliser l'unité
                 unit = self._normalize_unit(unit_raw)
 
+                # Nettoyer le nom (enlever "de " au début)
+                name = re.sub(r"^(de|d')\s+", "", name, flags=re.IGNORECASE)
+                name = name.strip()
+
                 return qty, unit, name
 
         # Fallback: tout est le nom
-        return 1.0, "unit", note.strip()
+        return 1.0, "unit", note
 
     def _normalize_unit(self, unit: str) -> str:
         """Normalise une unité vers le format standard."""
@@ -266,13 +289,79 @@ class IngredientMatcher:
         if not candidates:
             return None
 
-        result = process.extractOne(
-            ingredient_name.lower(),
-            [c.lower() for c in candidates],
-            scorer=fuzz.token_sort_ratio,
-        )
+        # Normaliser le nom de l'ingrédient
+        normalized_ing = self._normalize_ingredient_name(ingredient_name)
 
-        if result and result[1] >= threshold:
-            return result[0], result[1]
+        # Normaliser les candidats
+        normalized_candidates = [self._normalize_product_name(c) for c in candidates]
+
+        # Essayer plusieurs scorers pour trouver le meilleur match
+        scorers = [
+            fuzz.token_sort_ratio,  # Meilleur pour "huile d'olive" vs "olive oil"
+            fuzz.partial_ratio,     # Meilleur pour sous-chaînes
+            fuzz.WRatio,            # Weighted ratio (préfère les correspondances complètes)
+        ]
+
+        best_match = None
+        best_score = 0
+
+        for scorer in scorers:
+            result = process.extractOne(
+                normalized_ing,
+                normalized_candidates,
+                scorer=scorer,
+            )
+
+            if result and result[1] > best_score:
+                best_match = result[0]
+                best_score = result[1]
+
+                # Arrêter si on a un excellent match
+                if best_score >= 95:
+                    break
+
+        if best_match and best_score >= threshold:
+            # Retourner le nom original (non normalisé)
+            original_idx = normalized_candidates.index(best_match)
+            return candidates[original_idx], best_score
 
         return None
+
+    def _normalize_ingredient_name(self, name: str) -> str:
+        """Normalise un nom d'ingrédient pour le matching."""
+        name = name.lower().strip()
+
+        # Enlever les articles
+        name = re.sub(r"^(le|la|les|un|une|des|de|d')\s+", "", name, flags=re.IGNORECASE)
+
+        # Remplacer les caractères spéciaux
+        name = name.replace("é", "e").replace("è", "e").replace("ê", "e")
+        name = name.replace("à", "a").replace("â", "a")
+        name = name.replace("ô", "o").replace("ö", "o")
+        name = name.replace("î", "i").replace("ï", "i")
+        name = name.replace("ù", "u").replace("û", "u")
+        name = name.replace("ç", "c")
+
+        # Enlever les parenthèses et leur contenu
+        name = re.sub(r"\([^)]*\)", "", name)
+
+        # Enlever les mots de qualité (bio, frais, etc.)
+        quality_words = ["bio", "frais", "surgelé", "congelé", "nature", "entier"]
+        for word in quality_words:
+            name = re.sub(rf"\b{word}\b", "", name, flags=re.IGNORECASE)
+
+        # Nettoyer les espaces multiples
+        name = re.sub(r"\s+", " ", name).strip()
+
+        return name
+
+    def _normalize_product_name(self, name: str) -> str:
+        """Normalise un nom de produit Open Prices."""
+        name = name.lower().strip()
+
+        # Même normalisation que pour les ingrédients
+        name = re.sub(r"^(le|la|les|un|une|des|de|d')\s+", "", name, flags=re.IGNORECASE)
+        name = re.sub(r"\([^)]*\)", "", name)
+        name = re.sub(r"\s+", " ", name).strip()
+
+        return name

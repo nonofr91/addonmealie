@@ -150,23 +150,26 @@ with tabs[1]:
                 else:
                     st.error(f"Erreur: {resp.get('error')}")
 
-    # Liste des prix manuels
+    # Liste des prix manuels avec édition/suppression
     st.divider()
     st.subheader("📋 Prix manuels enregistrés")
     prices_resp = _api("GET", "/prices/manual")
     if prices_resp.get("success"):
         prices = prices_resp.get("prices", [])
         if prices:
-            price_data = [
-                {
-                    "Ingrédient": p.get("ingredient_name"),
-                    "Prix (€)": p.get("price_per_unit"),
-                    "Unité": p.get("unit"),
-                    "Magasin": p.get("store", "—"),
-                }
-                for p in prices
-            ]
-            st.dataframe(price_data, use_container_width=True, hide_index=True)
+            for p in prices:
+                with st.expander(f"💰 {p.get('ingredient_name')} - {p.get('price_per_unit')}€/{p.get('unit')}"):
+                    col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+                    with col1:
+                        st.write(f"**Ingrédient**: {p.get('ingredient_name')}")
+                    with col2:
+                        st.write(f"**Prix**: {p.get('price_per_unit')}€/{p.get('unit')}")
+                    with col3:
+                        st.write(f"**Magasin**: {p.get('store', '—')}")
+                    with col4:
+                        if st.button("🗑️", key=f"del_{p.get('ingredient_name')}", help="Supprimer"):
+                            # Note: suppression non implémentée côté API pour l'instant
+                            st.warning("Suppression à implémenter (TODO)")
         else:
             st.info("Aucun prix manuel enregistré")
     else:
@@ -179,48 +182,96 @@ with tabs[2]:
 
     # Calcul coût d'une recette
     st.subheader("🔢 Calculer le coût d'une recette")
-    slug = st.text_input("Slug de la recette", placeholder="ex: carbonara-marmiton")
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        use_open_prices = st.checkbox("Utiliser Open Prices", value=True)
+    col_slug, col_opts = st.columns([3, 1])
+    with col_slug:
+        slug = st.text_input("Slug de la recette", placeholder="ex: carbonara-marmiton")
+    with col_opts:
+        use_open_prices = st.checkbox("Open Prices", value=True, help="Utiliser Open Prices comme fallback")
 
-    if slug and st.button("💰 Calculer le coût"):
+    if slug and st.button("💰 Calculer le coût", type="primary"):
         with st.spinner("Calcul en cours..."):
             resp = _api("GET", f"/recipes/{slug}/cost", params={"use_open_prices": use_open_prices})
         if resp.get("success"):
             cost = resp.get("cost", {})
             breakdown = cost.get("breakdown", {})
 
-            # Métriques
-            col_m1, col_m2, col_m3 = st.columns(3)
+            # Métriques principales
+            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
             col_m1.metric("Coût total", f"{cost.get('total_cost', 0):.2f} €")
             col_m2.metric("Par portion", f"{cost.get('cost_per_serving', 0):.2f} €")
             col_m3.metric(
                 "Confiance",
                 f"{cost.get('confidence', 0) * 100:.0f}%",
+                delta=f"{cost.get('breakdown', {}).get('num_known_prices', 0)}/{cost.get('breakdown', {}).get('num_total_ingredients', 0)} prix connus"
             )
+            col_m4.metric("Portions", f"{cost.get('servings', 1)}")
 
             # Détail des ingrédients
+            st.divider()
             st.subheader("📝 Détail des ingrédients")
             ingredients = breakdown.get("ingredients", [])
             if ingredients:
-                ing_data = [
-                    {
+                # Colorer par source de prix
+                def get_source_color(source):
+                    colors = {
+                        "manual": "🟢",
+                        "open_prices": "🔵",
+                        "estimated": "🟡",
+                        "unknown": "⚪",
+                    }
+                    return colors.get(source, "⚪")
+
+                ing_data = []
+                for ing in ingredients:
+                    ing_data.append({
+                        "Source": get_source_color(ing.get("price_source")),
                         "Ingrédient": ing.get("ingredient_name"),
                         "Quantité": f"{ing.get('quantity')} {ing.get('unit')}",
                         "Coût (€)": f"{ing.get('total_cost'):.2f}",
-                        "Source": ing.get("price_source"),
-                    }
-                    for ing in ingredients
-                ]
+                        "Confiance": f"{ing.get('confidence') * 100:.0f}%",
+                    })
+
                 st.dataframe(ing_data, use_container_width=True, hide_index=True)
 
                 # Répartition des sources
+                st.divider()
                 sources = cost.get("price_sources_breakdown", {})
                 if sources:
                     st.caption("Répartition des sources de prix:")
-                    for src, count in sources.items():
-                        st.write(f"- {src}: {count}")
+                    cols = st.columns(len(sources))
+                    for i, (src, count) in enumerate(sources.items()):
+                        with cols[i]:
+                            st.metric(src, count)
+
+            else:
+                st.info("Aucun ingrédient trouvé")
+        else:
+            st.error(f"Erreur: {resp.get('error')}")
+
+    # Comparaison de recettes
+    st.divider()
+    st.subheader("⚖️ Comparer plusieurs recettes")
+    st.caption("Entrez plusieurs slugs séparés par des virgules")
+    slugs_input = st.text_input("Slugs des recettes", placeholder="ex: carbonara, bolognese, pizza")
+    per_serving = st.checkbox("Par portion", value=True)
+
+    if slugs_input and st.button("📊 Comparer"):
+        slugs = [s.strip() for s in slugs_input.split(",") if s.strip()]
+        resp = _api("GET", "/recipes/compare-costs", params={"slugs": slugs, "per_serving": per_serving})
+        if resp.get("success"):
+            comparison = resp.get("comparison", [])
+            if comparison:
+                comp_data = [
+                    {
+                        "Slug": item.get("slug"),
+                        "Coût (€)": f"{item.get('cost'):.2f}",
+                        "Par portion": "Oui" if item.get("per_serving") else "Non",
+                    }
+                    for item in comparison
+                ]
+                st.dataframe(comp_data, use_container_width=True, hide_index=True)
+            else:
+                st.info("Aucun résultat de comparaison")
         else:
             st.error(f"Erreur: {resp.get('error')}")
 
