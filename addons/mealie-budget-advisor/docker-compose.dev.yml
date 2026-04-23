@@ -5,11 +5,9 @@ services:
     ports:
       - "8003:8003"
       - "8503:8503"
+    env_file:
+      - .env.dev
     environment:
-      # Mealie (à configurer dans .env.dev)
-      - MEALIE_BASE_URL=${MEALIE_BASE_URL:-http://host.docker.internal:9925}
-      - MEALIE_API_KEY=${MEALIE_API_KEY}
-
       # Open Prices
       - OPEN_PRICES_BASE_URL=https://prices.openfoodfacts.org/api/v1
 
