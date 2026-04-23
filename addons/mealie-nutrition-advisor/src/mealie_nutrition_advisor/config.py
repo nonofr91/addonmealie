@@ -52,6 +52,8 @@ class NutritionConfig:
         self._enable_menu_planner = os.environ.get("ENABLE_MENU_PLANNER", "true").lower() == "true"
         self._enable_nutrition_analysis = os.environ.get("ENABLE_NUTRITION_ANALYSIS", "true").lower() == "true"
         self._enable_conflict_detection = os.environ.get("ENABLE_CONFLICT_DETECTION", "true").lower() == "true"
+        self._enable_seasonality = os.environ.get("ENABLE_SEASONALITY", "true").lower() == "true"
+        self._enable_variety_scoring = os.environ.get("ENABLE_VARIETY_SCORING", "true").lower() == "true"
 
         self._validate()
 
@@ -141,6 +143,14 @@ class NutritionConfig:
     @property
     def enable_conflict_detection(self) -> bool:
         return self._enable_conflict_detection
+
+    @property
+    def enable_seasonality(self) -> bool:
+        return self._enable_seasonality
+
+    @property
+    def enable_variety_scoring(self) -> bool:
+        return self._enable_variety_scoring
 
     @classmethod
     def load(cls) -> "NutritionConfig":

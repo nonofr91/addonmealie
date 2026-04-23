@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
 
+from .api_routes import menu_drafting_router
 from .config import NutritionConfig, NutritionConfigError
 from .models.profile import HouseholdProfile, MemberProfile, WeeklyPresencePattern
 from .orchestrator import NutritionOrchestrator, NutritionOrchestratorError
@@ -30,6 +31,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include menu drafting router
+app.include_router(menu_drafting_router)
 
 # ---------------------------------------------------------------------------
 # Auth (optional) — token via X-Addon-Key header
