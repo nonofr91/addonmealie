@@ -173,9 +173,24 @@ with tab_prices:
 
 with tab_cost:
     st.header("Coût d'une recette")
+    st.caption(
+        "Le coût est calculé à partir des ingrédients. "
+        "Vous pouvez ensuite le publier dans Mealie (`extras.cout_*`) "
+        "pour l'afficher sur la fiche recette et le modifier manuellement."
+    )
     slug = st.text_input("Slug de la recette Mealie")
-    if st.button("🧮 Calculer", key="cost_calc") and slug.strip():
-        result = _api("GET", f"/recipes/{slug}/cost")
+    col_calc, col_sync = st.columns([1, 1])
+    with col_calc:
+        if st.button("🧮 Calculer", key="cost_calc") and slug.strip():
+            st.session_state["cost_result"] = _api("GET", f"/recipes/{slug}/cost")
+    with col_sync:
+        if st.button("📤 Publier dans Mealie", key="cost_sync", help="Écrit cout_* dans extras") and slug.strip():
+            st.session_state["cost_sync_result"] = _api(
+                "POST", f"/recipes/{slug}/sync-cost",
+            )
+
+    result = st.session_state.get("cost_result")
+    if result:
         if result.get("success"):
             cost = result["cost"]
             st.metric("Coût total", f"{cost['total_cost']:.2f} {cost['currency']}")
@@ -185,22 +200,66 @@ with tab_cost:
         else:
             st.error(result.get("error"))
 
+    sync_result = st.session_state.get("cost_sync_result")
+    if sync_result:
+        if sync_result.get("success"):
+            msg = f"Publié dans Mealie (mois {sync_result.get('month')})"
+            if sync_result.get("override_preserved"):
+                msg += " — override manuel préservé"
+            st.success(msg)
+        else:
+            st.error(sync_result.get("error"))
+
 # --------------------------------------------------------------------------- plan tab
 
 with tab_plan:
     st.header("Planning budget-aware")
-    st.caption("Sélectionne les recettes les moins chères qui tiennent dans le budget effectif.")
+    st.caption(
+        "Sélectionne les recettes les moins chères qui tiennent dans le budget effectif. "
+        "Si une recette a un `cout_manuel_par_portion` dans ses extras Mealie, c'est ce prix qui est utilisé."
+    )
     plan_month = st.text_input("Mois (optionnel)", key="plan_month")
     meals_target = st.number_input("Nombre de repas à planifier", min_value=1, max_value=200, value=21)
-    if st.button("🚀 Générer", key="plan_btn"):
-        result = _api(
-            "POST",
-            "/plan/budget-aware",
-            json={
-                "month": plan_month or None,
-                "meals_target": int(meals_target),
-            },
-        )
+
+    col_gen, col_refresh = st.columns([1, 1])
+    with col_gen:
+        if st.button("🚀 Générer", key="plan_btn"):
+            st.session_state["plan_result"] = _api(
+                "POST",
+                "/plan/budget-aware",
+                json={
+                    "month": plan_month or None,
+                    "meals_target": int(meals_target),
+                },
+            )
+    with col_refresh:
+        if st.button(
+            "🔄 Rafraîchir coûts Mealie",
+            key="refresh_all_btn",
+            help="Recalcule et écrit cout_* pour toutes les recettes",
+        ):
+            st.session_state["refresh_result"] = _api(
+                "POST",
+                "/recipes/refresh-costs",
+                json={"month": plan_month or None},
+            )
+
+    refresh = st.session_state.get("refresh_result")
+    if refresh:
+        if refresh.get("success"):
+            rpt = refresh["report"]
+            st.success(
+                f"Coûts rafraîchis pour {rpt.get('month')}: "
+                f"{rpt.get('updated', 0)} mises à jour, "
+                f"{rpt.get('skipped', 0)} ignorées, "
+                f"{len(rpt.get('failed', []))} échecs, "
+                f"{rpt.get('override_preserved', 0)} overrides préservés"
+            )
+        else:
+            st.error(refresh.get("error"))
+
+    result = st.session_state.get("plan_result")
+    if result:
         if result.get("success"):
             report = result["report"]
             st.metric("Coût total", f"{report['total_cost']:.2f} {report['currency']}")

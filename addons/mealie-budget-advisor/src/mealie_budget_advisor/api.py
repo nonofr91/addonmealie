@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
+from contextlib import asynccontextmanager
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Security, status
@@ -14,11 +16,34 @@ from .config import BudgetConfigError
 from .models.budget import BudgetSettings
 from .models.pricing import ManualPrice
 from .orchestrator import BudgetOrchestrator, BudgetOrchestratorError
+from .scheduler import BudgetScheduler
+
+logger = logging.getLogger(__name__)
+
+_scheduler: BudgetScheduler | None = None
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Démarre / arrête le planificateur avec le cycle de vie FastAPI."""
+    global _scheduler
+    try:
+        orch = _get_orchestrator()
+    except HTTPException as exc:  # addon misconfigured -> pas de cron
+        logger.warning("Planificateur non démarré: %s", exc.detail)
+    else:
+        _scheduler = BudgetScheduler(orch, orch.config)
+        _scheduler.start()
+    yield
+    if _scheduler is not None:
+        _scheduler.stop()
+
 
 app = FastAPI(
     title="Mealie Budget Advisor",
     description="Estimation de coût des recettes et planification respectant un budget mensuel.",
-    version="0.1.0",
+    version="0.2.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -69,6 +94,10 @@ class BudgetPlanRequest(BaseModel):
     month: Optional[str] = None
     meals_target: Optional[int] = Field(None, ge=1, le=200)
     candidate_slugs: Optional[list[str]] = None
+
+
+class RefreshCostsRequest(BaseModel):
+    month: Optional[str] = None
 
 
 # -------------------------------------------------------------------- endpoints
@@ -173,6 +202,36 @@ def recipes_batch_cost(req: BatchCostRequest, _: None = Security(_check_key)) ->
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Batch cost failed: {exc}") from exc
     return {"success": True, "items": [c.model_dump(mode="json") for c in costs]}
+
+
+@app.post("/recipes/{slug}/sync-cost", tags=["recipes"])
+def sync_recipe_cost(
+    slug: str,
+    month: Optional[str] = None,
+    _: None = Security(_check_key),
+) -> dict[str, Any]:
+    """Recalcule le coût d'une recette et publie ``cout_*`` dans ses extras Mealie."""
+    orch = _get_orchestrator()
+    try:
+        return {"success": True, **orch.sync_recipe_cost(slug, month=month)}
+    except BudgetOrchestratorError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Sync cost failed: {exc}") from exc
+
+
+@app.post("/recipes/refresh-costs", tags=["recipes"])
+def refresh_all_recipe_costs(
+    req: RefreshCostsRequest,
+    _: None = Security(_check_key),
+) -> dict[str, Any]:
+    """Recalcule et publie le coût de TOUTES les recettes dans Mealie."""
+    orch = _get_orchestrator()
+    try:
+        report = orch.refresh_all_costs(month=req.month)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Refresh costs failed: {exc}") from exc
+    return {"success": True, "report": report}
 
 
 # ------------------------------------------------------------------- planning

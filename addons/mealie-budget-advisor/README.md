@@ -62,7 +62,49 @@ mealie-budget recipe-cost poulet-roti
 
 # Planning budget-aware
 mealie-budget plan --month 2026-04 --meals 21
+
+# Publier le coût d'une recette dans Mealie (extras.cout_*)
+mealie-budget sync-cost poulet-roti
+
+# Rafraîchir tous les coûts Mealie (tâche mensuelle manuelle)
+mealie-budget refresh-costs --month 2026-04
 ```
+
+### Persistance du coût dans Mealie (extras)
+
+Le coût calculé est publié dans le champ `extras` (libre) de la recette, sous
+des clés préfixées `cout_*`. Elles apparaissent dans l'onglet *Propriétés* de
+la fiche recette Mealie et peuvent être éditées manuellement pour forcer une
+valeur.
+
+| Clé | Écrite par | Rôle |
+|-----|-----------|------|
+| `cout_total` | addon | Coût total calculé (string, 2 décimales) |
+| `cout_par_portion` | addon | Coût par portion |
+| `cout_devise` | addon | `EUR` par défaut |
+| `cout_confiance` | addon | Ratio d'ingrédients avec prix résolu |
+| `cout_mois_reference` | addon | Mois du calcul (`YYYY-MM`) |
+| `cout_calcule_le` | addon | Horodatage ISO8601 UTC |
+| `cout_source` | addon | `auto` |
+| `cout_manuel_par_portion` | **utilisateur** | Override manuel par portion (prioritaire) |
+| `cout_manuel_total` | **utilisateur** | Override manuel total (prioritaire) |
+| `cout_manuel_raison` | **utilisateur** | Libre : raison de l'override |
+
+Règles :
+
+- L'addon ne touche **jamais** aux clés `cout_manuel_*` lors d'un recalcul.
+- Les autres extras (ex. `nutrition_calories` d'un autre addon) sont préservés.
+- Si `cout_manuel_par_portion` ou `cout_manuel_total` est présent, il prend la
+  priorité sur la valeur calculée dans `/recipes/{slug}/cost` et dans le
+  planning.
+
+### Rafraîchissement mensuel automatique
+
+Un `APScheduler` interne (activé par défaut) relance `refresh-costs` le **1er
+du mois à 03:00 UTC**. Pilotage via env :
+
+- `ENABLE_MONTHLY_COST_REFRESH=true|false` (défaut `true`)
+- `MONTHLY_COST_REFRESH_CRON="0 3 1 * *"` (expression cron 5-champs UTC)
 
 ### API FastAPI (port 8003)
 
@@ -86,8 +128,10 @@ Endpoints principaux :
 | POST | `/prices/manual` | Ajouter / modifier un prix manuel |
 | DELETE | `/prices/manual/{name}` | Supprimer un prix manuel |
 | GET | `/prices/search?q={query}` | Recherche Open Prices |
-| GET | `/recipes/{slug}/cost` | Coût d'une recette |
+| GET | `/recipes/{slug}/cost` | Coût d'une recette (applique l'override si présent) |
 | POST | `/recipes/batch-cost` | Coût de plusieurs recettes |
+| POST | `/recipes/{slug}/sync-cost` | Publie `cout_*` dans `extras` Mealie pour une recette |
+| POST | `/recipes/refresh-costs` | Recalcule et publie le coût de toutes les recettes |
 | POST | `/plan/budget-aware` | Planning respectant le budget |
 
 Authentification optionnelle via `X-Addon-Key` si `ADDON_SECRET_KEY` est défini.

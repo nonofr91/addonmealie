@@ -182,9 +182,11 @@ jobs:
           MEALIE_API_KEY: x
         run: |
           python3 -c "
+          import os
+          os.environ['ENABLE_MONTHLY_COST_REFRESH'] = 'false'
           from mealie_budget_advisor.api import app
           routes = [r.path for r in app.routes]
-          required = ['/health', '/status', '/budget', '/prices/manual', '/prices/search', '/recipes/{slug}/cost', '/recipes/batch-cost', '/plan/budget-aware']
+          required = ['/health', '/status', '/budget', '/prices/manual', '/prices/search', '/recipes/{slug}/cost', '/recipes/batch-cost', '/recipes/{slug}/sync-cost', '/recipes/refresh-costs', '/plan/budget-aware']
           for path in required:
               assert path in routes, f'Route manquante: {path} — routes: {routes}'
           print('Budget addon routes validated:', sorted(p for p in routes if not p.startswith('/openapi')))

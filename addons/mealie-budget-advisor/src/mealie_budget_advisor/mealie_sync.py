@@ -13,7 +13,7 @@ REQUEST_TIMEOUT = 30.0
 
 
 class MealieClient:
-    """Read-only Mealie client — lists recipes and fetches details."""
+    """Mealie REST client — lecture des recettes + écriture des `extras`."""
 
     def __init__(self, base_url: str, api_key: str) -> None:
         self.base_url = base_url.rstrip("/")
@@ -64,6 +64,33 @@ class MealieClient:
         except httpx.HTTPStatusError as exc:
             logger.warning("Recette introuvable: %s (%s)", slug, exc)
             return None
+
+    def patch_extras(self, slug: str, extras: dict[str, str]) -> bool:
+        """Écrit le champ ``extras`` d'une recette Mealie.
+
+        Mealie remplace le dict ``extras`` lors d'un PATCH : l'appelant
+        doit donc fournir la version fusionnée complète (voir
+        ``recipe_extras.merge_extras``).
+        """
+        try:
+            resp = self._client.patch(
+                f"{self.base_url}/api/recipes/{slug}",
+                json={"extras": {k: str(v) for k, v in extras.items()}},
+            )
+            resp.raise_for_status()
+            logger.debug("Extras patchés pour %s", slug)
+            return True
+        except httpx.HTTPStatusError as exc:
+            logger.warning(
+                "Patch extras échoué pour %s: %s — %s",
+                slug,
+                exc,
+                exc.response.text if exc.response is not None else "",
+            )
+            return False
+        except httpx.HTTPError as exc:
+            logger.warning("Patch extras échoué pour %s: %s", slug, exc)
+            return False
 
     @staticmethod
     def extract_ingredient_texts(recipe: dict) -> list[str]:

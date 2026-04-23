@@ -47,6 +47,19 @@ def main(argv: list[str] | None = None) -> int:
     p_plan.add_argument("--month", default=None)
     p_plan.add_argument("--meals", default=None, type=int)
 
+    p_sync = sub.add_parser(
+        "sync-cost",
+        help="Recalcule le coût d'une recette et publie cout_* dans ses extras Mealie",
+    )
+    p_sync.add_argument("slug")
+    p_sync.add_argument("--month", default=None)
+
+    p_refresh = sub.add_parser(
+        "refresh-costs",
+        help="Recalcule et publie le coût de toutes les recettes dans Mealie",
+    )
+    p_refresh.add_argument("--month", default=None)
+
     args = parser.parse_args(argv)
     orch = BudgetOrchestrator()
 
@@ -90,6 +103,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "plan":
         report = orch.plan_budget_aware(month=args.month, meals_target=args.meals)
         _print(report.model_dump(mode="json"))
+        return 0
+
+    if args.command == "sync-cost":
+        _print(orch.sync_recipe_cost(args.slug, month=args.month))
+        return 0
+
+    if args.command == "refresh-costs":
+        _print(orch.refresh_all_costs(month=args.month))
         return 0
 
     parser.print_help()

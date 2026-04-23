@@ -43,6 +43,15 @@ class BudgetConfig:
         self._enable_manual_prices = os.environ.get("ENABLE_MANUAL_PRICES", "true").lower() == "true"
         self._enable_budget_planning = os.environ.get("ENABLE_BUDGET_PLANNING", "true").lower() == "true"
 
+        # Rafraîchissement mensuel des coûts dans Mealie (extras.cout_*)
+        self._enable_monthly_cost_refresh = (
+            os.environ.get("ENABLE_MONTHLY_COST_REFRESH", "true").lower() == "true"
+        )
+        # Expression cron standard à 5 champs (minute heure jour mois jour-semaine)
+        self._monthly_cost_refresh_cron = os.environ.get(
+            "MONTHLY_COST_REFRESH_CRON", "0 3 1 * *"
+        )
+
         # Data paths — all stateful files live in project-relative data/ & config/
         pkg_root = Path(__file__).resolve().parent.parent.parent
         self._data_dir = Path(os.environ.get("BUDGET_DATA_DIR", pkg_root / "data"))
@@ -103,6 +112,14 @@ class BudgetConfig:
     @property
     def enable_budget_planning(self) -> bool:
         return self._enable_budget_planning
+
+    @property
+    def enable_monthly_cost_refresh(self) -> bool:
+        return self._enable_monthly_cost_refresh
+
+    @property
+    def monthly_cost_refresh_cron(self) -> str:
+        return self._monthly_cost_refresh_cron
 
     @property
     def data_dir(self) -> Path:
