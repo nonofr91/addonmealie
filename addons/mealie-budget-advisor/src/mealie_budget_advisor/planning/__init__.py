@@ -1,9 +1,7 @@
-"""Module de planification respectant le budget."""
+"""Package planning pour budget advisor."""
 
-from .budget_planner import BudgetPlanner
-from .budget_scorer import BudgetScorer
+from mealie_budget_advisor.planning.budget_manager import BudgetManager
 
 __all__ = [
-    "BudgetPlanner",
-    "BudgetScorer",
+    "BudgetManager",
 ]

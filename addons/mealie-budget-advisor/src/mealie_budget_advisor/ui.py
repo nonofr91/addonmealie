@@ -67,7 +67,7 @@ with col_btn:
         )
 
 # Onglets
-tabs = st.tabs(["📊 Statut", "🏷️ Prix", "📈 Coûts"])
+tabs = st.tabs(["📊 Statut", "💰 Budget", "🏷️ Prix", "📈 Coûts"])
 
 # Tab Statut
 with tabs[0]:
@@ -98,8 +98,72 @@ with tabs[0]:
     else:
         st.error(f"Erreur: {status.get('error')}")
 
-# Tab Prix
+# Tab Budget
 with tabs[1]:
+    st.header("💰 Gestion du budget mensuel")
+    st.caption("Définissez et suivez votre budget mensuel")
+
+    col_current, col_list = st.columns([2, 1])
+
+    with col_current:
+        st.subheader("Budget actuel")
+        current_budget = _api("GET", "/budget")
+        if current_budget.get("success") and current_budget.get("budget"):
+            budget = current_budget.get("budget", {})
+            b1, b2, b3 = st.columns(3)
+            b1.metric("Budget total", f"{budget.get('total_budget', 0):.2f} €")
+            b2.metric("Budget effectif", f"{budget.get('effective_budget', 0):.2f} €")
+            b3.metric("Par repas", f"{budget.get('budget_per_meal', 0):.2f} €")
+
+            st.caption(f"Période: {budget.get('period', {}).get('period_label', '')}")
+        else:
+            st.info("Aucun budget défini pour ce mois")
+
+    with col_list:
+        st.subheader("Historique")
+        budgets_list = _api("GET", "/budget/list")
+        if budgets_list.get("success"):
+            budgets = budgets_list.get("budgets", [])
+            if budgets:
+                for b in budgets[:5]:
+                    with st.expander(f"{b.get('period', {}).get('period_label')}"):
+                        st.write(f"Total: {b.get('total_budget', 0):.2f} €")
+                        st.write(f"Effectif: {b.get('effective_budget', 0):.2f} €")
+            else:
+                st.info("Aucun budget sauvegardé")
+
+    st.divider()
+    st.subheader("📝 Définir un nouveau budget")
+
+    with st.form("budget_form"):
+        col_year, col_month = st.columns(2)
+        with col_year:
+            year = st.number_input("Année", min_value=2020, max_value=2100, value=2026)
+        with col_month:
+            month = st.number_input("Mois", min_value=1, max_value=12, value=4)
+
+        total_budget = st.number_input("Budget total (€)", min_value=0.0, value=500.0, step=10.0)
+        condiments = st.number_input("Forfait condiments (€)", min_value=0.0, value=20.0, step=5.0)
+        meals_per_day = st.number_input("Repas/jour", min_value=1, max_value=10, value=3)
+        days_per_month = st.number_input("Jours/mois", min_value=1, max_value=31, value=30)
+
+        if st.form_submit_button("💾 Enregistrer"):
+            budget_data = {
+                "period": {"year": year, "month": month},
+                "total_budget": total_budget,
+                "condiments_forfait": condiments,
+                "meals_per_day": meals_per_day,
+                "days_per_month": days_per_month,
+            }
+            resp = _api("POST", "/budget", params={}, json=budget_data)
+            if resp.get("success"):
+                st.success(f"Budget enregistré pour {year}-{month:02d}")
+                st.rerun()
+            else:
+                st.error(f"Erreur: {resp.get('error')}")
+
+# Tab Prix
+with tabs[2]:
     st.header("🏷️ Gestion des prix")
     st.caption("Prix manuels et recherche Open Prices")
 
@@ -176,7 +240,7 @@ with tabs[1]:
         st.error(f"Erreur: {prices_resp.get('error')}")
 
 # Tab Coûts
-with tabs[2]:
+with tabs[3]:
     st.header("📈 Coût des recettes")
     st.caption("Calculez le coût de vos recettes Mealie")
 

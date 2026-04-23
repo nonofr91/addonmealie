@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import BudgetConfigError, get_config
 from .mealie_sync import MealieClient
 from .models.budget import BudgetPeriod, BudgetSettings
+from .planning.budget_manager import BudgetManager
 from .pricing.cost_calculator import CostCalculator
 from .pricing.manual_pricer import ManualPricer
 
@@ -18,6 +19,7 @@ cost_calculator = CostCalculator(
     config.mealie_api_key,
 )
 manual_pricer = ManualPricer()
+budget_manager = BudgetManager(config_dir=config.config_dir)
 
 
 @asynccontextmanager
@@ -78,25 +80,80 @@ async def get_status():
 @app.get("/budget")
 async def get_current_budget():
     """Récupère le budget du mois en cours."""
-    # TODO: Implémenter le stockage persistant des budgets
+    budget = budget_manager.get_current_budget()
+
+    if budget:
+        return {
+            "success": True,
+            "period": budget.period.period_label,
+            "budget": budget.model_dump(),
+        }
+
     return {
         "success": True,
         "period": BudgetPeriod.current().period_label,
-        "budget": None,  # Placeholder
-        "message": "Fonctionnalité en cours d'implémentation",
+        "budget": None,
+        "message": "Aucun budget défini pour cette période",
     }
 
 
 @app.post("/budget")
 async def set_budget(settings: BudgetSettings):
     """Définit le budget pour une période."""
-    # TODO: Implémenter le stockage persistant
+    budget = budget_manager.set_budget(settings)
+
     return {
         "success": True,
-        "period": settings.period.period_label,
-        "effective_budget": settings.effective_budget,
-        "budget_per_meal": settings.budget_per_meal,
-        "message": "Budget enregistré (stub)",
+        "period": budget.period.period_label,
+        "effective_budget": budget.effective_budget,
+        "budget_per_meal": budget.budget_per_meal,
+        "budget": budget.model_dump(),
+    }
+
+
+@app.get("/budget/period/{period_label}")
+async def get_budget_by_period(period_label: str):
+    """Récupère le budget pour une période spécifique."""
+    try:
+        period = BudgetPeriod.from_string(period_label)
+        budget = budget_manager.get_budget(period)
+
+        if budget:
+            return {
+                "success": True,
+                "period": period_label,
+                "budget": budget.model_dump(),
+            }
+
+        raise HTTPException(status_code=404, detail=f"Budget non trouvé pour {period_label}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Format de période invalide: {e}")
+
+
+@app.delete("/budget/period/{period_label}")
+async def delete_budget_by_period(period_label: str):
+    """Supprime le budget pour une période."""
+    try:
+        period = BudgetPeriod.from_string(period_label)
+        deleted = budget_manager.delete_budget(period)
+
+        if deleted:
+            return {"success": True, "period": period_label, "message": "Budget supprimé"}
+
+        raise HTTPException(status_code=404, detail=f"Budget non trouvé pour {period_label}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Format de période invalide: {e}")
+
+
+@app.get("/budget/list")
+async def list_budgets():
+    """Liste tous les budgets sauvegardés."""
+    budgets = budget_manager.list_budgets()
+
+    return {
+        "success": True,
+        "count": len(budgets),
+        "budgets": [b.model_dump() for b in budgets],
     }
 
 
