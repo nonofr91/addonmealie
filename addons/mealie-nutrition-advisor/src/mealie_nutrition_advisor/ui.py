@@ -19,6 +19,7 @@ if _SECRET:
 # Feature flags
 ENABLE_PROFILE_UI = os.environ.get("ENABLE_PROFILE_UI", "true").lower() == "true"
 ENABLE_MENU_PLANNER = os.environ.get("ENABLE_MENU_PLANNER", "true").lower() == "true"
+ENABLE_MENU_PLANNING_UI = os.environ.get("ENABLE_MENU_PLANNING_UI", "true").lower() == "true"
 ENABLE_NUTRITION_ANALYSIS = os.environ.get("ENABLE_NUTRITION_ANALYSIS", "true").lower() == "true"
 
 
@@ -120,6 +121,8 @@ if ENABLE_NUTRITION_ANALYSIS:
     tabs.append("🔬 Enrichissement")
 if ENABLE_PROFILE_UI:
     tabs.append("👥 Profils")
+if ENABLE_MENU_PLANNER and ENABLE_MENU_PLANNING_UI:
+    tabs.append("📅 Planning")
 tabs.append("📊 Statut")
 
 if not tabs:
@@ -345,6 +348,219 @@ if ENABLE_PROFILE_UI:
                                 st.error(f"Erreur: {create_resp.get('error')}")
     tab_index += 1
 
+if ENABLE_MENU_PLANNER and ENABLE_MENU_PLANNING_UI:
+    with tabs_ui[tab_index]:
+        st.header("📅 Planning de menus")
+        st.caption("Générez et gérez des menus hebdomadaires interactifs.")
+
+        # Section: Générer un nouveau draft
+        with st.expander("➕ Générer un nouveau menu", expanded=True):
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                week_label = st.text_input(
+                    "Semaine (format YYYY-Www)",
+                    value=st.session_state.get("new_week_label", ""),
+                    placeholder="ex: 2026-W16",
+                    help="Entrez la semaine au format ISO, ex: 2026-W16"
+                )
+            with col2:
+                st.write("")
+                st.write("")
+                if st.button("🚀 Générer", type="primary", use_container_width=True):
+                    if not week_label:
+                        st.error("Veuillez entrer une semaine")
+                    else:
+                        with st.spinner("Génération du menu en cours..."):
+                            resp = _api("POST", "/drafts/generate", json={"week_label": week_label})
+                        if resp.get("success"):
+                            st.success(f"Menu généré: {resp.get('draft_id')}")
+                            st.session_state["selected_draft_id"] = resp.get("draft_id")
+                            st.rerun()
+                        else:
+                            st.error(f"Erreur: {resp.get('error')}")
+
+        # Liste des drafts existants
+        st.subheader("📋 Menus existants")
+        drafts_resp = _api("GET", "/drafts/list")
+
+        if drafts_resp.get("success"):
+            drafts = drafts_resp.get("drafts", [])
+            if not drafts:
+                st.info("Aucun menu généré. Créez-en un nouveau ci-dessus.")
+            else:
+                # Tableau des drafts
+                draft_data = []
+                for d in drafts:
+                    draft_data.append({
+                        "ID": d.get("draft_id", "")[:8] + "...",
+                        "Semaine": d.get("week_label", "—"),
+                        "Statut": d.get("status", "—"),
+                        "Score": f"{d.get('overall_score', 0):.2f}",
+                        "Slots": d.get("num_slots", 0),
+                        "Généré": d.get("generated_at", "—")[:10] if d.get("generated_at") else "—",
+                    })
+
+                st.dataframe(draft_data, use_container_width=True, hide_index=True)
+
+                # Sélection d'un draft pour visualisation/détails
+                st.subheader("🔍 Détails d'un menu")
+                draft_options = {f"{d.get('week_label', '?')} ({d.get('draft_id', '?')[:8]}...)": d.get("draft_id") for d in drafts}
+                selected_label = st.selectbox(
+                    "Sélectionner un menu",
+                    options=list(draft_options.keys()),
+                    index=0 if not st.session_state.get("selected_draft_id") else
+                          list(draft_options.values()).index(st.session_state.get("selected_draft_id")) 
+                          if st.session_state.get("selected_draft_id") in draft_options.values() else 0
+                )
+                selected_draft_id = draft_options.get(selected_label)
+
+                if selected_draft_id:
+                    # Charger le détail du draft
+                    draft_detail = _api("GET", f"/drafts/{selected_draft_id}")
+
+                    if draft_detail.get("success") and draft_detail.get("draft"):
+                        draft = draft_detail.get("draft")
+
+                        # Info générale
+                        col_info1, col_info2, col_info3 = st.columns(3)
+                        col_info1.metric("Semaine", draft.get("week_label", "—"))
+                        col_info2.metric("Score global", f"{draft.get('overall_score', 0):.2f}")
+                        col_info3.metric("Statut", draft.get("status", "—"))
+
+                        # Affichage du menu par jour
+                        st.subheader("📆 Menu de la semaine")
+                        days = draft.get("days", [])
+
+                        for day in days:
+                            day_date = day.get("date", "—")
+                            day_name = day.get("day_name", "—")
+                            slots = day.get("slots", [])
+
+                            with st.expander(f"{day_name} ({day_date})"):
+                                if not slots:
+                                    st.info("Aucun repas prévu ce jour")
+                                else:
+                                    for slot in slots:
+                                        meal_type = slot.get("meal_type", "—")
+                                        recipe_name = slot.get("recipe_name", "—")
+                                        recipe_slug = slot.get("recipe_slug", "")
+                                        score = slot.get("score", 0)
+                                        servings = slot.get("servings", 0)
+
+                                        col_slot1, col_slot2, col_slot3 = st.columns([3, 1, 1])
+
+                                        with col_slot1:
+                                            meal_emoji = {"breakfast": "🥐", "lunch": "🍽️", "dinner": "🍽️", "snack": "🍎"}.get(meal_type, "🍽️")
+                                            st.write(f"**{meal_emoji} {meal_type.upper()}**: {recipe_name}")
+                                            if recipe_slug and _MEALIE_BASE:
+                                                st.caption(f"[🔗 Voir dans Mealie]({_MEALIE_BASE}/g/home/r/{recipe_slug})")
+
+                                        with col_slot2:
+                                            st.caption(f"Score: {score:.2f}")
+
+                                        with col_slot3:
+                                            # Bouton pour swap
+                                            if st.button("🔄 Changer", key=f"swap_{slot.get('slot_id')}"):
+                                                st.session_state["swapping_slot"] = {
+                                                    "draft_id": selected_draft_id,
+                                                    "day": day_date,
+                                                    "meal_type": meal_type,
+                                                    "current_recipe": recipe_name,
+                                                    "slot_id": slot.get("slot_id")
+                                                }
+                                                st.rerun()
+
+                        # Section swap de recette
+                        if st.session_state.get("swapping_slot"):
+                            swap_info = st.session_state.get("swapping_slot")
+                            st.divider()
+                            st.subheader(f"🔄 Alternatives pour {swap_info['current_recipe']}")
+
+                            # Charger les alternatives
+                            alt_resp = _api("GET", f"/drafts/{swap_info['draft_id']}/alternatives", params={
+                                "day": swap_info['day'],
+                                "meal_type": swap_info['meal_type']
+                            })
+
+                            if alt_resp.get("success"):
+                                alternatives = alt_resp.get("alternatives", [])
+                                if alternatives:
+                                    for alt in alternatives:
+                                        col_alt1, col_alt2, col_alt3 = st.columns([3, 2, 1])
+
+                                        with col_alt1:
+                                            st.write(f"**{alt.get('recipe_name', '—')}**")
+                                            st.caption(f"Score: {alt.get('score', 0):.2f} | {alt.get('reason', '')}")
+
+                                        with col_alt2:
+                                            nutrition = alt.get("nutrition_per_serving", {})
+                                            cal = nutrition.get("calories_kcal", 0)
+                                            prot = nutrition.get("protein_g", 0)
+                                            st.caption(f"{cal:.0f} kcal | {prot:.1f}g prot")
+
+                                        with col_alt3:
+                                            if st.button("✅ Choisir", key=f"choose_{alt.get('recipe_slug')}", use_container_width=True):
+                                                # Effectuer le swap
+                                                swap_resp = _api("POST", f"/drafts/{swap_info['draft_id']}/swap", params={
+                                                    "day": swap_info['day'],
+                                                    "meal_type": swap_info['meal_type']
+                                                }, json={"new_recipe_slug": alt.get("recipe_slug")})
+
+                                                if swap_resp.get("success"):
+                                                    st.success(f"Recette changée !")
+                                                    st.session_state.pop("swapping_slot", None)
+                                                    st.rerun()
+                                                else:
+                                                    st.error(f"Erreur: {swap_resp.get('error')}")
+                                else:
+                                    st.info("Aucune alternative trouvée pour ce slot")
+
+                            if st.button("❌ Annuler le changement"):
+                                st.session_state.pop("swapping_slot", None)
+                                st.rerun()
+
+                        # Actions sur le draft
+                        st.divider()
+                        st.subheader("📤 Actions")
+                        col_action1, col_action2, col_action3 = st.columns(3)
+
+                        with col_action1:
+                            if draft.get("status") == "draft":
+                                if st.button("✅ Valider le menu", use_container_width=True):
+                                    validate_resp = _api("POST", f"/drafts/{selected_draft_id}/validate")
+                                    if validate_resp.get("success"):
+                                        st.success("Menu validé !")
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Erreur: {validate_resp.get('error')}")
+                            else:
+                                st.success("✅ Menu déjà validé")
+
+                        with col_action2:
+                            if draft.get("status") == "validated":
+                                if st.button("🚀 Pousser vers Mealie", type="primary", use_container_width=True):
+                                    push_resp = _api("POST", f"/drafts/{selected_draft_id}/push")
+                                    if push_resp.get("success"):
+                                        st.success(f"Menu poussé ! ({push_resp.get('pushed_count', 0)} entrées)")
+                                    else:
+                                        st.error(f"Erreur: {push_resp.get('message')}")
+
+                        with col_action3:
+                            if st.button("🗑️ Supprimer", use_container_width=True):
+                                delete_resp = _api("DELETE", f"/drafts/{selected_draft_id}")
+                                if delete_resp.get("success"):
+                                    st.success("Menu supprimé")
+                                    st.rerun()
+                                else:
+                                    st.error(f"Erreur: {delete_resp.get('error')}")
+
+                    else:
+                        st.error(f"Erreur chargement du menu: {draft_detail.get('error')}")
+        else:
+            st.error(f"Erreur chargement des menus: {drafts_resp.get('error')}")
+
+    tab_index += 1
+
 # ---------------------------------------------------------------------------
 # Tab Statut (toujours présent)
 # ---------------------------------------------------------------------------
@@ -376,6 +592,7 @@ with tabs_ui[tab_index]:
         st.subheader("Feature Flags actifs")
         st.write(f"- **Profile UI**: {'✅ Activé' if ENABLE_PROFILE_UI else '⬜ Désactivé'}")
         st.write(f"- **Menu Planner**: {'✅ Activé' if ENABLE_MENU_PLANNER else '⬜ Désactivé'}")
+        st.write(f"- **Menu Planning UI**: {'✅ Activé' if ENABLE_MENU_PLANNING_UI else '⬜ Désactivé'}")
         st.write(f"- **Nutrition Analysis**: {'✅ Activé' if ENABLE_NUTRITION_ANALYSIS else '⬜ Désactivé'}")
     else:
         st.error(f"Erreur chargement statut: {status_response.get('error')}")

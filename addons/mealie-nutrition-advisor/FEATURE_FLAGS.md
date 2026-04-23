@@ -118,6 +118,25 @@ Enables or disables anti-boredom variety scoring.
 
 ---
 
+### `ENABLE_MENU_PLANNING_UI` (default: `true`)
+
+Enables or disables the interactive menu planning UI tab in Streamlit.
+
+**When enabled:**
+- Tab "📅 Planning" visible in Streamlit UI
+- Generate weekly menu drafts interactively
+- Swap recipes per slot with alternatives
+- Validate and push menus to Mealie mealplan
+
+**When disabled:**
+- Planning tab hidden from UI
+- API endpoints still accessible directly
+- Use direct API calls for menu planning
+
+**Use case:** Disable if you only use the API for menu planning or want a simpler UI.
+
+---
+
 ## Configuration
 
 ### Environment Variables
@@ -130,6 +149,7 @@ ENABLE_PROFILE_UI=true
 ENABLE_MENU_PLANNER=true
 ENABLE_NUTRITION_ANALYSIS=true
 ENABLE_CONFLICT_DETECTION=true
+ENABLE_MENU_PLANNING_UI=true
 ENABLE_SEASONALITY=true
 ENABLE_VARIETY_SCORING=true
 
@@ -138,6 +158,7 @@ ENABLE_PROFILE_UI=false
 ENABLE_MENU_PLANNER=false
 ENABLE_NUTRITION_ANALYSIS=false
 ENABLE_CONFLICT_DETECTION=false
+ENABLE_MENU_PLANNING_UI=false
 ENABLE_SEASONALITY=false
 ENABLE_VARIETY_SCORING=false
 ```
