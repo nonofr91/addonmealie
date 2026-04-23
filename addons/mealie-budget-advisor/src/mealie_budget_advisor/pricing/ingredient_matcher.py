@@ -182,8 +182,26 @@ class IngredientMatcher:
                 median_price = sorted_prices[len(sorted_prices) // 2]
 
                 qty_base, unit_base = self.normalize_quantity(quantity, unit)
-                # Estimation grossière: on suppose que le prix Open Prices est pour ~1kg/1l
-                total_price = qty_base * median_price
+                
+                # Conversion intelligente: le prix Open Prices est en €/kg ou €/l
+                # Si l'ingrédient est en unités, on estime un poids moyen
+                if unit_base == "unit":
+                    # Estimation: 1 unité ≈ 0.1kg pour les légumes, 0.2kg pour la viande
+                    # Pour simplifier, on utilise 0.15kg comme moyenne
+                    estimated_kg = qty_base * 0.15
+                    total_price = estimated_kg * median_price
+                elif unit_base == "kg" or unit_base == "l":
+                    # Prix déjà dans la bonne unité
+                    total_price = qty_base * median_price
+                elif unit_base == "g":
+                    # Convertir g en kg
+                    total_price = (qty_base / 1000) * median_price
+                elif unit_base == "ml":
+                    # Convertir ml en l
+                    total_price = (qty_base / 1000) * median_price
+                else:
+                    # Fallback: conversion directe (risqué mais nécessaire)
+                    total_price = qty_base * median_price
 
                 confidence = min(0.8, 0.5 + (len(prices) / 20))  # Plus de données = plus confiant
                 return round(total_price, 2), "open_prices", confidence
