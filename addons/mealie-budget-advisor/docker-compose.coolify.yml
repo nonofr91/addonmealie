@@ -11,7 +11,7 @@ services:
       - 'ENABLE_OPEN_PRICES=${ENABLE_OPEN_PRICES:-true}'
       - 'ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}'
       - 'ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}'
-      - 'LOG_LEVEL=${LOG_LEVEL:-INFO}'
+      - 'LOG_LEVEL=${LOG_LEVEL:-info}'
       - ADDON_API_HOST=0.0.0.0
       - ADDON_API_PORT=8003
       - ADDON_UI_PORT=8503
@@ -26,7 +26,7 @@ services:
       - '--port'
       - '8003'
       - '--log-level'
-      - '${LOG_LEVEL:-info}'
+      - info
     depends_on:
       mealie:
         condition: service_started
@@ -42,7 +42,7 @@ services:
     entrypoint:
       - sh
       - '-c'
-      - 'streamlit run /app/src/mealie_budget_advisor/ui.py --server.port=$ADDON_UI_PORT --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none'
+      - 'streamlit run mealie_budget_advisor/ui.py --server.port=$ADDON_UI_PORT --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none'
     depends_on:
       budget-api:
         condition: service_started
