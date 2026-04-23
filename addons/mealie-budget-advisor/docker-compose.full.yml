@@ -138,7 +138,7 @@ services:
       - 'ADDON_API_URL=${SERVICE_URL_BUDGETAPI}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
-      - 'ADDON_UI_PORT=${ADDON_UI_PORT_BUDGET:-8503}'
+      - 'ADDON_UI_PORT=${ADDON_UI_PORT_BUDGET}'
     entrypoint:
       - sh
       - '-c'
