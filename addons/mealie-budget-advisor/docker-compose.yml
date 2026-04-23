@@ -1,0 +1,55 @@
+services:
+  budget-advisor:
+    build: .
+    container_name: mealie-budget-advisor
+    ports:
+      - "${ADDON_API_PORT:-8003}:8003"
+      - "${ADDON_UI_PORT:-8503}:8503"
+    environment:
+      # Mealie
+      - MEALIE_BASE_URL=${MEALIE_BASE_URL:-http://localhost:9925}
+      - MEALIE_API_KEY=${MEALIE_API_KEY:-}
+
+      # Open Prices
+      - OPEN_PRICES_BASE_URL=${OPEN_PRICES_BASE_URL:-https://prices.openfoodfacts.org/api/v1}
+
+      # API/UI
+      - ADDON_API_HOST=0.0.0.0
+      - ADDON_API_PORT=8003
+      - ADDON_UI_PORT=8503
+      - ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-change-me-in-production}
+
+      # Feature flags
+      - ENABLE_OPEN_PRICES=${ENABLE_OPEN_PRICES:-true}
+      - ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}
+      - ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}
+
+      # Logs
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    volumes:
+      # Persistance des données (prix manuels, budgets)
+      - ./data:/app/data
+      - ./config:/app/config
+
+    restart: unless-stopped
+
+    # Mode double: API + UI via entrypoint personnalisé
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        # Démarrer l'API en arrière-plan
+        uvicorn mealie_budget_advisor.api:app --host 0.0.0.0 --port 8003 --log-level ${LOG_LEVEL:-info} &
+        API_PID=$!
+
+        # Démarrer l'UI Streamlit
+        python3 -m streamlit run src/mealie_budget_advisor/ui.py \
+          --server.port 8503 \
+          --server.address 0.0.0.0 \
+          --server.headless true \
+          --browser.gatherUsageStats false \
+          --server.fileWatcherType none &
+        UI_PID=$!
+
+        # Attendre l'un des processus
+        wait $API_PID $UI_PID

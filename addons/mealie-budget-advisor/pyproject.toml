@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mealie-budget-advisor"
+version = "0.1.0"
+description = "Addon Mealie pour l'estimation des coûts et l'assistance au choix des recettes selon le budget"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "CubixMedia"}
+]
+keywords = ["mealie", "budget", "recipes", "meal-planning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
+    "streamlit>=1.28.0",
+    "pandas>=2.0.0",
+    "rapidfuzz>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+    "mypy>=1.6.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+budget-api = "mealie_budget_advisor.api:main"
+budget-ui = "mealie_budget_advisor.ui:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "D", "UP", "B", "C4", "SIM"]
+ignore = ["D100", "D104", "D203", "D212"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

@@ -1,0 +1,58 @@
+services:
+  budget-advisor-dev:
+    build: .
+    container_name: mealie-budget-advisor-dev
+    ports:
+      - "8003:8003"
+      - "8503:8503"
+    environment:
+      # Mealie (à configurer dans .env.dev)
+      - MEALIE_BASE_URL=${MEALIE_BASE_URL:-http://host.docker.internal:9925}
+      - MEALIE_API_KEY=${MEALIE_API_KEY}
+
+      # Open Prices
+      - OPEN_PRICES_BASE_URL=https://prices.openfoodfacts.org/api/v1
+
+      # API/UI
+      - ADDON_API_HOST=0.0.0.0
+      - ADDON_API_PORT=8003
+      - ADDON_UI_PORT=8503
+      - ADDON_SECRET_KEY=dev-secret-key
+
+      # Feature flags
+      - ENABLE_OPEN_PRICES=true
+      - ENABLE_MANUAL_PRICES=true
+      - ENABLE_BUDGET_PLANNING=true
+
+      # Logs
+      - LOG_LEVEL=DEBUG
+
+    volumes:
+      # Mount pour le dévelopnement (hot reload)
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./config:/app/config
+
+    restart: "no"
+
+    # Mode dev avec reload
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        pip install -e /app 2>/dev/null
+
+        # Démarrer l'API avec reload
+        uvicorn mealie_budget_advisor.api:app \
+          --host 0.0.0.0 --port 8003 --reload --log-level debug &
+        API_PID=$!
+
+        # Démarrer l'UI Streamlit
+        python3 -m streamlit run src/mealie_budget_advisor/ui.py \
+          --server.port 8503 \
+          --server.address 0.0.0.0 \
+          --server.headless true \
+          --browser.gatherUsageStats false \
+          --server.fileWatcherType none &
+        UI_PID=$!
+
+        wait $API_PID $UI_PID
