@@ -1,6 +1,7 @@
 """FastAPI REST API pour le Budget Advisor."""
 
 from contextlib import asynccontextmanager
+from typing import List
 
 from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -389,7 +390,7 @@ async def suggest_alternatives(
 
 @app.get("/planning/cost-report")
 async def generate_cost_report(
-    slugs: list[str] = Query(..., description="Liste des slugs à analyser"),
+    slugs: List[str] = Query(..., description="Liste des slugs à analyser"),
 ):
     """Génère un rapport coût vs budget pour plusieurs recettes.
 
