@@ -142,7 +142,7 @@ services:
     entrypoint:
       - sh
       - '-c'
-      - 'streamlit run mealie_budget_advisor/ui.py --server.port=$ADDON_UI_PORT --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none'
+      - 'streamlit run mealie_budget_advisor/ui.py --server.port=8503 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none'
     depends_on:
       budget-api:
         condition: service_started
