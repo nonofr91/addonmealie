@@ -34,8 +34,23 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Mealie Budget Advisor",
-    description="Estimation des coûts et assistance au choix des recettes selon le budget",
+    title="Mealie Budget Advisor API",
+    description="""
+    API pour l'estimation des coûts et l'assistance au choix des recettes selon le budget.
+
+    ## Fonctionnalités principales
+
+    - **Calcul des coûts**: Estimation du coût des recettes Mealie
+    - **Gestion des prix**: Prix manuels et recherche via Open Prices
+    - **Budget**: Définition et suivi du budget mensuel
+    - **Planning**: Suggestions d'alternatives respectant le budget
+
+    ## Sources de prix
+
+    1. **Prix manuels**: Configurés par l'utilisateur (priorité)
+    2. **Open Prices**: API publique de prix alimentaires
+    3. **Estimation**: Basée sur les ingrédients connus
+    """,
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -52,13 +67,27 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint.
+
+    Returns:
+        JSON response with service status
+    """
     return {"status": "ok", "service": "mealie-budget-advisor"}
 
 
 @app.get("/status")
 async def get_status():
-    """Statut des connexions et configuration."""
+    """Statut des connexions et configuration.
+
+    Returns:
+        JSON response with:
+        - mealie_connected: Boolean
+        - mealie_version: String
+        - total_recipes: Integer
+        - manual_prices_count: Integer
+        - open_prices_enabled: Boolean
+        - config: Dict with current configuration
+    """
     mealie_status = mealie_client.health_check()
 
     # Compter les recettes
@@ -82,7 +111,15 @@ async def get_status():
 
 @app.get("/budget")
 async def get_current_budget():
-    """Récupère le budget du mois en cours."""
+    """Récupère le budget du mois en cours.
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - period: String (YYYY-MM)
+        - budget: BudgetSettings object or null
+        - message: String if no budget defined
+    """
     budget = budget_manager.get_current_budget()
 
     if budget:
@@ -102,7 +139,19 @@ async def get_current_budget():
 
 @app.post("/budget")
 async def set_budget(settings: BudgetSettings):
-    """Définit le budget pour une période."""
+    """Définit le budget pour une période.
+
+    Args:
+        settings: BudgetSettings object with period, total_budget, etc.
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - period: String (YYYY-MM)
+        - effective_budget: Float
+        - budget_per_meal: Float
+        - budget: BudgetSettings object
+    """
     budget = budget_manager.set_budget(settings)
 
     return {
@@ -276,7 +325,19 @@ async def suggest_alternatives(
     current_slug: str = Query(..., description="Slug de la recette actuelle"),
     limit: int = Query(5, ge=1, le=20),
 ):
-    """Suggère des alternatives moins chères respectant le budget."""
+    """Suggère des alternatives moins chères respectant le budget.
+
+    Args:
+        current_slug: Slug de la recette à remplacer
+        limit: Nombre maximum de suggestions (1-20)
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - current_recipe: Dict with slug and cost_per_serving
+        - budget_per_meal: Float
+        - suggestions: List of dicts with slug, cost_per_serving, savings
+    """
     # Récupérer le budget actuel
     budget = budget_manager.get_current_budget()
     if not budget:
@@ -329,7 +390,17 @@ async def suggest_alternatives(
 async def generate_cost_report(
     slugs: list[str] = Query(..., description="Liste des slugs à analyser"),
 ):
-    """Génère un rapport coût vs budget pour plusieurs recettes."""
+    """Génère un rapport coût vs budget pour plusieurs recettes.
+
+    Args:
+        slugs: Liste des slugs de recettes à analyser
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - budget: BudgetSettings object
+        - report: Dict with metrics (total_recipes, avg_cost_per_serving, within_budget_pct, etc.)
+    """
     # Récupérer le budget actuel
     budget = budget_manager.get_current_budget()
     if not budget:
