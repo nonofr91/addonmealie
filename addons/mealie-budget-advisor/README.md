@@ -90,12 +90,17 @@ docker compose -f docker-compose.dev.yml up
 | GET | `/status` | Statut et configuration |
 | GET | `/budget` | Budget mensuel actuel |
 | POST | `/budget` | Définir le budget |
+| GET | `/budget/period/{label}` | Budget par période |
+| DELETE | `/budget/period/{label}` | Supprimer budget |
+| GET | `/budget/list` | Lister tous les budgets |
 | GET | `/prices/search?q={query}` | Recherche Open Prices |
 | GET | `/prices/manual` | Liste prix manuels |
 | POST | `/prices/manual` | Ajouter prix manuel |
 | GET | `/recipes/{slug}/cost` | Coût d'une recette |
 | POST | `/recipes/batch-cost` | Coût batch |
 | GET | `/recipes/compare-costs` | Comparer recettes |
+| GET | `/planning/suggest-alternatives` | Suggestions alternatives |
+| GET | `/planning/cost-report` | Rapport coût vs budget |
 
 ## 🧪 Tests rapides
 
@@ -108,30 +113,71 @@ curl "http://localhost:8003/prices/search?q=farine&limit=5"
 
 # Calculer le coût d'une recette
 curl "http://localhost:8003/recipes/carbonara-marmiton/cost"
+
+# Définir un budget
+curl -X POST http://localhost:8003/budget \
+  -H "Content-Type: application/json" \
+  -d '{
+    "period": {"year": 2026, "month": 4},
+    "total_budget": 500,
+    "condiments_forfait": 20,
+    "meals_per_day": 3,
+    "days_per_month": 30
+  }'
+
+# Suggestions d'alternatives
+curl "http://localhost:8003/planning/suggest-alternatives?current_slug=carbonara-marmiton&limit=5"
 ```
+
+## 🎨 UI Streamlit
+
+L'interface utilisateur est accessible sur `http://localhost:8503` et comprend 5 onglets :
+
+- **📊 Statut**: État du système (connexion Mealie, nombre de recettes, feature flags)
+- **💰 Budget**: Gestion du budget mensuel (CRUD, historique)
+- **🎯 Planning**: Suggestions d'alternatives respectant le budget
+- **🏷️ Prix**: Gestion des prix manuels et recherche Open Prices
+- **📈 Coûts**: Calcul du coût des recettes et comparaison budget
 
 ## 🗺️ Roadmap
 
-### Sprint 1 ✅ (Actuel)
+### Sprint 1 ✅
 - [x] Structure de base de l'addon
-- [x] Modèles Pydantic
+- [x] Modèles Pydantic (budget, cost, pricing)
 - [x] Client API Open Prices
-- [x] Gestion prix manuels
+- [x] Gestion prix manuels (JSON)
 - [x] API endpoints de base
 - [x] UI Streamlit basique
 
-### Sprint 2 (À venir)
-- [ ] Parser ingrédients avancé
-- [ ] Calcul coût recette complet
-- [ ] UI gestion des prix
+### Sprint 2 ✅
+- [x] Parser ingrédients avancé (fractions, décimales françaises)
+- [x] Matching fuzzy ingrédients ↔ produits
+- [x] Calcul coût recette complet
+- [x] UI gestion des prix
+- [x] Unit tests pour pricing
+- [x] Docker build fixes
 
-### Sprint 3 (À venir)
-- [ ] Gestion budget mensuel
-- [ ] Affichage coût dans recettes
+### Sprint 3 ✅
+- [x] Gestion budget mensuel (CRUD)
+- [x] BudgetManager avec persistance JSON
+- [x] API endpoints budget
+- [x] Intégration coût dans détails recette
+- [x] Onglet Budget dans UI Streamlit
+- [x] Comparaison budget vs coût
 
-### Sprint 4 (À venir)
-- [ ] Planning respectant le budget
-- [ ] Suggestions d'alternatives
+### Sprint 4 ✅
+- [x] Planner budget-aware
+- [x] Suggestions d'alternatives moins chères
+- [x] Rapport coût vs budget
+- [x] API endpoints planning
+- [x] Onglet Planning dans UI Streamlit
+
+### Sprint 5 🔄 (En cours)
+- [x] Documenter l'API (OpenAPI/Swagger)
+- [x] Créer le README de l'addon
+- [ ] Ajouter tests E2E pour le workflow complet
+- [ ] Documenter l'architecture et l'intégration
+- [ ] Nettoyer et finaliser pour release
 
 ## 📄 Licence
 
