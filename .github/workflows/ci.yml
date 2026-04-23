@@ -52,6 +52,7 @@ jobs:
           ruff check mealie-workflow/src/ || true
           ruff check addons/mealie-import-orchestrator/src/ || true
           ruff check addons/mealie-nutrition-advisor/src/ || true
+          ruff check addons/mealie-budget-advisor/src/ || true
 
   repo-hygiene:
     name: Repository Hygiene
@@ -151,4 +152,40 @@ jobs:
               else:
                   assert not issues, f'Faux positif pour: {food[\"name\"]}'
           print('✅ Détection des problèmes validée')
+          "
+
+  budget-addon-test:
+    name: Budget Addon Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install budget addon
+        run: |
+          pip install --upgrade pip
+          pip install "./addons/mealie-budget-advisor[dev]"
+          pip install fastapi "uvicorn[standard]" requests
+
+      - name: Run unit tests
+        run: |
+          cd addons/mealie-budget-advisor
+          pytest tests/ -v
+
+      - name: Validate API routes
+        env:
+          MEALIE_BASE_URL: http://x
+          MEALIE_API_KEY: x
+        run: |
+          python3 -c "
+          from mealie_budget_advisor.api import app
+          routes = [r.path for r in app.routes]
+          required = ['/health', '/status', '/budget', '/prices/manual', '/prices/search', '/recipes/{slug}/cost', '/recipes/batch-cost', '/plan/budget-aware']
+          for path in required:
+              assert path in routes, f'Route manquante: {path} — routes: {routes}'
+          print('Budget addon routes validated:', sorted(p for p in routes if not p.startswith('/openapi')))
           "

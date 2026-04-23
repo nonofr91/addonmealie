@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  budget-api:
+    build:
+      context: ../..
+      dockerfile: addons/mealie-budget-advisor/Dockerfile
+    container_name: mealie-budget-api
+    environment:
+      - MEALIE_BASE_URL=${SERVICE_URL_MEALIE:-http://mealie:9000}
+      - MEALIE_API_KEY=${MEALIE_API_KEY}
+      - OPEN_PRICES_BASE_URL=${OPEN_PRICES_BASE_URL:-https://prices.openfoodfacts.org/api/v1}
+      - OFF_BASE_URL=${OFF_BASE_URL:-https://world.openfoodfacts.org}
+      - ADDON_API_HOST=0.0.0.0
+      - ADDON_API_PORT=8003
+      - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENABLE_OPEN_PRICES=${ENABLE_OPEN_PRICES:-true}
+      - ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}
+      - ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}
+      - NUTRITION_API_URL=${NUTRITION_API_URL:-}
+    ports:
+      - "${BUDGET_API_PORT:-8003}:8003"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    restart: unless-stopped
+    command: ["uvicorn", "mealie_budget_advisor.api:app", "--host", "0.0.0.0", "--port", "8003"]
+    networks:
+      - mealie-dev
+
+  budget-ui:
+    build:
+      context: ../..
+      dockerfile: addons/mealie-budget-advisor/Dockerfile
+    container_name: mealie-budget-ui
+    environment:
+      - ADDON_API_URL=http://budget-api:8003
+      - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
+      - MEALIE_BASE_URL=${SERVICE_URL_MEALIE:-http://mealie:9000}
+      - ADDON_UI_PORT=8503
+      - ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}
+    ports:
+      - "${BUDGET_UI_PORT:-8503}:8503"
+    depends_on:
+      - budget-api
+    restart: unless-stopped
+    command: ["streamlit", "run", "src/mealie_budget_advisor/ui.py", "--server.port=8503", "--server.address=0.0.0.0", "--server.headless=true", "--browser.gatherUsageStats=false", "--server.fileWatcherType=none"]
+    networks:
+      - mealie-dev
+
+networks:
+  mealie-dev:
+    external: true

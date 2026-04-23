@@ -85,6 +85,38 @@ services:
     networks:
       - mealie-network
 
+  budget-addon:
+    build:
+      context: .
+      dockerfile: addons/mealie-budget-advisor/Dockerfile
+    container_name: mealie-budget-addon
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - MEALIE_BASE_URL=${MEALIE_BASE_URL:-http://mealie:9000}
+      - MEALIE_API_KEY=${MEALIE_API_KEY}
+      - OPEN_PRICES_BASE_URL=${OPEN_PRICES_BASE_URL:-https://prices.openfoodfacts.org/api/v1}
+      - OFF_BASE_URL=${OFF_BASE_URL:-https://world.openfoodfacts.org}
+      - ADDON_API_HOST=0.0.0.0
+      - ADDON_API_PORT=8003
+      - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENABLE_OPEN_PRICES=${ENABLE_OPEN_PRICES:-true}
+      - ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}
+      - ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}
+      - NUTRITION_API_URL=${NUTRITION_API_URL:-http://nutrition-addon:8001}
+    ports:
+      - "${BUDGET_API_PORT:-8003}:8003"
+    volumes:
+      - budget_data:/app/data
+      - budget_config:/app/config
+    depends_on:
+      mealie:
+        condition: service_healthy
+    networks:
+      - mealie-network
+
   mcp-server:
     build:
       context: .
@@ -106,6 +138,8 @@ services:
 volumes:
   mealie_data:
   nutrition_data:
+  budget_data:
+  budget_config:
 
 networks:
   mealie-network:

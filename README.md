@@ -86,7 +86,8 @@ Voir [docs/INSTALLATION.md](docs/INSTALLATION.md) pour les instructions détaill
 .
 ├── addons/                    # Addons externes Mealie
 │   ├── mealie-import-orchestrator/   # Import de recettes
-│   └── mealie-nutrition-advisor/     # Nutrition + menus
+│   ├── mealie-nutrition-advisor/     # Nutrition + menus
+│   └── mealie-budget-advisor/        # Budget + estimation coût recettes
 ├── mealie-mcp-server/         # Serveur MCP pour assistants IA
 ├── mealie-workflow/           # Scripts et outils d'import
 ├── packages/                  # Code partagé
@@ -107,6 +108,7 @@ Voir [docs/INSTALLATION.md](docs/INSTALLATION.md) pour les instructions détaill
 |-------|-------------|-----|-----|
 | [mealie-import-orchestrator](addons/mealie-import-orchestrator/) | Import de recettes et audit de qualité | :8000 | :8501 |
 | [mealie-nutrition-advisor](addons/mealie-nutrition-advisor/) | Calcul nutritionnel et planification | :8001 | :8502 |
+| [mealie-budget-advisor](addons/mealie-budget-advisor/) | Budget mensuel + estimation coût des recettes | :8003 | :8503 |
 | [mealie-mcp-server](mealie-mcp-server/) | Intégration MCP pour assistants IA | MCP | - |
 
 ## 🗺️ Roadmap
