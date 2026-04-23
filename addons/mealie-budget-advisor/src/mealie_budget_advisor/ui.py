@@ -309,6 +309,28 @@ with tabs[3]:
 
             else:
                 st.info("Aucun ingrédient trouvé")
+
+            # Comparaison avec le budget
+            if _MEALIE_BASE:
+                st.divider()
+                st.subheader("📊 Comparaison avec le budget")
+                current_budget = _api("GET", "/budget")
+                if current_budget.get("success") and current_budget.get("budget"):
+                    budget = current_budget.get("budget", {})
+                    budget_per_meal = budget.get("budget_per_meal", 0)
+                    cost_per_serving = cost.get("cost_per_serving", 0)
+
+                    if budget_per_meal > 0:
+                        ratio = (cost_per_serving / budget_per_meal) * 100
+                        if ratio <= 100:
+                            st.success(f"✅ Cette recette respecte le budget ({ratio:.0f}% du budget par repas)")
+                        else:
+                            st.warning(f"⚠️ Cette recette dépasse le budget ({ratio:.0f}% du budget par repas)")
+                    else:
+                        st.info("Budget par repas non défini")
+                else:
+                    st.info("Définissez un budget pour comparer les coûts")
+
         else:
             st.error(f"Erreur: {resp.get('error')}")
 
