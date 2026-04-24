@@ -176,6 +176,38 @@ with tabs[2]:
     budget = current_budget.get("budget", {})
     budget_per_meal = budget.get("budget_per_meal", 0)
 
+    # Rafraîchir les coûts Mealie (refresh-costs)
+    st.subheader("🔄 Rafraîchir les coûts dans Mealie")
+    st.caption(
+        "Recalcule et publie le coût de **toutes** les recettes dans `extras.cout_*`. "
+        "Les clés `cout_manuel_*` posées manuellement sont toujours préservées."
+    )
+    col_refresh1, col_refresh2 = st.columns([2, 3])
+    with col_refresh1:
+        refresh_month = st.text_input(
+            "Mois (YYYY-MM, optionnel)",
+            placeholder="ex: 2026-04",
+            key="refresh-month",
+        )
+    with col_refresh2:
+        st.write("")
+        if st.button("🔄 Rafraîchir coûts Mealie", key="refresh-all"):
+            payload = {"month": refresh_month} if refresh_month.strip() else {}
+            with st.spinner("Recalcul et publication en cours..."):
+                resp = _api("POST", "/recipes/refresh-costs", json=payload)
+            if resp.get("success"):
+                summary = resp.get("summary", {})
+                st.success(
+                    f"Rafraîchissement terminé : "
+                    f"{summary.get('updated', 0)} mis à jour, "
+                    f"{summary.get('failed', 0)} échecs, "
+                    f"{summary.get('skipped', 0)} ignorés, "
+                    f"{summary.get('overrides_preserved', 0)} overrides préservés."
+                )
+            else:
+                st.error(f"Erreur: {resp.get('error') or resp.get('detail', 'erreur inconnue')}")
+    st.divider()
+
     # Suggestion d'alternatives
     st.subheader("💡 Suggérer des alternatives moins chères")
     col_slug, col_limit = st.columns([3, 1])
@@ -382,6 +414,41 @@ with tabs[4]:
 
             else:
                 st.info("Aucun ingrédient trouvé")
+
+            # Publication dans Mealie (extras.cout_*)
+            st.divider()
+            st.subheader("📤 Publier dans Mealie")
+            st.caption(
+                "Écrit le coût dans `extras.cout_*`. Les clés `cout_manuel_*` "
+                "éventuellement posées manuellement dans Mealie ne sont jamais écrasées."
+            )
+            col_pub1, col_pub2 = st.columns([2, 3])
+            with col_pub1:
+                if st.button("📤 Publier dans Mealie", key=f"publish-{slug}"):
+                    with st.spinner("Publication en cours..."):
+                        sync_resp = _api("POST", f"/recipes/{slug}/sync-cost")
+                    if sync_resp.get("success"):
+                        extras = sync_resp.get("extras", {}) or {}
+                        has_override = sync_resp.get("has_override")
+                        if has_override:
+                            st.success(
+                                "Coût publié — override manuel préservé "
+                                f"({extras.get('cout_manuel_par_portion') or extras.get('cout_manuel_total')} €)."
+                            )
+                        else:
+                            st.success(
+                                f"Coût publié dans Mealie "
+                                f"({extras.get('cout_par_portion', '?')} €/portion, source={extras.get('cout_source')})."
+                            )
+                    else:
+                        st.error(
+                            f"Publication échouée: {sync_resp.get('error') or sync_resp.get('detail', 'erreur inconnue')}"
+                        )
+            with col_pub2:
+                st.info(
+                    "Pour forcer un coût : dans Mealie → onglet Propriétés de la recette → "
+                    "ajouter `cout_manuel_par_portion = 1.50`."
+                )
 
             # Comparaison avec le budget
             if _MEALIE_BASE:

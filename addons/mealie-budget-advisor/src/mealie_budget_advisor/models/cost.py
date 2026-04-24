@@ -82,24 +82,65 @@ class RecipeCost(BaseModel):
 
     breakdown: CostBreakdown = Field(default_factory=CostBreakdown)
 
+    override_per_serving: Optional[float] = Field(
+        default=None,
+        description="Override manuel du coût par portion (lu depuis extras.cout_manuel_par_portion).",
+    )
+    override_total: Optional[float] = Field(
+        default=None,
+        description="Override manuel du coût total (lu depuis extras.cout_manuel_total).",
+    )
+    override_reason: Optional[str] = Field(
+        default=None,
+        description="Raison de l'override manuel (extras.cout_manuel_raison).",
+    )
+
     @computed_field
     @property
-    def total_cost(self) -> float:
-        """Coût total de la recette."""
+    def computed_total_cost(self) -> float:
+        """Coût total calculé (sans override)."""
         return self.breakdown.total_estimated_cost
 
     @computed_field
     @property
-    def cost_per_serving(self) -> float:
-        """Coût par portion."""
+    def computed_cost_per_serving(self) -> float:
+        """Coût par portion calculé (sans override)."""
         if self.servings == 0:
             return 0.0
-        return round(self.total_cost / self.servings, 2)
+        return round(self.computed_total_cost / self.servings, 2)
+
+    @computed_field
+    @property
+    def total_cost(self) -> float:
+        """Coût total effectif (override manuel prioritaire s'il existe)."""
+        if self.override_total is not None:
+            return round(self.override_total, 2)
+        if self.override_per_serving is not None:
+            return round(self.override_per_serving * max(self.servings, 1), 2)
+        return self.computed_total_cost
+
+    @computed_field
+    @property
+    def cost_per_serving(self) -> float:
+        """Coût par portion effectif (override manuel prioritaire s'il existe)."""
+        if self.override_per_serving is not None:
+            return round(self.override_per_serving, 2)
+        if self.override_total is not None and self.servings:
+            return round(self.override_total / max(self.servings, 1), 2)
+        return self.computed_cost_per_serving
+
+    @computed_field
+    @property
+    def has_override(self) -> bool:
+        """Vrai si un override manuel a été appliqué."""
+        return self.override_per_serving is not None or self.override_total is not None
 
     @computed_field
     @property
     def confidence(self) -> float:
-        """Confiance globale basée sur le coverage des prix."""
+        """Confiance globale basée sur le coverage des prix (1.0 si override manuel)."""
+        if self.has_override:
+            return 1.0
         return self.breakdown.coverage_ratio
 
     @computed_field

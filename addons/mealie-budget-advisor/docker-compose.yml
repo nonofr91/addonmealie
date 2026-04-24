@@ -24,6 +24,10 @@ services:
       - ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}
       - ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}
 
+      # Rafraîchissement mensuel automatique des coûts (publie dans extras.cout_*)
+      - ENABLE_MONTHLY_COST_REFRESH=${ENABLE_MONTHLY_COST_REFRESH:-true}
+      - MONTHLY_COST_REFRESH_CRON=${MONTHLY_COST_REFRESH_CRON:-0 3 1 * *}
+
       # Logs
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
 

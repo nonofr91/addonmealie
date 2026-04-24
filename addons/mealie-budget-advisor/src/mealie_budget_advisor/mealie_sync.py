@@ -104,3 +104,39 @@ class MealieClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Erreur récupération units: {e}")
             return []
+
+    def get_recipe_extras(self, slug: str) -> dict[str, str]:
+        """Récupère le dictionnaire ``extras`` d'une recette (ou ``{}`` si absent)."""
+        recipe = self.get_recipe(slug)
+        if not recipe:
+            return {}
+        extras = recipe.get("extras") or {}
+        if not isinstance(extras, dict):
+            return {}
+        return {str(k): str(v) for k, v in extras.items() if v is not None}
+
+    def patch_extras(self, slug: str, extras: dict[str, str]) -> bool:
+        """Patch le champ ``extras`` d'une recette.
+
+        Mealie n'accepte que des valeurs strings dans ``extras``. Toute valeur
+        non-string est sérialisée via ``str()``.
+
+        Args:
+            slug: Slug de la recette.
+            extras: Dictionnaire complet à écrire (Mealie remplace l'ensemble).
+
+        Returns:
+            ``True`` si le PATCH a réussi, ``False`` sinon.
+        """
+        try:
+            payload = {str(k): str(v) for k, v in extras.items() if v is not None}
+            response = self.session.patch(
+                f"{self.base_url}/api/recipes/{slug}",
+                json={"extras": payload},
+                timeout=30,
+            )
+            response.raise_for_status()
+            return True
+        except requests.exceptions.RequestException as e:
+            logger.warning("Patch extras échoué pour '%s': %s", slug, e)
+            return False

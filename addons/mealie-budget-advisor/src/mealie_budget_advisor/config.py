@@ -64,6 +64,14 @@ class BudgetConfig:
             os.environ.get("ENABLE_BUDGET_PLANNING", "true").lower() == "true"
         )
 
+        # Rafraîchissement mensuel automatique des coûts (publication dans extras)
+        self._enable_monthly_cost_refresh = (
+            os.environ.get("ENABLE_MONTHLY_COST_REFRESH", "true").lower() == "true"
+        )
+        self._monthly_cost_refresh_cron = os.environ.get(
+            "MONTHLY_COST_REFRESH_CRON", "0 3 1 * *"
+        ).strip()
+
         # Data paths
         self.data_dir = Path(__file__).parent.parent.parent / "data"
         self.config_dir = Path(__file__).parent.parent.parent / "config"
@@ -94,6 +102,14 @@ class BudgetConfig:
     def enable_budget_planning(self) -> bool:
         return self._enable_budget_planning
 
+    @property
+    def enable_monthly_cost_refresh(self) -> bool:
+        return self._enable_monthly_cost_refresh
+
+    @property
+    def monthly_cost_refresh_cron(self) -> str:
+        return self._monthly_cost_refresh_cron
+
     def to_dict(self) -> dict:
         """Retourne la configuration sans secrets."""
         return {
@@ -106,6 +122,8 @@ class BudgetConfig:
             "enable_open_prices": self.enable_open_prices,
             "enable_manual_prices": self.enable_manual_prices,
             "enable_budget_planning": self.enable_budget_planning,
+            "enable_monthly_cost_refresh": self.enable_monthly_cost_refresh,
+            "monthly_cost_refresh_cron": self.monthly_cost_refresh_cron,
             "log_level": self.log_level,
         }
 
