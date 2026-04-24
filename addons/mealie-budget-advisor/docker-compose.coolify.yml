@@ -127,7 +127,7 @@ services:
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
     entrypoint: ["sh", "-c", "streamlit run mealie_budget_advisor/ui.py --server.port=8503 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none"]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8503/_stcore/health || exit 1"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8503/_stcore/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
