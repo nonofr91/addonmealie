@@ -1,10 +1,12 @@
 """FastAPI REST API pour le Budget Advisor."""
 
+import logging
 from contextlib import asynccontextmanager
-from typing import List
+from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from .config import BudgetConfigError, get_config
 from .mealie_sync import MealieClient
@@ -15,6 +17,9 @@ from .planning.budget_aware_planner import BudgetAwarePlanner
 from .planning.budget_manager import BudgetManager
 from .pricing.cost_calculator import CostCalculator
 from .pricing.manual_pricer import ManualPricer
+from .scheduler import BudgetScheduler
+
+logger = logging.getLogger(__name__)
 
 config = get_config()
 mealie_client = MealieClient(config.mealie_base_url, config.mealie_api_key)
@@ -25,14 +30,40 @@ cost_calculator = CostCalculator(
 manual_pricer = ManualPricer()
 budget_manager = BudgetManager(config_dir=config.config_dir)
 budget_planner = BudgetAwarePlanner()
+_scheduler: Optional[BudgetScheduler] = None
+
+
+class RefreshCostsRequest(BaseModel):
+    """Corps de requête pour ``POST /recipes/refresh-costs``."""
+
+    month: Optional[str] = Field(
+        default=None,
+        description="Mois de référence (YYYY-MM). Si absent, utilise le mois courant UTC.",
+    )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan handler pour startup/shutdown."""
-    # Startup
-    yield
-    # Shutdown
+    """Lifespan handler pour startup/shutdown (scheduler cron mensuel)."""
+    global _scheduler
+    if config.enable_monthly_cost_refresh:
+        _scheduler = BudgetScheduler(
+            refresh_callable=lambda: cost_calculator.refresh_all_costs(),
+            cron_expression=config.monthly_cost_refresh_cron,
+        )
+        try:
+            _scheduler.start()
+        except Exception:  # noqa: BLE001
+            logger.exception("Démarrage du scheduler impossible (continue sans cron)")
+    else:
+        logger.info(
+            "Rafraîchissement mensuel des coûts désactivé (ENABLE_MONTHLY_COST_REFRESH=false)"
+        )
+    try:
+        yield
+    finally:
+        if _scheduler is not None:
+            _scheduler.shutdown()
 
 
 app = FastAPI(
@@ -288,6 +319,46 @@ async def get_recipe_cost(
         "success": True,
         "cost": cost.model_dump(),
     }
+
+
+@app.post("/recipes/{slug}/sync-cost")
+async def sync_recipe_cost(
+    slug: str,
+    month: Optional[str] = Query(
+        None, description="Mois de référence au format YYYY-MM. Défaut : mois courant UTC."
+    ),
+    use_open_prices: bool = True,
+):
+    """Recalcule le coût d'une recette et le publie dans ``extras`` de Mealie.
+
+    - Les clés utilisateur ``cout_manuel_*`` sont **toujours préservées**.
+    - Les autres clés `extras` (autres addons) sont préservées.
+    - Si un override manuel est présent, ``cout_source=manuel`` dans le retour.
+    """
+    result = cost_calculator.sync_recipe_cost(
+        slug=slug,
+        month=month,
+        use_open_prices=use_open_prices,
+        mealie_client=mealie_client,
+    )
+    if not result.get("success"):
+        status = 404 if "introuvable" in str(result.get("error", "")) else 502
+        raise HTTPException(status_code=status, detail=result.get("error", "Sync échoué"))
+    return result
+
+
+@app.post("/recipes/refresh-costs")
+async def refresh_all_recipes_costs(payload: RefreshCostsRequest = Body(default=None)):
+    """Recalcule et publie les coûts pour toutes les recettes Mealie.
+
+    Les ``extras.cout_manuel_*`` existants ne sont jamais touchés.
+    """
+    month = payload.month if payload else None
+    summary = cost_calculator.refresh_all_costs(
+        month=month,
+        mealie_client=mealie_client,
+    )
+    return {"success": True, "summary": summary}
 
 
 @app.post("/recipes/batch-cost")

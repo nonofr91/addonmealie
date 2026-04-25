@@ -97,10 +97,62 @@ docker compose -f docker-compose.dev.yml up
 | GET | `/prices/manual` | Liste prix manuels |
 | POST | `/prices/manual` | Ajouter prix manuel |
 | GET | `/recipes/{slug}/cost` | Coût d'une recette |
+| POST | `/recipes/{slug}/sync-cost` | Publier le coût dans `extras.cout_*` Mealie |
+| POST | `/recipes/refresh-costs` | Rafraîchir le coût de toutes les recettes |
 | POST | `/recipes/batch-cost` | Coût batch |
 | GET | `/recipes/compare-costs` | Comparer recettes |
 | GET | `/planning/suggest-alternatives` | Suggestions alternatives |
 | GET | `/planning/cost-report` | Rapport coût vs budget |
+
+## 💾 Persistance du coût dans Mealie (`extras`)
+
+L'addon publie le coût calculé d'une recette dans son champ `extras` (visible
+dans l'onglet *Propriétés* de chaque recette Mealie). Toutes les clés sont
+préfixées `cout_` et nommées en français.
+
+### Clés écrites par l'addon (recalculées à chaque sync)
+
+| Clé | Description |
+|-----|-------------|
+| `cout_total` | Coût total (€) |
+| `cout_par_portion` | Coût par portion (€) |
+| `cout_devise` | Devise (`EUR`) |
+| `cout_confiance` | Confiance 0–1 |
+| `cout_mois_reference` | Mois du calcul (`YYYY-MM`) |
+| `cout_calcule_le` | Timestamp ISO UTC |
+| `cout_source` | `auto` (calculé) ou `manuel` (override actif) |
+
+### Clés réservées à l'utilisateur (**jamais écrasées**)
+
+| Clé | Description |
+|-----|-------------|
+| `cout_manuel_par_portion` | Override manuel du coût par portion |
+| `cout_manuel_total` | Override manuel du coût total |
+| `cout_manuel_raison` | Raison libre (ex. « promo Leclerc -30% ») |
+
+> Pour forcer un coût : éditer la recette dans Mealie → onglet *Propriétés* →
+> ajouter `cout_manuel_par_portion` = `1.50`. Le planner et l'UI utiliseront
+> cette valeur et marqueront la recette comme `cout_source=manuel`.
+
+### Rafraîchissement mensuel automatique
+
+Un scheduler APScheduler intégré à l'API recalcule et publie le coût de toutes
+les recettes, activé par défaut (1er du mois à 03:00 UTC). Variables d'env :
+
+```bash
+ENABLE_MONTHLY_COST_REFRESH=true        # false pour désactiver
+MONTHLY_COST_REFRESH_CRON="0 3 1 * *"   # cron 5 champs (UTC)
+```
+
+### CLI
+
+```bash
+# Publier le coût d'une recette unique
+mealie-budget sync-cost poulet-riz --month 2026-04
+
+# Recalculer toutes les recettes
+mealie-budget refresh-costs --month 2026-04
+```
 
 ## 🧪 Tests rapides
 
