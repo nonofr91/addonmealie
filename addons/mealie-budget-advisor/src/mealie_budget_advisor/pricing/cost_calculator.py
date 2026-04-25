@@ -5,7 +5,9 @@ from typing import Optional
 
 import requests
 
+from ..mealie_sync import MealieClient
 from ..models.cost import CostBreakdown, IngredientCost, RecipeCost
+from ..recipe_extras import build_addon_extras, merge_extras, read_override
 from .ingredient_matcher import IngredientMatcher
 from .manual_pricer import ManualPricer
 from .open_prices_client import OpenPricesClient
@@ -114,11 +116,17 @@ class CostCalculator:
         else:
             avg_confidence = 0.0
 
+        # Lecture d'un éventuel override manuel depuis extras.cout_manuel_*
+        override = read_override(recipe.get("extras"))
+
         return RecipeCost(
             recipe_slug=recipe_slug,
             recipe_name=recipe_name,
             servings=servings,
             breakdown=breakdown,
+            override_per_serving=override.per_serving,
+            override_total=override.total,
+            override_reason=override.reason,
         )
 
     def calculate_batch_costs(
@@ -178,6 +186,126 @@ class CostCalculator:
         if quantity == 0:
             return 0.0
         return round(total_price / quantity, 4)
+
+    def sync_recipe_cost(
+        self,
+        slug: str,
+        month: Optional[str] = None,
+        use_open_prices: bool = True,
+        mealie_client: Optional["MealieClient"] = None,
+    ) -> dict:
+        """Recalcule le coût d'une recette et le publie dans ``extras`` de Mealie.
+
+        Les clés utilisateur (``cout_manuel_*``) ne sont JAMAIS écrasées.
+
+        Args:
+            slug: Slug de la recette.
+            month: Mois de référence (``YYYY-MM``). Si ``None``, mois courant.
+            use_open_prices: Utiliser Open Prices comme fallback.
+            mealie_client: Client Mealie injectable (sinon créé depuis la config
+                du calculateur).
+
+        Returns:
+            ``dict`` avec :
+                - ``success`` (bool)
+                - ``slug`` (str)
+                - ``patched`` (bool) : PATCH Mealie réussi
+                - ``has_override`` (bool) : override manuel détecté sur la recette
+                - ``extras`` (dict[str, str]) : extras complets envoyés à Mealie
+                - ``cost`` (dict) : RecipeCost sérialisé
+                - ``error`` (str, optionnel)
+        """
+        client = mealie_client or MealieClient(
+            self.mealie_base_url, self.mealie_api_key
+        )
+
+        recipe = self.get_recipe(slug)
+        if not recipe:
+            return {
+                "success": False,
+                "slug": slug,
+                "patched": False,
+                "has_override": False,
+                "error": f"Recette {slug} introuvable",
+            }
+
+        cost = self.calculate_cost(slug, use_open_prices=use_open_prices)
+        if not cost:
+            return {
+                "success": False,
+                "slug": slug,
+                "patched": False,
+                "has_override": False,
+                "error": f"Calcul de coût impossible pour {slug}",
+            }
+
+        source = "manuel" if cost.has_override else "auto"
+        addon_extras = build_addon_extras(cost, month=month, source=source)
+        merged = merge_extras(recipe.get("extras") or {}, addon_extras)
+        patched = client.patch_extras(slug, merged)
+
+        return {
+            "success": patched,
+            "slug": slug,
+            "patched": patched,
+            "has_override": cost.has_override,
+            "extras": merged,
+            "cost": cost.model_dump(),
+        }
+
+    def refresh_all_costs(
+        self,
+        month: Optional[str] = None,
+        use_open_prices: bool = True,
+        mealie_client: Optional["MealieClient"] = None,
+        limit: int = 1000,
+    ) -> dict:
+        """Recalcule et publie les coûts pour toutes les recettes Mealie.
+
+        Ne touche jamais aux ``extras.cout_manuel_*`` existants.
+
+        Returns:
+            Dictionnaire récapitulatif :
+                - ``total`` : nombre de recettes examinées
+                - ``updated`` : PATCH réussis
+                - ``failed`` : PATCH échoués
+                - ``skipped`` : recettes sans ingrédients
+                - ``overrides_preserved`` : recettes avec override utilisateur
+                - ``month`` : mois de référence utilisé
+        """
+        client = mealie_client or MealieClient(
+            self.mealie_base_url, self.mealie_api_key
+        )
+
+        recipes = client.get_all_recipes(limit=limit)
+        summary = {
+            "total": len(recipes),
+            "updated": 0,
+            "failed": 0,
+            "skipped": 0,
+            "overrides_preserved": 0,
+            "month": month or "",
+        }
+
+        for recipe in recipes:
+            slug = recipe.get("slug")
+            if not slug:
+                summary["skipped"] += 1
+                continue
+            result = self.sync_recipe_cost(
+                slug=slug,
+                month=month,
+                use_open_prices=use_open_prices,
+                mealie_client=client,
+            )
+            if not result.get("success"):
+                summary["failed"] += 1
+                continue
+            summary["updated"] += 1
+            if result.get("has_override"):
+                summary["overrides_preserved"] += 1
+
+        return summary
 
     def compare_recipes_by_cost(
         self,
