@@ -124,7 +124,7 @@ async def get_status():
     mealie_status = mealie_client.health_check()
 
     # Compter les recettes
-    recipes = mealie_client.get_all_recipes(limit=1)
+    recipes = mealie_client.get_all_recipes()
     total_recipes = len(recipes)
 
     # Compter les prix manuels
