@@ -1,6 +1,6 @@
-# Testing: Budget Advisor Docker Addon
+# Testing: Mealie Budget Advisor
 
-How to test Docker image changes for the `mealie-budget-advisor` addon.
+How to test the `mealie-budget-advisor` addon locally using Docker and a mock Mealie server.
 
 ## Prerequisites
 
@@ -9,7 +9,26 @@ How to test Docker image changes for the `mealie-budget-advisor` addon.
 
 ## Devin Secrets Needed
 
-None for healthcheck/Docker testing. The API container needs `MEALIE_API_KEY` and `MEALIE_BASE_URL` env vars to start, but dummy values work for healthcheck-only validation.
+No secrets required for local testing. The mock server provides its own auth tokens.
+For healthcheck-only validation, dummy values work for `MEALIE_API_KEY`.
+
+## Environment Variables
+
+The budget-advisor requires these env vars to start:
+
+| Variable | Required | Description |
+|---|---|---|
+| `MEALIE_BASE_URL` | Yes | URL of the Mealie instance (or mock) |
+| `MEALIE_API_KEY` | Yes | API token (any non-empty string for mock) |
+| `ADDON_API_PORT` | No | API port (default: 8003) |
+| `ADDON_UI_PORT` | No | UI port (default: 8503) |
+
+## Docker Image
+
+- The Docker CMD is `uvicorn mealie_budget_advisor.api:app --host 0.0.0.0 --port 8003`
+- To override the port, pass the full uvicorn command: `uvicorn mealie_budget_advisor.api:app --host 0.0.0.0 --port <PORT>`
+- Do NOT use `python3 -m mealie_budget_advisor.api` — the api module has no `__main__` block
+- The CLI entry point is `mealie-budget` (e.g., `mealie-budget sync-cost <slug>`)
 
 ## Build the Image Locally
 
@@ -20,12 +39,22 @@ docker build -t mealie-budget-advisor:<version>-test .
 
 Build takes ~60s due to pip install of Python dependencies.
 
+## Mock Mealie Server
+
+For isolated testing, create a simple Python HTTP server that responds to:
+
+- `GET /api/app/about` → `{"version": "1.0.0-mock"}`
+- `GET /api/recipes?page=X&perPage=Y` → `{"items": [...], "total": <N>, "page": X, "per_page": Y}`
+- `POST /api/auth/token` → `{"access_token": "mock-token", "token_type": "bearer"}`
+- `GET /health` → `{"status": "ok"}`
+
+The `total` field in the `/api/recipes` response is the pagination metadata that `get_recipe_count()` reads. Set it to a known value (e.g., 42) and verify the `/status` endpoint returns that same count.
+
 ## Testing Healthchecks
 
 ### API healthcheck (port 8003)
 
 ```bash
-# Start API container (needs env vars)
 docker run -d --name test-api \
   -e MEALIE_API_KEY=test-dummy-key \
   -e MEALIE_BASE_URL=http://localhost:9999 \
@@ -40,7 +69,6 @@ docker exec test-api curl -f http://localhost:8003/health
 ### Streamlit UI healthcheck (port 8503)
 
 ```bash
-# Start UI container
 docker run -d --name test-ui \
   mealie-budget-advisor:<version>-test \
   sh -c "streamlit run mealie_budget_advisor/ui.py \
@@ -53,9 +81,16 @@ docker exec test-ui curl -f http://localhost:8503/_stcore/health
 # Expected: "ok"
 ```
 
-### Comparing old vs new image
+## Testing API Behavior (with Mock)
 
-To prove a fix works, pull the old published image and compare:
+### Testing Workflow
+
+1. Start mock Mealie server on a local port (e.g., 9925)
+2. Run the Docker container with `--network host` so it can reach the mock
+3. Call `GET /status` and verify the response JSON
+4. For comparison tests: run old and new images on different ports against the same mock
+
+### Comparing old vs new image
 
 ```bash
 # Pull old image
@@ -63,27 +98,39 @@ docker pull ghcr.io/nonofr91/mealie-budget-advisor:<old-version>
 
 # Check if a binary exists
 docker run --rm ghcr.io/nonofr91/mealie-budget-advisor:<old-version> which curl
-# If missing: exit code 1, no output
 
 # Check in new image
 docker run --rm mealie-budget-advisor:<new-version>-test which curl
-# If present: exit code 0, output /usr/bin/curl
 ```
+
+## Key Endpoints to Test
+
+| Endpoint | Method | What it does |
+|---|---|---|
+| `/status` | GET | System status, recipe count, feature flags |
+| `/health` | GET | Simple health check |
+| `/recipes/refresh-costs` | POST | Recalculate costs for all recipes |
+| `/recipes/{slug}/cost` | GET | Get cost for a specific recipe |
+
+## Config Singleton Caveat
+
+`BudgetConfig` is a singleton (`config.py`). If running multiple containers on the same host, use separate Docker containers (not processes) to avoid config pollution. Each container gets its own Python runtime.
+
+## Common Issues
+
+- **Container exits immediately**: Check `docker logs <name>` — usually a missing `MEALIE_API_KEY` env var
+- **Streamlit takes ~15s to start**: Don't run healthcheck immediately after `docker run`. Wait at least 15 seconds.
+- **Base image `python:3.11-slim`**: Does NOT include `curl`, `wget`, or `requests` by default. Any healthcheck using these must explicitly install them in the Dockerfile.
+- **Cannot reach mock from container**: Use `--network host` or set `MEALIE_BASE_URL` to `http://host.docker.internal:<port>` on Docker Desktop
+- **Live Coolify instance unreachable from Devin VM**: Network routes may not exist. Pivot to local Docker testing instead.
+- **Version governance (AGENTS.md)**: When bumping the Docker image version, the `pyproject.toml` version AND all `docker-compose*.yml` image tags must be updated in the same commit.
+
+## Testing is Shell-Only
+
+All testing is done via `docker run`/`docker exec`/`curl` commands. No browser or GUI interaction needed. No screen recording required.
 
 ## Cleanup
 
 ```bash
 docker rm -f test-ui test-api 2>/dev/null
 ```
-
-## Common Issues
-
-- **API container crashes on startup**: It requires `MEALIE_API_KEY` env var. Pass a dummy value for healthcheck-only testing.
-- **Streamlit takes ~15s to start**: Don't run healthcheck immediately after `docker run`. Wait at least 15 seconds.
-- **Base image `python:3.11-slim`**: Does NOT include `curl`, `wget`, or `requests` by default. Any healthcheck using these must explicitly install them in the Dockerfile.
-- **Version governance (AGENTS.md)**: When bumping the Docker image version, the `pyproject.toml` version AND all `docker-compose*.yml` image tags must be updated in the same commit.
-- **Tag 0.2.0 was never published to ghcr.io**: If you need to compare against the previous version, 0.1.1 is the latest published image as of this writing. This might change in the future.
-
-## Testing is Shell-Only
-
-All healthcheck testing is done via `docker run`/`docker exec` commands. No browser or GUI interaction needed. No screen recording required.
