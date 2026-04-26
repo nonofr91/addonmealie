@@ -95,7 +95,7 @@ services:
         condition: service_started
 
   budget-api:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.1'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.2'
     environment:
       - SERVICE_FQDN_BUDGETAPI_8003
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
@@ -118,7 +118,7 @@ services:
         condition: service_started
 
   budget-ui:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.1'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.2'
     environment:
       - SERVICE_FQDN_BUDGETUI_8503
       - SERVICE_URL_BUDGETUI_8503
