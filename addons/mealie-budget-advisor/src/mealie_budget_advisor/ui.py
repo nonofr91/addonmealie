@@ -42,6 +42,15 @@ def _api(method: str, path: str, **kwargs) -> dict:
         return {"success": False, "error": str(exc)}
 
 
+@st.cache_data(ttl=300)
+def _get_recipe_list() -> list[dict]:
+    """Récupère la liste des recettes (nom + slug) depuis l'API."""
+    resp = _api("GET", "/recipes/list")
+    if resp.get("success"):
+        return resp.get("recipes", [])
+    return []
+
+
 # Configuration de la page
 st.set_page_config(
     page_title="Mealie Budget Advisor",
@@ -210,9 +219,17 @@ with tabs[2]:
 
     # Suggestion d'alternatives
     st.subheader("💡 Suggérer des alternatives moins chères")
+    recipes_planning = _get_recipe_list()
+    recipe_opts_planning = {r["name"]: r["slug"] for r in recipes_planning}
     col_slug, col_limit = st.columns([3, 1])
     with col_slug:
-        slug = st.text_input("Slug de la recette actuelle", placeholder="ex: carbonara-marmiton")
+        selected_alt_name = st.selectbox(
+            "Recette actuelle",
+            options=[""] + list(recipe_opts_planning.keys()),
+            format_func=lambda x: "Choisir une recette..." if x == "" else x,
+            key="alt-recipe-select",
+        )
+        slug = recipe_opts_planning.get(selected_alt_name, "")
     with col_limit:
         limit = st.number_input("Max suggestions", min_value=1, max_value=20, value=5)
 
@@ -241,10 +258,16 @@ with tabs[2]:
     st.divider()
     st.subheader("📊 Rapport coût vs budget")
     st.caption("Analysez plusieurs recettes par rapport à votre budget")
-    slugs_input = st.text_input("Slugs des recettes (séparés par des virgules)", placeholder="ex: carbonara, bolognese, pizza")
+    recipes_report = _get_recipe_list()
+    recipe_opts_report = {r["name"]: r["slug"] for r in recipes_report}
+    selected_report_names = st.multiselect(
+        "Recettes à analyser",
+        options=list(recipe_opts_report.keys()),
+        key="report-recipe-select",
+    )
 
-    if slugs_input and st.button("Générer le rapport"):
-        slugs = [s.strip() for s in slugs_input.split(",") if s.strip()]
+    if selected_report_names and st.button("Générer le rapport"):
+        slugs = [recipe_opts_report[n] for n in selected_report_names if n in recipe_opts_report]
         with st.spinner("Calcul en cours..."):
             resp = _api("GET", "/planning/cost-report", params={"slugs": slugs})
         if resp.get("success"):
@@ -349,11 +372,52 @@ with tabs[4]:
     st.header("📈 Coût des recettes")
     st.caption("Calculez le coût de vos recettes Mealie")
 
+    # Rafraîchir les coûts de toutes les recettes
+    st.subheader("🔄 Calculer et publier tous les coûts")
+    st.caption(
+        "Recalcule le coût de **toutes** les recettes et publie le résultat "
+        "dans les `extras` de chaque recette Mealie (visible directement dans la fiche recette)."
+    )
+    col_refresh, col_month = st.columns([2, 3])
+    with col_month:
+        cost_refresh_month = st.text_input(
+            "Mois (YYYY-MM, optionnel)",
+            placeholder="ex: 2026-04",
+            key="cost-refresh-month",
+        )
+    with col_refresh:
+        st.write("")
+        if st.button("🔄 Calculer et publier tous les coûts", type="primary", key="refresh-all-costs"):
+            payload = {"month": cost_refresh_month} if cost_refresh_month.strip() else {}
+            with st.spinner("Recalcul et publication en cours pour toutes les recettes..."):
+                resp = _api("POST", "/recipes/refresh-costs", json=payload)
+            if resp.get("success"):
+                summary = resp.get("summary", {})
+                st.success(
+                    f"Terminé : "
+                    f"{summary.get('updated', 0)} mis à jour, "
+                    f"{summary.get('failed', 0)} échecs, "
+                    f"{summary.get('skipped', 0)} ignorés, "
+                    f"{summary.get('overrides_preserved', 0)} overrides préservés."
+                )
+            else:
+                st.error(f"Erreur: {resp.get('error') or resp.get('detail', 'erreur inconnue')}")
+
+    st.divider()
+
     # Calcul coût d'une recette
     st.subheader("🔢 Calculer le coût d'une recette")
+    recipes = _get_recipe_list()
+    recipe_options = {r["name"]: r["slug"] for r in recipes}
     col_slug, col_opts = st.columns([3, 1])
     with col_slug:
-        slug = st.text_input("Slug de la recette", placeholder="ex: carbonara-marmiton")
+        selected_name = st.selectbox(
+            "Recette",
+            options=[""] + list(recipe_options.keys()),
+            format_func=lambda x: "Choisir une recette..." if x == "" else x,
+            key="cost-recipe-select",
+        )
+        slug = recipe_options.get(selected_name, "")
     with col_opts:
         use_open_prices = st.checkbox("Open Prices", value=True, help="Utiliser Open Prices comme fallback")
 
@@ -477,12 +541,18 @@ with tabs[4]:
     # Comparaison de recettes
     st.divider()
     st.subheader("⚖️ Comparer plusieurs recettes")
-    st.caption("Entrez plusieurs slugs séparés par des virgules")
-    slugs_input = st.text_input("Slugs des recettes", placeholder="ex: carbonara, bolognese, pizza")
+    st.caption("Sélectionnez plusieurs recettes à comparer")
+    recipes_compare = _get_recipe_list()
+    recipe_opts_compare = {r["name"]: r["slug"] for r in recipes_compare}
+    selected_compare_names = st.multiselect(
+        "Recettes à comparer",
+        options=list(recipe_opts_compare.keys()),
+        key="compare-recipe-select",
+    )
     per_serving = st.checkbox("Par portion", value=True)
 
-    if slugs_input and st.button("📊 Comparer"):
-        slugs = [s.strip() for s in slugs_input.split(",") if s.strip()]
+    if selected_compare_names and st.button("📊 Comparer"):
+        slugs = [recipe_opts_compare[n] for n in selected_compare_names if n in recipe_opts_compare]
         resp = _api("GET", "/recipes/compare-costs", params={"slugs": slugs, "per_serving": per_serving})
         if resp.get("success"):
             comparison = resp.get("comparison", [])
