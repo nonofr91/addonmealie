@@ -141,6 +141,20 @@ async def get_status():
     }
 
 
+@app.get("/recipes/list")
+async def list_recipes():
+    """Liste les recettes Mealie (nom + slug) pour les menus déroulants de l'UI."""
+    recipes = mealie_client.get_all_recipes()
+    return {
+        "success": True,
+        "recipes": [
+            {"name": r.get("name", r.get("slug", "")), "slug": r.get("slug", "")}
+            for r in recipes
+            if r.get("slug")
+        ],
+    }
+
+
 @app.get("/budget")
 async def get_current_budget():
     """Récupère le budget du mois en cours.
