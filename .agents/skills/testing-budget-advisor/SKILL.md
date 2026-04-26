@@ -20,6 +20,7 @@ The budget-advisor requires these env vars to start:
 |---|---|---|
 | `MEALIE_BASE_URL` | Yes | URL of the Mealie instance (or mock) |
 | `MEALIE_API_KEY` | Yes | API token (any non-empty string for mock) |
+| `ADDON_API_URL` | No | URL of the addon API (default: http://localhost:8003) — used by the Streamlit UI |
 | `ADDON_API_PORT` | No | API port (default: 8003) |
 | `ADDON_UI_PORT` | No | UI port (default: 8503) |
 
@@ -45,8 +46,14 @@ For isolated testing, create a simple Python HTTP server that responds to:
 
 - `GET /api/app/about` → `{"version": "1.0.0-mock"}`
 - `GET /api/recipes?page=X&perPage=Y` → `{"items": [...], "total": <N>, "page": X, "per_page": Y}`
+- `GET /api/recipes/<slug>` → Full recipe object with `recipeIngredient`, `extras`, `recipeYield`
 - `POST /api/auth/token` → `{"access_token": "mock-token", "token_type": "bearer"}`
+- `PATCH /api/recipes/<slug>` → `{"success": true}` (for publishing costs to extras)
+- `GET /api/foods` → `{"items": [], "total": 0}`
+- `GET /api/units` → `{"items": [], "total": 0}`
 - `GET /health` → `{"status": "ok"}`
+
+The mock should return **at least 5 recipes** with distinct names and slugs to test dropdown/multiselect widgets.
 
 The `total` field in the `/api/recipes` response is the pagination metadata that `get_recipe_count()` reads. Set it to a known value (e.g., 42) and verify the `/status` endpoint returns that same count.
 
@@ -103,14 +110,47 @@ docker run --rm ghcr.io/nonofr91/mealie-budget-advisor:<old-version> which curl
 docker run --rm mealie-budget-advisor:<new-version>-test which curl
 ```
 
+## Testing the UI (Browser-Based)
+
+For UI changes (e.g., dropdowns, buttons, tab rendering), test via Streamlit in the browser:
+
+### Local Development Mode (faster iteration)
+
+```bash
+cd addons/mealie-budget-advisor
+pip install -e "."
+
+# Start mock Mealie + API + UI
+python3 /path/to/mock_mealie.py &   # port 9925
+MEALIE_BASE_URL=http://localhost:9925 MEALIE_API_KEY=test-key \
+  uvicorn mealie_budget_advisor.api:app --host 0.0.0.0 --port 8003 &
+ADDON_API_URL=http://localhost:8003 MEALIE_BASE_URL=http://localhost:9925 \
+  python3 -m streamlit run src/mealie_budget_advisor/ui.py \
+  --server.port=8504 --server.address=0.0.0.0 \
+  --server.headless=true --browser.gatherUsageStats=false \
+  --server.fileWatcherType=none &
+```
+
+Then open `http://localhost:8504` in the browser and use computer-use tools to interact with the UI.
+
+### UI Test Checklist
+
+- **Statut tab**: Shows recipe count, connection status, feature flags
+- **Budget tab**: Budget form and history
+- **Planning tab**: Shows warning if no budget defined; does NOT block other tabs
+- **Prix tab**: Open Prices search + manual price form
+- **Coûts tab**: Recipe selectbox (names, not slugs), batch cost button, comparison multiselect
+
 ## Key Endpoints to Test
 
 | Endpoint | Method | What it does |
 |---|---|---|
 | `/status` | GET | System status, recipe count, feature flags |
 | `/health` | GET | Simple health check |
+| `/recipes/list` | GET | Returns `[{name, slug}]` for UI dropdowns |
 | `/recipes/refresh-costs` | POST | Recalculate costs for all recipes |
 | `/recipes/{slug}/cost` | GET | Get cost for a specific recipe |
+| `/recipes/{slug}/sync-cost` | POST | Publish cost to Mealie extras |
 
 ## Config Singleton Caveat
 
@@ -124,10 +164,8 @@ docker run --rm mealie-budget-advisor:<new-version>-test which curl
 - **Cannot reach mock from container**: Use `--network host` or set `MEALIE_BASE_URL` to `http://host.docker.internal:<port>` on Docker Desktop
 - **Live Coolify instance unreachable from Devin VM**: Network routes may not exist. Pivot to local Docker testing instead.
 - **Version governance (AGENTS.md)**: When bumping the Docker image version, the `pyproject.toml` version AND all `docker-compose*.yml` image tags must be updated in the same commit.
-
-## Testing is Shell-Only
-
-All testing is done via `docker run`/`docker exec`/`curl` commands. No browser or GUI interaction needed. No screen recording required.
+- **`st.stop()` in Streamlit tabs**: Never use `st.stop()` inside a tab context — it halts the **entire script**, preventing all subsequent tabs from rendering. Use `if/else` blocks instead to conditionally show/hide content within a tab.
+- **Streamlit `@st.cache_data` returns empty list**: If the API is unreachable when the cache is first populated, it will cache an empty list for the TTL duration. This can cause dropdowns to appear empty. Restart Streamlit or wait for the TTL to expire.
 
 ## Cleanup
 
