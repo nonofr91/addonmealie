@@ -178,117 +178,117 @@ with tabs[2]:
 
     # Vérifier si un budget est défini
     current_budget = _api("GET", "/budget")
-    if not current_budget.get("success") or not current_budget.get("budget"):
+    _has_budget = current_budget.get("success") and current_budget.get("budget")
+    if not _has_budget:
         st.warning("⚠️ Définissez d'abord un budget dans l'onglet 💰 Budget")
-        st.stop()
+    else:
+        budget = current_budget.get("budget", {})
+        budget_per_meal = budget.get("budget_per_meal", 0)
 
-    budget = current_budget.get("budget", {})
-    budget_per_meal = budget.get("budget_per_meal", 0)
-
-    # Rafraîchir les coûts Mealie (refresh-costs)
-    st.subheader("🔄 Rafraîchir les coûts dans Mealie")
-    st.caption(
-        "Recalcule et publie le coût de **toutes** les recettes dans `extras.cout_*`. "
-        "Les clés `cout_manuel_*` posées manuellement sont toujours préservées."
-    )
-    col_refresh1, col_refresh2 = st.columns([2, 3])
-    with col_refresh1:
-        refresh_month = st.text_input(
-            "Mois (YYYY-MM, optionnel)",
-            placeholder="ex: 2026-04",
-            key="refresh-month",
+        # Rafraîchir les coûts Mealie (refresh-costs)
+        st.subheader("🔄 Rafraîchir les coûts dans Mealie")
+        st.caption(
+            "Recalcule et publie le coût de **toutes** les recettes dans `extras.cout_*`. "
+            "Les clés `cout_manuel_*` posées manuellement sont toujours préservées."
         )
-    with col_refresh2:
-        st.write("")
-        if st.button("🔄 Rafraîchir coûts Mealie", key="refresh-all"):
-            payload = {"month": refresh_month} if refresh_month.strip() else {}
-            with st.spinner("Recalcul et publication en cours..."):
-                resp = _api("POST", "/recipes/refresh-costs", json=payload)
+        col_refresh1, col_refresh2 = st.columns([2, 3])
+        with col_refresh1:
+            refresh_month = st.text_input(
+                "Mois (YYYY-MM, optionnel)",
+                placeholder="ex: 2026-04",
+                key="refresh-month",
+            )
+        with col_refresh2:
+            st.write("")
+            if st.button("🔄 Rafraîchir coûts Mealie", key="refresh-all"):
+                payload = {"month": refresh_month} if refresh_month.strip() else {}
+                with st.spinner("Recalcul et publication en cours..."):
+                    resp = _api("POST", "/recipes/refresh-costs", json=payload)
+                if resp.get("success"):
+                    summary = resp.get("summary", {})
+                    st.success(
+                        f"Rafraîchissement terminé : "
+                        f"{summary.get('updated', 0)} mis à jour, "
+                        f"{summary.get('failed', 0)} échecs, "
+                        f"{summary.get('skipped', 0)} ignorés, "
+                        f"{summary.get('overrides_preserved', 0)} overrides préservés."
+                    )
+                else:
+                    st.error(f"Erreur: {resp.get('error') or resp.get('detail', 'erreur inconnue')}")
+        st.divider()
+
+        # Suggestion d'alternatives
+        st.subheader("💡 Suggérer des alternatives moins chères")
+        recipes_planning = _get_recipe_list()
+        recipe_opts_planning = {r["name"]: r["slug"] for r in recipes_planning}
+        col_slug, col_limit = st.columns([3, 1])
+        with col_slug:
+            selected_alt_name = st.selectbox(
+                "Recette actuelle",
+                options=[""] + list(recipe_opts_planning.keys()),
+                format_func=lambda x: "Choisir une recette..." if x == "" else x,
+                key="alt-recipe-select",
+            )
+            slug = recipe_opts_planning.get(selected_alt_name, "")
+        with col_limit:
+            limit = st.number_input("Max suggestions", min_value=1, max_value=20, value=5)
+
+        if slug and st.button("🔍 Chercher des alternatives", type="primary"):
+            with st.spinner("Recherche en cours..."):
+                resp = _api("GET", "/planning/suggest-alternatives", params={"current_slug": slug, "limit": limit})
             if resp.get("success"):
-                summary = resp.get("summary", {})
-                st.success(
-                    f"Rafraîchissement terminé : "
-                    f"{summary.get('updated', 0)} mis à jour, "
-                    f"{summary.get('failed', 0)} échecs, "
-                    f"{summary.get('skipped', 0)} ignorés, "
-                    f"{summary.get('overrides_preserved', 0)} overrides préservés."
-                )
-            else:
-                st.error(f"Erreur: {resp.get('error') or resp.get('detail', 'erreur inconnue')}")
-    st.divider()
+                current = resp.get("current_recipe", {})
+                suggestions = resp.get("suggestions", [])
 
-    # Suggestion d'alternatives
-    st.subheader("💡 Suggérer des alternatives moins chères")
-    recipes_planning = _get_recipe_list()
-    recipe_opts_planning = {r["name"]: r["slug"] for r in recipes_planning}
-    col_slug, col_limit = st.columns([3, 1])
-    with col_slug:
-        selected_alt_name = st.selectbox(
-            "Recette actuelle",
-            options=[""] + list(recipe_opts_planning.keys()),
-            format_func=lambda x: "Choisir une recette..." if x == "" else x,
-            key="alt-recipe-select",
+                st.info(f"Budget par repas: {budget_per_meal:.2f} €")
+                st.caption(f"Coût actuel: {current.get('cost_per_serving', 0):.2f} €")
+
+                if suggestions:
+                    st.success(f"✅ {len(suggestions)} alternatives respectant le budget trouvées")
+                    for s in suggestions:
+                        with st.expander(f"{s.get('slug')} - {s.get('cost_per_serving'):.2f} €/portion"):
+                            st.write(f"Économie: {s.get('savings', 0):.2f} € par portion")
+                            st.write(f"Coût: {s.get('cost_per_serving', 0):.2f} €")
+                else:
+                    st.warning("Aucune alternative moins chère trouvée")
+            else:
+                st.error(f"Erreur: {resp.get('error')}")
+
+        # Rapport coût vs budget
+        st.divider()
+        st.subheader("📊 Rapport coût vs budget")
+        st.caption("Analysez plusieurs recettes par rapport à votre budget")
+        recipes_report = _get_recipe_list()
+        recipe_opts_report = {r["name"]: r["slug"] for r in recipes_report}
+        selected_report_names = st.multiselect(
+            "Recettes à analyser",
+            options=list(recipe_opts_report.keys()),
+            key="report-recipe-select",
         )
-        slug = recipe_opts_planning.get(selected_alt_name, "")
-    with col_limit:
-        limit = st.number_input("Max suggestions", min_value=1, max_value=20, value=5)
 
-    if slug and st.button("🔍 Chercher des alternatives", type="primary"):
-        with st.spinner("Recherche en cours..."):
-            resp = _api("GET", "/planning/suggest-alternatives", params={"current_slug": slug, "limit": limit})
-        if resp.get("success"):
-            current = resp.get("current_recipe", {})
-            suggestions = resp.get("suggestions", [])
+        if selected_report_names and st.button("Générer le rapport"):
+            slugs = [recipe_opts_report[n] for n in selected_report_names if n in recipe_opts_report]
+            with st.spinner("Calcul en cours..."):
+                resp = _api("GET", "/planning/cost-report", params={"slugs": slugs})
+            if resp.get("success"):
+                report = resp.get("report", {})
 
-            st.info(f"Budget par repas: {budget_per_meal:.2f} €")
-            st.caption(f"Coût actuel: {current.get('cost_per_serving', 0):.2f} €")
+                # Métriques principales
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("Recettes analysées", report.get("total_recipes", 0))
+                col2.metric("Coût moyen", f"{report.get('avg_cost_per_serving', 0):.2f} €")
+                col3.metric("Dans le budget", f"{report.get('within_budget_pct', 0):.0f}%")
+                col4.metric("Repas possibles", report.get("meals_possible", 0))
 
-            if suggestions:
-                st.success(f"✅ {len(suggestions)} alternatives respectant le budget trouvées")
-                for s in suggestions:
-                    with st.expander(f"{s.get('slug')} - {s.get('cost_per_serving'):.2f} €/portion"):
-                        st.write(f"Économie: {s.get('savings', 0):.2f} € par portion")
-                        st.write(f"Coût: {s.get('cost_per_serving', 0):.2f} €")
+                # Détails
+                st.divider()
+                col_wb, col_ob = st.columns(2)
+                with col_wb:
+                    st.metric("Recettes dans le budget", report.get("within_budget_count", 0))
+                with col_ob:
+                    st.metric("Recettes hors budget", report.get("over_budget_count", 0))
             else:
-                st.warning("Aucune alternative moins chère trouvée")
-        else:
-            st.error(f"Erreur: {resp.get('error')}")
-
-    # Rapport coût vs budget
-    st.divider()
-    st.subheader("📊 Rapport coût vs budget")
-    st.caption("Analysez plusieurs recettes par rapport à votre budget")
-    recipes_report = _get_recipe_list()
-    recipe_opts_report = {r["name"]: r["slug"] for r in recipes_report}
-    selected_report_names = st.multiselect(
-        "Recettes à analyser",
-        options=list(recipe_opts_report.keys()),
-        key="report-recipe-select",
-    )
-
-    if selected_report_names and st.button("Générer le rapport"):
-        slugs = [recipe_opts_report[n] for n in selected_report_names if n in recipe_opts_report]
-        with st.spinner("Calcul en cours..."):
-            resp = _api("GET", "/planning/cost-report", params={"slugs": slugs})
-        if resp.get("success"):
-            report = resp.get("report", {})
-
-            # Métriques principales
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Recettes analysées", report.get("total_recipes", 0))
-            col2.metric("Coût moyen", f"{report.get('avg_cost_per_serving', 0):.2f} €")
-            col3.metric("Dans le budget", f"{report.get('within_budget_pct', 0):.0f}%")
-            col4.metric("Repas possibles", report.get("meals_possible", 0))
-
-            # Détails
-            st.divider()
-            col_wb, col_ob = st.columns(2)
-            with col_wb:
-                st.metric("Recettes dans le budget", report.get("within_budget_count", 0))
-            with col_ob:
-                st.metric("Recettes hors budget", report.get("over_budget_count", 0))
-        else:
-            st.error(f"Erreur: {resp.get('error')}")
+                st.error(f"Erreur: {resp.get('error')}")
 
 # Tab Prix
 with tabs[3]:
