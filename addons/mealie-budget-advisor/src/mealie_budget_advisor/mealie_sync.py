@@ -47,6 +47,21 @@ class MealieClient:
                 "error": str(e),
             }
 
+    def get_recipe_count(self) -> int:
+        """Retourne le nombre total de recettes via les métadonnées de pagination."""
+        try:
+            response = self.session.get(
+                f"{self.base_url}/api/recipes",
+                params={"page": 1, "perPage": 1},
+                timeout=10,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("total", 0)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erreur comptage recettes: {e}")
+            return 0
+
     def get_all_recipes(self, limit: int = 1000) -> list[dict]:
         """Récupère toutes les recettes."""
         try:
