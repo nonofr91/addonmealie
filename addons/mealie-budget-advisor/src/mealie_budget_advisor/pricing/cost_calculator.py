@@ -164,12 +164,16 @@ class CostCalculator:
         return 1
 
     def _extract_note(self, ingredient_data: dict) -> str:
-        """Extrait le texte d'un ingrédient."""
-        # Format Mealie v1: {note: "2 cuillères d'huile"}
-        # Format Mealie v2: {display: "2 cuillères d'huile", food: {...}}
-        note = ingredient_data.get("note", "")
+        """Extrait le texte d'un ingrédient.
+
+        Préfère ``originalText`` car Mealie peut perdre l'unité lors du
+        parsing (ex. ``25 cl de vin blanc`` → display ``25 vin blanc``).
+        """
+        # originalText conserve le texte saisi (avec unités intactes)
+        note = ingredient_data.get("originalText", "")
         if not note:
-            # Essayer d'autres champs
+            note = ingredient_data.get("note", "")
+        if not note:
             note = ingredient_data.get("display", "")
         if not note and ingredient_data.get("food"):
             # Construire depuis l'objet food + quantité
