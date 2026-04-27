@@ -1,7 +1,5 @@
 """Menu draft models for interactive menu planning."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from enum import Enum
 from typing import Literal, Optional
