@@ -130,6 +130,43 @@ class MealieClient:
             return {}
         return {str(k): str(v) for k, v in extras.items() if v is not None}
 
+    def patch_recipe_notes(self, slug: str, cost_note: str) -> bool:
+        """Ajoute ou met à jour la section coût dans les notes de la recette.
+
+        Insère un bloc ``<!-- BUDGET-ADDON -->`` dans les notes existantes.
+        Si le bloc existe déjà, il est remplacé.
+        """
+        recipe = self.get_recipe(slug)
+        if not recipe:
+            return False
+
+        existing_notes = recipe.get("notes", []) or []
+
+        # Chercher et remplacer un bloc existant
+        marker = "💰 Coût estimé"
+        found = False
+        for i, note_obj in enumerate(existing_notes):
+            text = note_obj.get("text", "") if isinstance(note_obj, dict) else str(note_obj)
+            if marker in text:
+                existing_notes[i] = {"title": "", "text": cost_note}
+                found = True
+                break
+
+        if not found:
+            existing_notes.append({"title": "", "text": cost_note})
+
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/recipes/{slug}",
+                json={"notes": existing_notes},
+                timeout=30,
+            )
+            response.raise_for_status()
+            return True
+        except requests.exceptions.RequestException as e:
+            logger.warning("Patch notes échoué pour '%s': %s", slug, e)
+            return False
+
     def patch_extras(self, slug: str, extras: dict[str, str]) -> bool:
         """Patch le champ ``extras`` d'une recette.
 
