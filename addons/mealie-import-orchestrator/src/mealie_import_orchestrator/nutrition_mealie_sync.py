@@ -86,10 +86,13 @@ class MealieClient:
                 elif isinstance(calories_value, str) and calories_value.replace(".", "").isdigit():
                     nutrition_payload["calories"] = f"{calories_value} kcal"
             
-            # Patch uniquement nutrition pour ne pas affecter l'affichage des autres champs
+            # Patch nutrition + activer l'affichage dans Mealie
             resp = self._client.patch(
                 f"{self.base_url}/api/recipes/{slug}",
-                json={"nutrition": nutrition_payload},
+                json={
+                    "nutrition": nutrition_payload,
+                    "settings": {"showNutrition": True},
+                },
             )
             resp.raise_for_status()
             logger.debug("Nutrition patchée: %s", slug)

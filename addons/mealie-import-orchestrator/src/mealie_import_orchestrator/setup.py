@@ -1,4 +1,4 @@
-"""Setup script for automatic fake recipe creation in Mealie."""
+"""Setup script for automatic fake recipe + Addon cookbook creation in Mealie."""
 from __future__ import annotations
 
 import logging
@@ -10,13 +10,17 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+ADDON_TAG_NAME = "addon"
+ADDON_COOKBOOK_NAME = "Addon"
+ADDON_COOKBOOK_FILTER = 'tags.name CONTAINS ALL ["addon"]'
+
 
 class SetupError(Exception):
     """Error during setup process."""
 
 
 class MealieSetup:
-    """Handles automatic setup of fake recipe in Mealie."""
+    """Handles automatic setup of fake recipe + Addon cookbook in Mealie."""
 
     def __init__(self, mealie_base_url: str, mealie_api_key: str):
         self.mealie_base_url = mealie_base_url.rstrip("/")
@@ -25,6 +29,10 @@ class MealieSetup:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+
+    # ------------------------------------------------------------------
+    # Mealie readiness
+    # ------------------------------------------------------------------
 
     def _wait_for_mealie(self, max_retries: int = 10, initial_delay: int = 2) -> bool:
         """Wait for Mealie API to be ready with exponential backoff."""
@@ -36,65 +44,148 @@ class MealieSetup:
                     timeout=5,
                 )
                 if response.status_code == 200:
-                    logger.info(f"Mealie API ready after {attempt + 1} attempt(s)")
+                    logger.info("Mealie API ready after %d attempt(s)", attempt + 1)
                     return True
             except Exception as exc:
-                logger.warning(f"Attempt {attempt + 1}/{max_retries}: Mealie not ready - {exc}")
-            
+                logger.warning("Attempt %d/%d: Mealie not ready - %s", attempt + 1, max_retries, exc)
+
             if attempt < max_retries - 1:
-                delay = initial_delay * (2 ** attempt)  # Exponential backoff
-                logger.info(f"Waiting {delay}s before retry...")
+                delay = initial_delay * (2 ** attempt)
+                logger.info("Waiting %ds before retry...", delay)
                 time.sleep(delay)
-        
+
         logger.error("Mealie API did not become ready after maximum retries")
         return False
 
-    def _check_fake_recipe_exists(self) -> bool:
-        """Check if the fake recipe already exists."""
+    # ------------------------------------------------------------------
+    # Tag management
+    # ------------------------------------------------------------------
+
+    def _ensure_addon_tag(self) -> str | None:
+        """Create the 'addon' tag if it doesn't exist. Returns tag id."""
+        try:
+            resp = requests.get(
+                f"{self.mealie_base_url}/api/organizers/tags",
+                headers=self.headers,
+                params={"page": 1, "perPage": 100},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            for tag in resp.json().get("items", []):
+                if tag.get("name") == ADDON_TAG_NAME:
+                    logger.debug("Tag '%s' already exists (id=%s)", ADDON_TAG_NAME, tag["id"])
+                    return tag["id"]
+
+            resp = requests.post(
+                f"{self.mealie_base_url}/api/organizers/tags",
+                headers=self.headers,
+                json={"name": ADDON_TAG_NAME},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            tag_id = resp.json().get("id", "")
+            logger.info("Created tag '%s' (id=%s)", ADDON_TAG_NAME, tag_id)
+            return tag_id
+        except Exception as exc:
+            logger.warning("Failed to ensure addon tag: %s", exc)
+            return None
+
+    # ------------------------------------------------------------------
+    # Cookbook management
+    # ------------------------------------------------------------------
+
+    def _ensure_addon_cookbook(self) -> str | None:
+        """Create the 'Addon' cookbook if it doesn't exist. Returns cookbook id."""
+        try:
+            resp = requests.get(
+                f"{self.mealie_base_url}/api/households/cookbooks",
+                headers=self.headers,
+                params={"page": 1, "perPage": 100},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            for cb in resp.json().get("items", []):
+                if cb.get("name") == ADDON_COOKBOOK_NAME:
+                    logger.debug("Cookbook '%s' already exists", ADDON_COOKBOOK_NAME)
+                    return cb.get("id")
+
+            resp = requests.post(
+                f"{self.mealie_base_url}/api/households/cookbooks",
+                headers=self.headers,
+                json={
+                    "name": ADDON_COOKBOOK_NAME,
+                    "description": "Recettes-liens vers les interfaces des addons Mealie.",
+                    "public": True,
+                    "queryFilterString": ADDON_COOKBOOK_FILTER,
+                },
+                timeout=10,
+            )
+            resp.raise_for_status()
+            cb_id = resp.json().get("id", "")
+            logger.info("Created cookbook '%s' (id=%s)", ADDON_COOKBOOK_NAME, cb_id)
+            return cb_id
+        except Exception as exc:
+            logger.warning("Failed to ensure addon cookbook: %s", exc)
+            return None
+
+    # ------------------------------------------------------------------
+    # Fake recipe
+    # ------------------------------------------------------------------
+
+    def _check_fake_recipe_exists(self, recipe_name: str) -> bool:
+        """Check if a fake recipe already exists by name."""
         try:
             response = requests.get(
                 f"{self.mealie_base_url}/api/recipes",
                 headers=self.headers,
-                params={"search": "📥 Import de recettes"},
+                params={"search": recipe_name, "perPage": 5},
+                timeout=10,
             )
             response.raise_for_status()
-            data = response.json()
-            return len(data.get("items", [])) > 0
+            for item in response.json().get("items", []):
+                if item.get("name") == recipe_name:
+                    return True
+            return False
         except Exception as exc:
-            logger.warning(f"Failed to check if fake recipe exists: {exc}")
+            logger.warning("Failed to check if fake recipe exists: %s", exc)
             return False
 
     def _create_fake_recipe(self) -> str:
-        """Create the fake recipe in Mealie."""
+        """Create the import addon fake recipe in Mealie."""
+        ui_url = os.environ.get("ADDON_UI_URL", "")
+        recipe_name = "\U0001f4e5 Import de recettes"
+
+        description = (
+            "Accès à l'interface de l'addon Import.\n\n"
+        )
+        if ui_url:
+            description += f"➡️ Ouvrir l'UI : {ui_url}"
+
         fake_recipe_data = {
-            "name": "📥 Import de recettes",
-            "description": "Recette spéciale pour accéder à l'interface de l'addon Mealie Import. Cette recette sert de point d'entrée vers l'UI de l'addon.",
-            "recipeYield": "1 serving",
-            "orgURL": f"{os.environ.get('ADDON_API_URL', 'http://localhost:8000')}",
-            "tags": [{"name": "addon"}, {"name": "import"}],
-            "categories": [{"name": "Tools"}],
+            "name": recipe_name,
+            "description": description,
+            "orgURL": ui_url or os.environ.get("ADDON_API_URL", ""),
+            "tags": [{"name": ADDON_TAG_NAME}, {"name": "import"}],
         }
 
         try:
-            # Create recipe
             response = requests.post(
                 f"{self.mealie_base_url}/api/recipes",
                 headers=self.headers,
-                json={"name": fake_recipe_data["name"]},
+                json={"name": recipe_name},
+                timeout=10,
             )
             response.raise_for_status()
             slug = response.text.strip('"')
 
-            # Update with full data
             response = requests.patch(
                 f"{self.mealie_base_url}/api/recipes/{slug}",
                 headers=self.headers,
                 json=fake_recipe_data,
+                timeout=10,
             )
             response.raise_for_status()
 
-            # Cleanup useless fields for special recipe
-            logger.info("Cleaning up useless fields for special recipe")
             response = requests.patch(
                 f"{self.mealie_base_url}/api/recipes/{slug}",
                 headers=self.headers,
@@ -105,25 +196,32 @@ class MealieSetup:
                     "cookTime": None,
                     "performTime": None,
                     "recipeYield": None,
-                    "recipeYieldQuantity": None
+                    "recipeYieldQuantity": None,
                 },
+                timeout=10,
             )
             response.raise_for_status()
 
-            logger.info(f"Created fake recipe: {slug}")
+            logger.info("Created fake recipe: %s", slug)
             return slug
-
         except Exception as exc:
             raise SetupError(f"Failed to create fake recipe: {exc}") from exc
 
-    def setup_fake_recipe(self, force: bool = False) -> dict[str, str]:
-        """Setup fake recipe if it doesn't exist."""
-        # Wait for Mealie to be ready
+    # ------------------------------------------------------------------
+    # Public entry point
+    # ------------------------------------------------------------------
+
+    def setup(self, force: bool = False) -> dict[str, str]:
+        """Full setup: tag + cookbook + fake recipe."""
         if not self._wait_for_mealie():
             logger.error("Mealie API not ready, skipping setup")
             return {"status": "failed", "error": "Mealie API not ready"}
-        
-        if not force and self._check_fake_recipe_exists():
+
+        self._ensure_addon_tag()
+        self._ensure_addon_cookbook()
+
+        recipe_name = "\U0001f4e5 Import de recettes"
+        if not force and self._check_fake_recipe_exists(recipe_name):
             logger.info("Fake recipe already exists, skipping creation")
             return {"status": "skipped", "reason": "already_exists"}
 
@@ -131,8 +229,11 @@ class MealieSetup:
             slug = self._create_fake_recipe()
             return {"status": "created", "slug": slug}
         except SetupError as exc:
-            logger.error(f"Failed to setup fake recipe: {exc}")
+            logger.error("Failed to setup fake recipe: %s", exc)
             return {"status": "failed", "error": str(exc)}
+
+    # Keep backward-compat alias
+    setup_fake_recipe = setup
 
 
 def main():
@@ -150,14 +251,14 @@ def main():
     )
 
     setup = MealieSetup(mealie_base_url, mealie_api_key)
-    result = setup.setup_fake_recipe()
+    result = setup.setup()
 
     if result["status"] == "created":
-        print(f"✅ Fake recipe created: {result['slug']}")
+        print(f"\u2705 Fake recipe created: {result['slug']}")
     elif result["status"] == "skipped":
-        print("ℹ️  Fake recipe already exists")
+        print("\u2139\ufe0f  Fake recipe already exists")
     else:
-        print(f"❌ Failed to create fake recipe: {result.get('error')}")
+        print(f"\u274c Failed to create fake recipe: {result.get('error')}")
         sys.exit(1)
 
 

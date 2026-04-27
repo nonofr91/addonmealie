@@ -44,8 +44,19 @@ class RefreshCostsRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan handler pour startup/shutdown (scheduler cron mensuel)."""
+    """Lifespan handler pour startup/shutdown (scheduler cron + setup fake recipe)."""
     global _scheduler
+
+    # Setup fake recipe + Addon cookbook (non-blocking, best-effort)
+    try:
+        from .setup import MealieSetup
+
+        setup = MealieSetup(config.mealie_base_url, config.mealie_api_key)
+        result = setup.setup()
+        logger.info("Addon setup: %s", result.get("status"))
+    except Exception:  # noqa: BLE001
+        logger.exception("Addon setup failed (non-critical)")
+
     if config.enable_monthly_cost_refresh:
         _scheduler = BudgetScheduler(
             refresh_callable=lambda: cost_calculator.refresh_all_costs(),

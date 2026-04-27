@@ -29,6 +29,7 @@ services:
       - 'MEALIE_API_KEY=${MEALIE_API_KEY}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
       - 'ADDON_API_URL=http://mealie-addon:8000'
+      - 'ADDON_UI_URL=${SERVICE_URL_MEALIEADDON}'
       - 'ADDON_UI_PORT=${ADDON_UI_PORT_IMPORT:-8501}'
       - 'ENABLE_NUTRITION=${ENABLE_NUTRITION:-true}'
       - 'AI_PROVIDER=${AI_PROVIDER:-mock}'
@@ -70,6 +71,7 @@ services:
       - 'ENABLE_MENU_PLANNER=${ENABLE_MENU_PLANNER:-true}'
       - 'ENABLE_NUTRITION_ANALYSIS=${ENABLE_NUTRITION_ANALYSIS:-true}'
       - 'ENABLE_CONFLICT_DETECTION=${ENABLE_CONFLICT_DETECTION:-true}'
+      - 'ADDON_UI_URL=${SERVICE_URL_NUTRITIONUI}'
       - 'ADDON_API_HOST=0.0.0.0'
       - 'ADDON_API_PORT=8001'
     entrypoint: ["uvicorn", "mealie_nutrition_advisor.api:app", "--host", "0.0.0.0", "--port", "8001"]
@@ -107,6 +109,7 @@ services:
       - 'ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}'
       - 'ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}'
       - 'LOG_LEVEL=${LOG_LEVEL:-info}'
+      - 'ADDON_UI_URL=${SERVICE_URL_BUDGETUI}'
       - 'ADDON_API_HOST=0.0.0.0'
       - 'ADDON_API_PORT=8003'
     volumes:

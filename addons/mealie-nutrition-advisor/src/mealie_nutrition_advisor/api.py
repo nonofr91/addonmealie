@@ -1,7 +1,9 @@
 """FastAPI REST API for mealie-nutrition-advisor addon."""
 from __future__ import annotations
 
+import logging
 import os
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Security, status
@@ -15,6 +17,30 @@ from .models.profile import HouseholdProfile, MemberProfile, WeeklyPresencePatte
 from .orchestrator import NutritionOrchestrator, NutritionOrchestratorError
 from .profiles.manager import ProfileManager
 
+_logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Lifespan — setup fake recipe at startup
+# ---------------------------------------------------------------------------
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: create placeholder recipe + Addon cookbook (best-effort)."""
+    try:
+        from .setup import MealieSetup
+
+        base_url = os.environ.get("MEALIE_BASE_URL", "")
+        api_key = os.environ.get("MEALIE_API_KEY", "")
+        if base_url and api_key:
+            setup = MealieSetup(base_url, api_key)
+            result = setup.setup()
+            _logger.info("Addon setup: %s", result.get("status"))
+    except Exception:  # noqa: BLE001
+        _logger.exception("Addon setup failed (non-critical)")
+    yield
+
+
 # ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
@@ -23,6 +49,7 @@ app = FastAPI(
     title="Mealie Nutrition Advisor",
     description="Calculateur nutritionnel et enrichissement de recettes pour Mealie.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
