@@ -24,6 +24,8 @@ class IngredientMatcher:
         "kg": "kg", "kilogram": "kg", "kilograms": "kg", "kilo": "kg", "kilos": "kg",
         # Millilitres
         "ml": "ml", "milliliter": "ml", "milliliters": "ml", "millilitre": "ml", "millilitres": "ml",
+        # Centilitres
+        "cl": "cl", "centilitre": "cl", "centilitres": "cl",
         # Litres
         "l": "l", "liter": "l", "liters": "l", "litre": "l", "litres": "l",
         # Cuillères
@@ -41,6 +43,7 @@ class IngredientMatcher:
         "g": ("kg", 0.001),
         "kg": ("kg", 1.0),
         "ml": ("l", 0.001),
+        "cl": ("l", 0.01),
         "l": ("l", 1.0),
         "tsp": ("ml", 5.0),  # ~5ml
         "tbsp": ("ml", 15.0),  # ~15ml
