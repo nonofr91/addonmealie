@@ -292,7 +292,7 @@ class MenuPlanner:
         print(f"    Moyenne: {week.average_daily_calories()} kcal/jour\n")
         meal_icons = {MealType.breakfast: "🌅", MealType.lunch: "🍽️ ", MealType.dinner: "🌙", MealType.snack: "🍎"}
         for day in week.days:
-            print(f"  {day.date.strftime('%A %d/%m')} ({round(day.total_calories())} kcal)")
+            print(f"  {day.day_date.strftime('%A %d/%m')} ({round(day.total_calories())} kcal)")
             for slot in day.slots:
                 icon = meal_icons.get(slot.meal_type, "•")
                 print(f"    {icon} {slot.recipe_name}  [{round(slot.nutrition_per_serving.calories_kcal)} kcal, score:{slot.score:.2f}]")

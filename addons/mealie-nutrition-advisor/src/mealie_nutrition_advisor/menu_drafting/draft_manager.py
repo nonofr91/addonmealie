@@ -351,7 +351,7 @@ class DraftManager:
         
         # Find and update slot
         for day in draft.days:
-            if day.date == day_date:
+            if day.day_date == day_date:
                 for i, slot in enumerate(day.slots):
                     if slot.meal_type == meal_type:
                         day.slots[i] = new_slot

@@ -254,7 +254,7 @@ def get_alternatives(
         # Find the slot
         slot = None
         for d in draft.days:
-            if d.date == day_date:
+            if d.day_date == day_date:
                 for s in d.slots:
                     if s.meal_type == mt:
                         slot = s
@@ -371,7 +371,7 @@ def swap_recipe(
         # Find current slot
         current_slot = None
         for d in draft.days:
-            if d.date == day_date:
+            if d.day_date == day_date:
                 for s in d.slots:
                     if s.meal_type == mt:
                         current_slot = s

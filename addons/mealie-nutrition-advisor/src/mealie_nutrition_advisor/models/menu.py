@@ -1,7 +1,5 @@
 """Menu planning models."""
 
-from __future__ import annotations
-
 from datetime import date
 from enum import Enum
 from typing import Optional
@@ -34,8 +32,10 @@ class MealSlot(BaseModel):
 class DayMenu(BaseModel):
     """Menu d'une journée."""
 
-    date: date
+    day_date: date = Field(..., alias="date")
     slots: list[MealSlot] = Field(default_factory=list)
+
+    model_config = {"populate_by_name": True}
 
     def total_nutrition(self) -> NutritionFacts:
         total = NutritionFacts()
@@ -66,7 +66,7 @@ class WeekMenu(BaseModel):
         for day in self.days:
             for slot in day.slots:
                 entry = {
-                    "date": day.date.isoformat(),
+                    "date": day.day_date.isoformat(),
                     "entry_type": slot.meal_type.value,
                 }
                 if slot.recipe_id:

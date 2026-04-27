@@ -69,8 +69,10 @@ class DraftSlot(BaseModel):
 class DayDraftSlots(BaseModel):
     """All slots for a single day in a draft."""
     
-    date: date = Field(..., description="Date of the day")
+    day_date: date = Field(..., description="Date of the day", alias="date")
     day_name: str = Field(..., description="Day name (Monday, Tuesday...)")
+
+    model_config = {"populate_by_name": True}
     slots: list[DraftSlot] = Field(default_factory=list, description="Meal slots for this day")
     
     def total_nutrition(self) -> NutritionFacts:
@@ -142,7 +144,7 @@ class MenuDraft(BaseModel):
     def get_slot(self, day_date: date, meal_type: MealType) -> Optional[DraftSlot]:
         """Get a specific slot by date and meal type."""
         for day in self.days:
-            if day.date == day_date:
+            if day.day_date == day_date:
                 for slot in day.slots:
                     if slot.meal_type == meal_type:
                         return slot
@@ -151,7 +153,7 @@ class MenuDraft(BaseModel):
     def update_slot(self, day_date: date, meal_type: MealType, new_slot: DraftSlot) -> bool:
         """Update a specific slot. Returns True if found and updated."""
         for day in self.days:
-            if day.date == day_date:
+            if day.day_date == day_date:
                 for i, slot in enumerate(day.slots):
                     if slot.meal_type == meal_type:
                         day.slots[i] = new_slot
@@ -164,7 +166,7 @@ class MenuDraft(BaseModel):
         for day in self.days:
             for slot in day.slots:
                 entry = {
-                    "date": day.date.isoformat(),
+                    "date": day.day_date.isoformat(),
                     "entry_type": slot.meal_type.value,
                 }
                 if slot.recipe_id:
