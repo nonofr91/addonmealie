@@ -70,10 +70,11 @@ class MealieDataStructurer:
                 "cookTime": self._minutes_to_text(scraped_recipe.get('cook_time')),
                 "totalTime": self._minutes_to_text(scraped_recipe.get('total_time')),
 
-                # Portions
-                "recipeServings": float(scraped_recipe.get('servings', '4')),
-                "recipeYieldQuantity": float(scraped_recipe.get('servings', '4')),
-                "recipeYield": scraped_recipe.get('servings', '4'),
+                # Portions — recipeYield est le label (ex. "portions"),
+                # recipeYieldQuantity le nombre affiché dans Mealie.
+                "recipeServings": float(scraped_recipe.get('servings', '4') or '4'),
+                "recipeYieldQuantity": float(scraped_recipe.get('servings', '4') or '4'),
+                "recipeYield": "portions",
                 
                 # Ingrédients (format Mealie)
                 "recipeIngredient": formatted_ingredients,
