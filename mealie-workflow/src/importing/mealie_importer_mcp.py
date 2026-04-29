@@ -413,9 +413,10 @@ class MealieImporterMCP:
                 "totalTime": total_time or None,
                 
                 # Portions (format API 3.14)
+                # recipeYield = label d'unité ("portions"), recipeYieldQuantity = nombre
                 "recipeServings": structured_recipe.get('recipeServings', 4),
                 "recipeYieldQuantity": structured_recipe.get('recipeYieldQuantity', 4),
-                "recipeYield": structured_recipe.get('recipeYield', f"{structured_recipe.get('recipeServings', 4)} servings"),
+                "recipeYield": self._normalize_yield_label(structured_recipe),
                 
                 # Ingrédients (format structuré API 3.14)
                 "recipeIngredient": formatted_ingredients,
@@ -465,6 +466,22 @@ class MealieImporterMCP:
             print(f"   ⚠️ Erreur extraction image: {e}")
             return ""
     
+    @staticmethod
+    def _normalize_yield_label(structured_recipe: Dict) -> str:
+        """Normalise recipeYield en label d'unité pour Mealie.
+
+        Mealie affiche ``{recipeYieldQuantity} {recipeYield}``.
+        Si recipeYield est un nombre brut ("4"), Mealie affiche "4 4".
+        On le remplace par "portions" pour obtenir "4 portions".
+        """
+        raw = str(structured_recipe.get("recipeYield", "portions")).strip()
+        # Si c'est un nombre pur (ex. "4", "4.0"), le remplacer par "portions"
+        try:
+            float(raw)
+            return "portions"
+        except ValueError:
+            return raw or "portions"
+
     def import_recipe_to_mealie(self, structured_recipe: Dict) -> bool:
         """
         Importe une recette dans Mealie
