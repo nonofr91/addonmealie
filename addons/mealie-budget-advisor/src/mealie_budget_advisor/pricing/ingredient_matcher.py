@@ -83,11 +83,11 @@ class IngredientMatcher:
         patterns = [
             # Fractions: "1/2 tasse de lait", "3/4 cup sugar"
             r"^(?P<qty>\d+/\d+)\s+(?P<unit>tasse?|cup|cuill[èe]res?\s+à\s+(?:soupe|café)|tsp|tbsp|g|kg|ml|l|cl)\s+(?:de\s+)?(?P<name>.+)$",
-            # "2 cuillères à soupe d'huile" ou "2 c. à s. huile"
-            r"^(?P<qty>\d+(?:[,.]\d+)?)\s+(?P<unit>cuill[èe]res?\s+à\s+(?:soupe|café)|c\.\s*(?:à|a)\.\s*s\.?|c\.\s*(?:à|a)\.\s*c\.?|tbsp|tsp)\s+d['e]?(?P<name>.+)$",
-            # "200g de farine", "200 g farine", "200g farine"
+            # "200g de farine", "200 g farine", "200g farine" - METTRE AVANT les cuillères pour éviter le conflit cl/tsp
             r"^(?P<qty>\d+(?:[,.]\d+)?)\s*(?P<unit>g|kg|ml|l|cl|mg|tasses?|cups?|oz|lb)\s+(?:de\s+)?(?P<name>.+)$",
-            # "2 pommes", "3 oeufs"
+            # "2 cuillères à soupe d'huile" ou "2 c. à s. huile" (avec adjectifs optionnels: rases, bombées)
+            r"^(?P<qty>\d+(?:[,.]\d+)?)\s+(?P<unit>cuill[èe]res?\s+à\s+(?:soupe|café)|c\.\s*(?:à|a)\.\s*s\.?|c\.\s*(?:à|a)\.\s*c\.?|tbsp|tsp)(?:\s+(?:rases?|bombées?))?\s+d['e]?(?P<name>.+)$",
+            # "2 pommes", "3 oeufs" - EXCLURE les mots qui ressemblent à des unités
             r"^(?P<qty>\d+(?:[,.]\d+)?)\s+(?P<name>[a-zA-ZàâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\w\s\-']+)$",
             # "huile d'olive" (pas de quantité explicite)
             r"^(?P<name>[a-zA-ZàâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\w\s\-']+)$",
@@ -124,11 +124,15 @@ class IngredientMatcher:
         """Normalise une unité vers le format standard."""
         unit_lower = unit.lower().strip()
 
-        # Gestion spéciale des cuillères
+        # Priorité aux unités métriques explicites
+        if unit_lower in ["g", "kg", "ml", "l", "cl", "mg"]:
+            return unit_lower
+        
+        # Gestion spéciale des cuillères - café avant soupe pour éviter les faux positifs
+        if "café" in unit_lower:
+            return "tsp"
         if "soupe" in unit_lower or ("c" in unit_lower and "s" in unit_lower):
             return "tbsp"
-        if "café" in unit_lower or ("c" in unit_lower and "c" in unit_lower):
-            return "tsp"
 
         return self.UNIT_ALIASES.get(unit_lower, "unit")
 
@@ -168,8 +172,15 @@ class IngredientMatcher:
         """
         normalized_name = ingredient_name.lower().strip()
         
+        # Conversion spéciale: moules en litres → kg (1l de moules ≈ 0.8 kg)
+        if "moule" in normalized_name and unit == "l":
+            original_qty = quantity
+            quantity = quantity * 0.8
+            unit = "kg"
+            logger.debug(f"Conversion moules: {original_qty} l → {quantity} kg")
+        
         # Ingrédients gratuits (eau, sel de table, etc.)
-        free_ingredients = ["eau", "water", "sel de table", "table salt"]
+        free_ingredients = ["eau", "water", "sel de table", "table salt", "sel", "poivre"]
         if any(free in normalized_name for free in free_ingredients):
             return 0.0, "free", 1.0
 
@@ -177,6 +188,14 @@ class IngredientMatcher:
         manual_price = self.manual.get_price(normalized_name)
         if manual_price:
             qty_base, unit_base = self.normalize_quantity(quantity, unit)
+            
+            # Si l'ingrédient est en unit mais le prix est en kg/l, utiliser le poids moyen
+            if unit_base == "unit" and manual_price.unit in ["kg", "l"]:
+                weight_per_unit = get_ingredient_weight(ingredient_name)
+                qty_base = qty_base * weight_per_unit
+                unit_base = manual_price.unit
+                logger.debug(f"Conversion {ingredient_name}: {quantity} unit × {weight_per_unit}kg/unit = {qty_base}{unit_base}")
+            
             price_multiplier = self._get_price_multiplier(manual_price.unit, unit_base)
             total_price = qty_base * manual_price.price_per_unit * price_multiplier
             return round(total_price, 2), "manual", 1.0

@@ -26,6 +26,8 @@ MANUAL_WEIGHTS = {
     "tomates": 0.12,
     "oignon": 0.15,
     "oignons": 0.15,
+    "échalote": 0.025,  # ~25g par échalote
+    "échalotes": 0.025,
     "carotte": 0.075,
     "carottes": 0.075,
     "pomme de terre": 0.2,

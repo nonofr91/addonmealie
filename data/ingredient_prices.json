@@ -1,0 +1,42 @@
+{
+  "moules": {
+    "ingredient_name": "moules",
+    "price_per_unit": 8.0,
+    "unit": "kg",
+    "store": "marché",
+    "location": "France",
+    "notes": "Prix moyen des moules fraîches"
+  },
+  "vin blanc sec": {
+    "ingredient_name": "vin blanc sec",
+    "price_per_unit": 6.0,
+    "unit": "l",
+    "store": "supermarché",
+    "location": "France",
+    "notes": "Vin blanc ordinaire pour cuisson"
+  },
+  "beurre": {
+    "ingredient_name": "beurre",
+    "price_per_unit": 10.0,
+    "unit": "kg",
+    "store": "supermarché",
+    "location": "France",
+    "notes": "Beurre standard"
+  },
+  "beurre ou de margarine": {
+    "ingredient_name": "beurre ou de margarine",
+    "price_per_unit": 10.0,
+    "unit": "kg",
+    "store": "supermarché",
+    "location": "France",
+    "notes": "Beurre standard"
+  },
+  "échalotes": {
+    "ingredient_name": "échalotes",
+    "price_per_unit": 15.0,
+    "unit": "kg",
+    "store": "supermarché",
+    "location": "France",
+    "notes": "Échalotes fraîches"
+  }
+}
