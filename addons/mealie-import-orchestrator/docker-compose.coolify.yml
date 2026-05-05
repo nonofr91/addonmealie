@@ -21,7 +21,7 @@ services:
       start_period: 120s
 
   mealie-addon:
-    image: 'ghcr.io/nonofr91/mealie-import-addon:0.5.9'
+    image: 'ghcr.io/nonofr91/mealie-import-addon:0.6.0'
     environment:
       - SERVICE_FQDN_MEALIEADDON_8501
       - SERVICE_URL_MEALIEADDON_8501
@@ -31,7 +31,7 @@ services:
       - 'ADDON_API_URL=http://mealie-addon:8000'
       - 'ADDON_UI_PORT=${ADDON_UI_PORT_IMPORT:-8501}'
       - 'ENABLE_NUTRITION=${ENABLE_NUTRITION:-true}'
-      - 'AI_PROVIDER=${AI_PROVIDER:-mock}'
+      - 'AI_PROVIDER=${AI_PROVIDER:-mistral}'
       - 'USE_AI_ESTIMATION=${USE_AI_ESTIMATION:-false}'
       - 'OPENAI_API_KEY=${OPENAI_API_KEY}'
       - 'OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}'
@@ -43,6 +43,10 @@ services:
       - 'USDA_API_KEY=${USDA_API_KEY}'
       - 'NUTRITION_CACHE_TTL_DAYS=${NUTRITION_CACHE_TTL_DAYS:-30}'
       - 'LOG_LEVEL=${LOG_LEVEL:-DEBUG}'
+      - 'ENABLE_INGREDIENT_MANAGER=${ENABLE_INGREDIENT_MANAGER:-true}'
+      - 'ENABLE_IMAGE_MANAGER=${ENABLE_IMAGE_MANAGER:-true}'
+      - 'INGREDIENT_AI_PROVIDER=${INGREDIENT_AI_PROVIDER:-${AI_PROVIDER:-mistral}}'
+      - 'IMAGE_AI_PROVIDER=${IMAGE_AI_PROVIDER:-${AI_PROVIDER:-mistral}}'
     depends_on:
       mealie:
         condition: service_started

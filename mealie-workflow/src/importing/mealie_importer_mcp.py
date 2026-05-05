@@ -21,17 +21,23 @@ try:
     from .ingredient_normalizer import IngredientNormalizer
     from .ingredient_matcher import IngredientMatcher
     from .ingredient_parser import IngredientParser
+    from .ingredient_manager import IngredientManager
+    from .image_manager import ImageManager
 except ImportError:
     try:
         from ingredient_normalizer import IngredientNormalizer
         from ingredient_matcher import IngredientMatcher
         from ingredient_parser import IngredientParser
+        from ingredient_manager import IngredientManager
+        from image_manager import ImageManager
     except ImportError:
         # Si les imports échouent, définir des classes vides pour éviter l'erreur
         print("⚠️ Modules de déduplication non disponibles, fonctionnalité désactivée")
         IngredientNormalizer = None
         IngredientMatcher = None
         IngredientParser = None
+        IngredientManager = None
+        ImageManager = None
 
 # MCP mealie-test disponibles via wrapper
 MCP_AVAILABLE = True  # Les MCP mealie-test sont disponibles via le wrapper
@@ -63,6 +69,22 @@ class MealieImporterMCP:
             self.matcher = None
             self.deduplication_enabled = False
             self.use_parser = False
+        
+        # Initialiser IngredientManager si disponible
+        if IngredientManager:
+            import os
+            ai_provider = os.getenv("AI_PROVIDER", "mistral")
+            self.ingredient_manager = IngredientManager(ai_provider=ai_provider)
+        else:
+            self.ingredient_manager = None
+        
+        # Initialiser ImageManager si disponible
+        if ImageManager:
+            import os
+            ai_provider = os.getenv("AI_PROVIDER", "mistral")
+            self.image_manager = ImageManager(ai_provider=ai_provider)
+        else:
+            self.image_manager = None
         
         # Cache des foods/units existants
         self.existing_foods = []
@@ -235,6 +257,15 @@ class MealieImporterMCP:
             # S'assurer que les ingrédients ont le bon format
             ingredients = structured_recipe.get('recipeIngredient', [])
             formatted_ingredients = []
+            
+            # Validation des ingrédients avec IngredientManager si disponible
+            if self.ingredient_manager:
+                validation_results = self.ingredient_manager.validate_ingredients_structure(ingredients)
+                for i, result in enumerate(validation_results):
+                    if result.errors:
+                        print(f"      ⚠️ Erreurs ingrédient {i}: {result.errors}")
+                    if result.warnings:
+                        print(f"      ℹ️  Avertissements ingrédient {i}: {result.warnings}")
             
             for ingredient in ingredients:
                 if isinstance(ingredient, dict):
@@ -490,23 +521,38 @@ class MealieImporterMCP:
     def _get_image_url(self, structured_recipe: Dict) -> str:
         """Extrait l'URL de l'image des données structurées"""
         try:
+            recipe_name = structured_recipe.get('name', '')
+            image_url = ""
+            
             # Vérifier image_path (liste d'URLs)
             image_path = structured_recipe.get('image_path', [])
             if image_path and isinstance(image_path, list) and len(image_path) > 0:
                 # Prendre la première image (format .jpg ou .webp)
                 for url in image_path:
                     if url and isinstance(url, str) and (url.endswith('.jpg') or url.endswith('.jpeg')):
-                        return url
+                        image_url = url
+                        break
                 # Fallback: prendre la première image
-                if image_path[0]:
-                    return image_path[0]
+                if not image_url and image_path[0]:
+                    image_url = image_path[0]
             
             # Vérifier image (URL simple)
-            image = structured_recipe.get('image', '')
-            if image:
-                return image
+            if not image_url:
+                image = structured_recipe.get('image', '')
+                if image:
+                    image_url = image
             
-            return ""
+            # Analyser et remplacer l'image avec ImageManager si disponible
+            if self.image_manager and image_url and recipe_name:
+                print(f"   🔍 Analyse de l'image pour '{recipe_name}'...")
+                new_image_url = self.image_manager.search_and_replace_recipe_image(recipe_name, image_url)
+                if new_image_url != image_url:
+                    print(f"   🖼️ Image remplacée: {image_url[:50]}... → {new_image_url[:50]}...")
+                    image_url = new_image_url
+                else:
+                    print(f"   ✅ Image appropriée conservée")
+            
+            return image_url
         except Exception as e:
             print(f"   ⚠️ Erreur extraction image: {e}")
             return ""
