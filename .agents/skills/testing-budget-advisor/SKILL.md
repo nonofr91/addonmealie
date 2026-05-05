@@ -141,6 +141,61 @@ Then open `http://localhost:8504` in the browser and use computer-use tools to i
 - **Prix tab**: Open Prices search + manual price form
 - **Coûts tab**: Recipe selectbox (names, not slugs), batch cost button, comparison multiselect
 
+## Unit Testing (No Docker Needed)
+
+For logic-level fixes (ingredient dedup, time parsing, cost PATCH), unit tests are faster and more adversarial than Docker-based tests.
+
+### Testing ingredient deduplication (UUID fix)
+
+The `MatchResult` dataclass in `mealie-workflow/src/importing/ingredient_matcher.py` has:
+- `match_id`: the Mealie UUID (e.g., `b31086b3-029f-415d-8d1d-435358fb297c`)
+- `matched_item`: the full dict with `{'id': ..., 'name': 'ail'}`
+
+To test that dedup uses the **name** (not UUID), create a `MatchResult` with both fields set and verify the importer reads `matched_item.get('name', ...)`. The adversarial check: verify the OLD code path (`match_id`) would produce the UUID — this proves the test distinguishes broken from fixed code.
+
+```python
+import sys
+sys.path.insert(0, 'repos/addonmealie/mealie-workflow/src')
+from importing.ingredient_matcher import MatchResult
+
+match = MatchResult(
+    matched=True,
+    matched_item={'id': 'b31086b3-...', 'name': 'ail'},
+    similarity=0.95,
+    match_id='b31086b3-...'
+)
+# FIXED: food = match.matched_item.get('name', fallback)
+# BROKEN: food = match.match_id  → UUID in ingredient text
+```
+
+### Testing ISO 8601 duration parsing
+
+`RequestsProvider._parse_iso_duration` is a static method — import and call directly:
+
+```python
+from scraping.providers.requests_provider import RequestsProvider
+assert RequestsProvider._parse_iso_duration('PT1H30M') == '90'
+assert RequestsProvider._parse_iso_duration(None) is None
+assert RequestsProvider._parse_iso_duration('PT0M') is None  # zero → None
+```
+
+### Testing atomic cost PATCH
+
+`MealieClient.patch_cost_data` should send exactly **1 PATCH** with both `extras` and `notes`. Mock `get_recipe` and `session.patch`, then assert:
+1. `session.patch.call_count == 1`
+2. JSON body has both `"extras"` and `"notes"` keys
+3. Existing cost notes are updated in-place (not duplicated)
+4. Non-cost notes are preserved unchanged
+
+### Running existing repo tests
+
+```bash
+cd addons/mealie-budget-advisor
+python3 -m pytest tests/test_cost_sync.py -v
+```
+
+These tests mock `patch_cost_data` (not the old `patch_extras`). If tests fail with `AttributeError: patch_extras`, the test file needs updating to match the current API.
+
 ## Key Endpoints to Test
 
 | Endpoint | Method | What it does |
@@ -166,6 +221,8 @@ Then open `http://localhost:8504` in the browser and use computer-use tools to i
 - **Version governance (AGENTS.md)**: When bumping the Docker image version, the `pyproject.toml` version AND all `docker-compose*.yml` image tags must be updated in the same commit.
 - **`st.stop()` in Streamlit tabs**: Never use `st.stop()` inside a tab context — it halts the **entire script**, preventing all subsequent tabs from rendering. Use `if/else` blocks instead to conditionally show/hide content within a tab.
 - **Streamlit `@st.cache_data` returns empty list**: If the API is unreachable when the cache is first populated, it will cache an empty list for the TTL duration. This can cause dropdowns to appear empty. Restart Streamlit or wait for the TTL to expire.
+- **`mealie-workflow` imports in unit tests**: The workflow module uses relative imports and has heavy dependencies. Use `sys.path.insert(0, 'mealie-workflow/src')` only in standalone test scripts — not in installed packages (see AGENTS.md).
+- **Pydantic field name clashes**: Avoid naming a field the same as its type (e.g., `date: date`). Pydantic 2.13+ rejects this even without `from __future__ import annotations`. Rename the field and use `alias=` for JSON compatibility.
 
 ## Cleanup
 
