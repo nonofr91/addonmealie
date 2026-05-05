@@ -33,6 +33,7 @@ def mock_client(fake_recipe):
     client.get_recipe.return_value = fake_recipe
     client.get_all_recipes.return_value = [fake_recipe]
     client.patch_extras.return_value = True
+    client.patch_cost_data.return_value = True
     return client
 
 
@@ -71,7 +72,7 @@ class TestSyncRecipeCost:
         assert "cout_total" in result["extras"]
         assert result["extras"]["cout_source"] == "auto"
         assert result["extras"]["cout_mois_reference"] == "2026-04"
-        mock_client.patch_extras.assert_called_once()
+        mock_client.patch_cost_data.assert_called_once()
 
     def test_preserves_user_override_keys(self, mock_client, fake_recipe):
         fake_recipe["extras"]["cout_manuel_par_portion"] = "1.50"
@@ -105,12 +106,12 @@ class TestSyncRecipeCost:
 
         assert result["success"] is False
         assert "introuvable" in result["error"]
-        mock_client.patch_extras.assert_not_called()
+        mock_client.patch_cost_data.assert_not_called()
 
     def test_patch_failure(self, fake_recipe):
         calculator = _build_calculator_with_stub_matcher(fake_recipe)
         client = MagicMock(spec=MealieClient)
-        client.patch_extras.return_value = False
+        client.patch_cost_data.return_value = False
 
         result = calculator.sync_recipe_cost(
             slug="poulet-riz",
@@ -154,7 +155,7 @@ class TestRefreshAllCosts:
     def test_counts_failures(self, fake_recipe):
         client = MagicMock(spec=MealieClient)
         client.get_all_recipes.return_value = [fake_recipe]
-        client.patch_extras.return_value = False
+        client.patch_cost_data.return_value = False
 
         calculator = _build_calculator_with_stub_matcher(fake_recipe)
         summary = calculator.refresh_all_costs(mealie_client=client)
@@ -166,7 +167,7 @@ class TestRefreshAllCosts:
     def test_skips_recipe_without_slug(self, fake_recipe):
         client = MagicMock(spec=MealieClient)
         client.get_all_recipes.return_value = [{"name": "sans slug"}, fake_recipe]
-        client.patch_extras.return_value = True
+        client.patch_cost_data.return_value = True
 
         calculator = _build_calculator_with_stub_matcher(fake_recipe)
         summary = calculator.refresh_all_costs(mealie_client=client)

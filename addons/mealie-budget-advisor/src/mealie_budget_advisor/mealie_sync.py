@@ -192,3 +192,42 @@ class MealieClient:
         except requests.exceptions.RequestException as e:
             logger.warning("Patch extras échoué pour '%s': %s", slug, e)
             return False
+
+    def patch_cost_data(
+        self, slug: str, extras: dict[str, str], cost_note: str
+    ) -> bool:
+        """Patch extras ET notes en un seul appel PATCH atomique."""
+        recipe = self.get_recipe(slug)
+        if not recipe:
+            return False
+
+        # Préparer extras
+        extras_payload = {
+            str(k): str(v) for k, v in extras.items() if v is not None
+        }
+
+        # Préparer notes
+        existing_notes: list = recipe.get("notes") or []
+        marker = "💰 Coût estimé"
+        found = False
+        for i, note_obj in enumerate(existing_notes):
+            text = note_obj.get("text", "") if isinstance(note_obj, dict) else str(note_obj)
+            if marker in text:
+                existing_notes[i] = {"title": "", "text": cost_note}
+                found = True
+                break
+        if not found:
+            existing_notes.append({"title": "", "text": cost_note})
+
+        try:
+            response = self.session.patch(
+                f"{self.base_url}/api/recipes/{slug}",
+                json={"extras": extras_payload, "notes": existing_notes},
+                timeout=30,
+            )
+            response.raise_for_status()
+            logger.info("Coûts publiés pour '%s'", slug)
+            return True
+        except requests.exceptions.RequestException as e:
+            logger.warning("Patch coûts échoué pour '%s': %s", slug, e)
+            return False

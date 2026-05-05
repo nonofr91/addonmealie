@@ -93,6 +93,14 @@ class RequestsProvider(ScrapingProvider):
                         # Extraire l'image
                         image = data.get('image', '')
                         
+                        # Extraire les temps (ISO 8601 duration → minutes)
+                        prep_time = self._parse_iso_duration(data.get('prepTime'))
+                        cook_time = self._parse_iso_duration(data.get('cookTime'))
+                        total_time = self._parse_iso_duration(data.get('totalTime'))
+                        
+                        # Extraire les portions
+                        servings = self._extract_servings(data.get('recipeYield'))
+                        
                         print(f"   ✅ Contenu extrait via JSON-LD: {len(ingredients)} ingrédients, {len(instructions)} instructions")
                         
                         return {
@@ -100,6 +108,10 @@ class RequestsProvider(ScrapingProvider):
                             'ingredients': ingredients,
                             'instructions': instructions,
                             'image': image,
+                            'prep_time': prep_time,
+                            'cook_time': cook_time,
+                            'total_time': total_time,
+                            'servings': servings,
                             'raw_content': json.dumps(data, ensure_ascii=False)
                         }
                 except json.JSONDecodeError:
@@ -154,6 +166,34 @@ class RequestsProvider(ScrapingProvider):
             print(f"   ⚠️ Contenu trop court: {len(structured_text)} caractères")
             return None
     
+    @staticmethod
+    def _parse_iso_duration(duration_str) -> Optional[str]:
+        """Convertit une durée ISO 8601 (PT15M, PT1H30M) en minutes (str)."""
+        if not duration_str:
+            return None
+        import re
+        m = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?', str(duration_str))
+        if not m:
+            return None
+        hours = int(m.group(1) or 0)
+        minutes = int(m.group(2) or 0)
+        total = hours * 60 + minutes
+        return str(total) if total > 0 else None
+
+    @staticmethod
+    def _extract_servings(yield_val) -> Optional[str]:
+        """Extrait le nombre de portions depuis recipeYield (str, int ou list)."""
+        if yield_val is None:
+            return None
+        import re
+        if isinstance(yield_val, list):
+            yield_val = yield_val[0] if yield_val else None
+        if yield_val is None:
+            return None
+        val = str(yield_val).strip()
+        nums = re.findall(r'\d+', val)
+        return nums[0] if nums else None
+
     def search_images(self, query: str, num: int = 3) -> List[str]:
         """Recherche des images via Google Images (fallback)"""
         try:
