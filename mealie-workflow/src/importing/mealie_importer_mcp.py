@@ -246,8 +246,10 @@ class MealieImporterMCP:
                             parsed_note = json.loads(note)
                             # Utiliser les valeurs parsées si disponibles
                             quantity = float(parsed_note.get('quantity', ingredient.get('quantity', 0)))
-                            unit = parsed_note.get('unit_id', ingredient.get('unit', ''))
-                            food = parsed_note.get('food_id', ingredient.get('food', ''))
+                            # NE PAS utiliser unit_id/food_id directement - ce sont des UUIDs
+                            # Utiliser unit/food à la place (noms, pas IDs)
+                            unit = parsed_note.get('unit', ingredient.get('unit', ''))
+                            food = parsed_note.get('food', ingredient.get('food', ''))
                             display_note = parsed_note.get('note', note)
                         except (json.JSONDecodeError, ValueError):
                             # Si parsing échoue, utiliser les valeurs originales
@@ -260,6 +262,49 @@ class MealieImporterMCP:
                         unit = ingredient.get('unit', '')
                         food = ingredient.get('food', '')
                         display_note = note
+
+                    # VALIDATION: Ne jamais utiliser un UUID comme nom de food/unit
+                    def is_uuid(value):
+                        """Détecte si une valeur est un UUID"""
+                        if not value or not isinstance(value, str):
+                            return False
+                        import re
+                        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                        return bool(re.match(uuid_pattern, value.lower()))
+
+                    # Si food est un UUID, essayer de le résoudre via le cache
+                    if is_uuid(food):
+                        print(f"      ⚠️ Food est un UUID: {food}, tentative de résolution...")
+                        if self.existing_foods:
+                            for existing_food in self.existing_foods:
+                                if existing_food.get('id') == food:
+                                    food = existing_food.get('name', food)
+                                    print(f"      ✅ UUID résolu en nom: {food}")
+                                    break
+                        else:
+                            # Pas de cache, utiliser le display text comme fallback
+                            food = display_text or 'Ingrédient inconnu'
+                            print(f"      ⚠️ UUID non résolu, fallback sur display: {food}")
+
+                    # Si unit est un UUID, essayer de le résoudre via le cache
+                    if is_uuid(unit):
+                        print(f"      ⚠️ Unit est un UUID: {unit}, tentative de résolution...")
+                        if self.existing_units:
+                            for existing_unit in self.existing_units:
+                                if existing_unit.get('id') == unit:
+                                    unit = existing_unit.get('name', unit)
+                                    print(f"      ✅ UUID résolu en nom: {unit}")
+                                    break
+                        else:
+                            # Pas de cache, essayer d'extraire l'unité du display text
+                            import re
+                            unit_match = re.search(r'\d+\s*([a-zA-Z°]+)', display_text)
+                            if unit_match:
+                                unit = unit_match.group(1)
+                                print(f"      ⚠️ UUID non résolu, fallback sur display: {unit}")
+                            else:
+                                unit = None
+                                print(f"      ⚠️ UUID non résolu, unité mise à None")
 
                     # Texte complet pour le champ note (fallback si unit/food non résolus)
                     display_text = ingredient.get('display') or ingredient.get('originalText') or display_note or ''
