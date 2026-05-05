@@ -100,6 +100,10 @@ class RecipeScraperMCP:
                         'recipeIngredient': content.get('ingredients', []),
                         'recipeInstructions': content.get('instructions', []),
                         'image': content.get('image', ''),
+                        'prep_time': content.get('prep_time'),
+                        'cook_time': content.get('cook_time'),
+                        'total_time': content.get('total_time'),
+                        'servings': content.get('servings'),
                         'source_url': url,
                         'scraped_at': datetime.now().isoformat()
                     }

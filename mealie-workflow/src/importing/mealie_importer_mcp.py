@@ -296,10 +296,10 @@ class MealieImporterMCP:
                         # Chercher si le food existe déjà dans Mealie
                         if self.existing_foods:
                             food_match = self.matcher.find_existing_food(food_to_match)
-                            if food_match.matched and food_match.match_id:
-                                # Utiliser l'ID du food existant
-                                food = food_match.match_id
-                                print(f"      🔄 Food matché: {food_to_match} → ID existant")
+                            if food_match.matched and food_match.matched_item:
+                                # Utiliser le NOM du food existant (pas l'ID/UUID)
+                                food = food_match.matched_item.get('name', food_to_match)
+                                print(f"      🔄 Food matché: {food_to_match} → {food}")
                             else:
                                 # Utiliser le nom pour création
                                 food = food_to_match
@@ -319,10 +319,10 @@ class MealieImporterMCP:
                         # Chercher si l'unité existe déjà dans Mealie
                         if self.existing_units:
                             unit_match = self.matcher.find_existing_unit(standardized_unit)
-                            if unit_match.matched and unit_match.match_id:
-                                # Utiliser l'ID de l'unité existante
-                                unit = unit_match.match_id
-                                print(f"      🔄 Unit matchée: {standardized_unit} → ID existant")
+                            if unit_match.matched and unit_match.matched_item:
+                                # Utiliser le NOM de l'unité existante (pas l'ID/UUID)
+                                unit = unit_match.matched_item.get('name', standardized_unit)
+                                print(f"      🔄 Unit matchée: {standardized_unit} → {unit}")
                             else:
                                 # Utiliser le nom standardisé pour création
                                 unit = standardized_unit

@@ -246,14 +246,13 @@ class CostCalculator:
         source = "manuel" if cost.has_override else "auto"
         addon_extras = build_addon_extras(cost, month=month, source=source)
         merged = merge_extras(recipe.get("extras") or {}, addon_extras)
-        patched = client.patch_extras(slug, merged)
 
-        # Écrire le coût dans les notes de la recette (visible dans Mealie UI)
+        # Écrire extras + notes dans un seul PATCH pour éviter les conflits
         cost_note = (
             f"💰 Coût estimé : {cost.cost_per_serving:.2f} €/portion"
             f" ({cost.total_cost:.2f} € total pour {cost.servings} portions)"
         )
-        client.patch_recipe_notes(slug, cost_note)
+        patched = client.patch_cost_data(slug, merged, cost_note)
 
         return {
             "success": patched,
