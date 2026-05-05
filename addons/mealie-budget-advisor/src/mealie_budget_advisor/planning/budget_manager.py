@@ -58,7 +58,7 @@ class BudgetManager:
             Le budget sauvegardé
         """
         period_key = budget.period.period_label
-        self._budgets[period_key] = budget.model_dump()
+        self._budgets[period_key] = budget.model_dump(mode="json")
         self._save_budgets()
         logger.info("Budget défini pour %s: %.2f€", period_key, budget.total_budget)
         return budget
