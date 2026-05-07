@@ -110,11 +110,11 @@ services:
       - 'ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}'
       - 'LOG_LEVEL=${LOG_LEVEL:-info}'
       - 'ADDON_UI_URL=${SERVICE_URL_BUDGETUI}'
-      - 'ADDON_API_HOST=0.0.0.0'
-      - 'ADDON_API_PORT=8003'
+      - ADDON_API_HOST=0.0.0.0
+      - ADDON_API_PORT=8003
     volumes:
-      - 'budget_data:/app/data'
-      - 'budget_config:/app/config'
+      - 'ffkfjdtvq2irbm3s5553sako_budget-data:/app/data'
+      - 'ffkfjdtvq2irbm3s5553sako_budget-config:/app/config'
     entrypoint: ["uvicorn", "mealie_budget_advisor.api:app", "--host", "0.0.0.0", "--port", "8003", "--log-level", "info"]
     depends_on:
       mealie:
@@ -141,5 +141,5 @@ services:
 
 volumes:
   mealie_data:
-  budget_data:
-  budget_config:
+  ffkfjdtvq2irbm3s5553sako_budget-data:
+  ffkfjdtvq2irbm3s5553sako_budget-config:
