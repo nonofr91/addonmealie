@@ -18,7 +18,11 @@ class MealieSetup:
     """Creates the Nutrition Advisor placeholder recipe + Addon cookbook."""
 
     def __init__(self, mealie_base_url: str, mealie_api_key: str):
-        self.mealie_base_url = mealie_base_url.rstrip("/")
+        # Ensure mealie_base_url does not end with /api
+        base_url = mealie_base_url.rstrip("/")
+        if base_url.endswith("/api"):
+            base_url = base_url[:-4]
+        self.mealie_base_url = base_url
         self.headers = {
             "Authorization": f"Bearer {mealie_api_key}",
             "Content-Type": "application/json",
