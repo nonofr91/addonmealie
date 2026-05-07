@@ -277,10 +277,12 @@ class MealieDataStructurer:
                 candidates.append(after_adj)
             for candidate in candidates:
                 for known in self.KNOWN_UNITS:
-                    pattern = r'^' + re.escape(known) + r'(?:\s|$)'
+                    # Pattern amélioré : unité suivie de espace, fin de ligne, ou préposition "de/d'"
+                    pattern = r'^' + re.escape(known) + r'(?:\s+de\s+|\s+d\'|\s|$)'
                     if re.match(pattern, candidate, re.IGNORECASE):
                         unit = known
-                        rest = candidate[len(known):].strip()
+                        # Supprimer l'unité et la préposition "de/d'" si présente
+                        rest = re.sub(r'^' + re.escape(known) + r'(?:\s+de\s+|\s+d\'|\s)', '', candidate, flags=re.IGNORECASE).strip()
                         break
                 if unit:
                     break
