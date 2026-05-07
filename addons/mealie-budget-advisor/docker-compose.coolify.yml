@@ -49,7 +49,7 @@ services:
         condition: service_started
 
   nutrition-api:
-    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:1.0.3'
+    image: 'ghcr.io/nonofr91/mealie-nutrition-advisor:1.0.4'
     environment:
       - SERVICE_FQDN_NUTRITIONAPI_8001
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
@@ -97,7 +97,7 @@ services:
         condition: service_started
 
   budget-api:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.10'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.11'
     environment:
       - SERVICE_FQDN_BUDGETAPI_8003
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
