@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mealie-import-orchestrator"
-version = "0.6.1"
+version = "0.6.2"
 description = "External addon orchestrating the canonical Mealie import workflow with integrated nutrition analysis, ingredient management, and image analysis"
 requires-python = ">=3.12"
 dependencies = [
