@@ -286,6 +286,16 @@ class CostCalculator:
     def _format_currency(self, value: float) -> str:
         return f"{value:.2f} €".replace(".", ",")
 
+    def _format_source_label(self, source: str) -> str:
+        labels = {
+            "manual": "prix manuel",
+            "open_prices": "Open Prices",
+            "estimated": "estimation",
+            "free": "gratuit",
+            "unknown": "inconnu",
+        }
+        return labels.get(source, source or "inconnu")
+
     def sync_recipe_cost(
         self,
         slug: str,
@@ -344,12 +354,21 @@ class CostCalculator:
 
         # Écrire extras + notes dans un seul PATCH pour éviter les conflits
         cost_note = (
-            f"💰 Coût estimé : {cost.cost_per_serving:.2f} €/portion"
-            f" ({cost.total_cost:.2f} € total pour {cost.servings} portions)\n\n"
+            f"💰 Coût estimé : {self._format_currency(cost.cost_per_serving)}/portion"
+            f" ({self._format_currency(cost.total_cost)} total pour {cost.servings} portions)\n\n"
             f"📝 Détail des ingrédients :\n"
         )
         for ing in cost.breakdown.ingredients:
-            cost_note += f"- {ing.quantity} {ing.unit} {ing.ingredient_name} : {ing.total_cost:.2f} € ({ing.price_source})\n"
+            cost_note += (
+                f"- {ing.ingredient_name} : "
+                f"{ing.display_quantity or self._format_display_quantity(ing.quantity, ing.unit)}"
+                f" → {ing.priced_quantity or 'quantité non valorisée'}"
+                f" : {self._format_currency(ing.total_cost)}"
+                f" ({self._format_source_label(ing.price_source)})"
+            )
+            if ing.pricing_detail:
+                cost_note += f" — {ing.pricing_detail}"
+            cost_note += "\n"
         patched = client.patch_cost_data(slug, merged, cost_note)
 
         return {
