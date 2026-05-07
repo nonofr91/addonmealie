@@ -71,12 +71,12 @@ with col_btn:
             f'<a href="{_MEALIE_BASE}" target="_blank" style="'
             f'display:inline-block;padding:0.4rem 0.8rem;background:#FF4B4B;'
             f'color:white;border-radius:6px;text-decoration:none;font-size:0.9rem">'
-            f'🏠 Mealie</a></div>',
+            f' Mealie</a></div>',
             unsafe_allow_html=True,
         )
 
 # Onglets
-tabs = st.tabs(["📊 Statut", "💰 Budget", "� Planning", "�️ Prix", "📈 Coûts"])
+tabs = st.tabs(["📊 Statut", "💰 Budget", "🎯 Planning", "🏷️ Prix", "📈 Coûts"])
 
 # Tab Statut
 with tabs[0]:
