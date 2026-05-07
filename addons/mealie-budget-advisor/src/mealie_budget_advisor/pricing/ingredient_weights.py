@@ -47,6 +47,8 @@ MANUAL_WEIGHTS = {
     "concombre": 0.3,
     "ail": 0.005,  # 1 gousse
     "ails": 0.005,
+    "gousse d'ail": 0.005,
+    "gousses d'ail": 0.005,
 
     # Fruits
     "pomme": 0.15,
@@ -110,6 +112,9 @@ MANUAL_WEIGHTS = {
     "tranches de fromage": 0.02,
     "beurre": 0.01,  # par noisette/cuillère
     "crème": 0.015,  # par cuillère à soupe
+    "bouillon de volaille": 0.01,
+    "cube de bouillon": 0.01,
+    "cube bouillon": 0.01,
 
     # Féculents
     "pain": 0.05,  # par tranche
@@ -122,9 +127,15 @@ MANUAL_WEIGHTS = {
     "basilic": 0.005,
     "persil": 0.005,
     "thym": 0.002,
+    "branche de thym": 0.002,
     "laurier": 0.001,  # par feuille
     "feuille de laurier": 0.001,
     "feuilles de laurier": 0.001,
+    "genièvre": 0.0002,
+    "baie de genièvre": 0.0002,
+    "baies de genièvre": 0.0002,
+    "clou de girofle": 0.0002,
+    "clous de girofle": 0.0002,
     "cumin": 0.001,
     "paprika": 0.001,
     "poivre": 0.001,
@@ -169,7 +180,7 @@ def get_ingredient_weight(ingredient_name: str) -> float:
         return INGREDIENT_WEIGHTS[name_lower]
     
     # Recherche partielle (ex: "épices pour tajine" → "épices")
-    for key, weight in INGREDIENT_WEIGHTS.items():
+    for key, weight in sorted(INGREDIENT_WEIGHTS.items(), key=lambda item: len(item[0]), reverse=True):
         if key in name_lower or name_lower in key:
             return weight
     

@@ -222,12 +222,9 @@ class IngredientMatcher:
                 elif unit_base == "kg" or unit_base == "l":
                     # Prix déjà dans la bonne unité
                     total_price = qty_base * median_price
-                elif unit_base == "g":
-                    # Convertir g en kg
-                    total_price = (qty_base / 1000) * median_price
                 elif unit_base == "ml":
-                    # Convertir ml en l
-                    total_price = (qty_base / 1000) * median_price
+                    estimated_kg = self._estimate_ml_as_kg(ingredient_name, qty_base)
+                    total_price = estimated_kg * median_price
                 else:
                     # Fallback: conversion directe (risqué mais nécessaire)
                     total_price = qty_base * median_price
@@ -238,6 +235,28 @@ class IngredientMatcher:
         # 3. Fallback: estimation basée sur la catégorie
         estimated_price = self._estimate_price(ingredient_name, quantity, unit)
         return estimated_price, "estimated", 0.3
+
+    def _estimate_ml_as_kg(self, ingredient_name: str, quantity_ml: float) -> float:
+        normalized_name = ingredient_name.lower().strip()
+        density = 1.0
+        if any(keyword in normalized_name for keyword in ["huile", "vinaigre"]):
+            density = 0.91
+        elif any(
+            keyword in normalized_name
+            for keyword in [
+                "thym",
+                "laurier",
+                "genièvre",
+                "genievre",
+                "girofle",
+                "cumin",
+                "paprika",
+                "épice",
+                "epice",
+            ]
+        ):
+            density = 0.25
+        return (quantity_ml * density) / 1000
 
     def _get_price_multiplier(self, price_unit: str, target_unit: str) -> float:
         """Calcule le multiplicateur pour convertir entre unités de prix."""

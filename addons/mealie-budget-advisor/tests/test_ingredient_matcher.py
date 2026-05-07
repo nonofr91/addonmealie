@@ -3,6 +3,7 @@
 import pytest
 
 from mealie_budget_advisor.pricing.ingredient_matcher import IngredientMatcher
+from mealie_budget_advisor.pricing.ingredient_weights import get_ingredient_weight
 
 
 class TestIngredientMatcher:
@@ -134,6 +135,18 @@ class TestIngredientMatcher:
         """Test normalisation avec accents."""
         normalized = matcher._normalize_ingredient_name("crème fraîche")
         assert normalized == "creme fraiche"
+
+    def test_unit_weights_for_small_culinary_items(self):
+        assert get_ingredient_weight("oignons") == 0.15
+        assert get_ingredient_weight("gousses d'ail") == 0.005
+        assert get_ingredient_weight("feuilles de laurier") == 0.001
+        assert get_ingredient_weight("genièvre") == 0.0002
+        assert get_ingredient_weight("clous de girofle") == 0.0002
+        assert get_ingredient_weight("bouillon de volaille") == 0.01
+
+    def test_unit_weight_prefers_specific_match(self):
+        assert get_ingredient_weight("1 gousse d'ail") == 0.005
+        assert get_ingredient_weight("3 baies de genièvre") == 0.0002
 
     def test_estimate_price_vegetables(self, matcher):
         """Test estimation prix légumes."""
