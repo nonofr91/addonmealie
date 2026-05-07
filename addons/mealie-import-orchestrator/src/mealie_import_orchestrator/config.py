@@ -20,6 +20,8 @@ class AddonConfig:
     openai_api_key: str | None
     openai_base_url: str
     openai_model: str
+    ai_provider: str
+    ai_model: str | None
     ai_enabled: bool
     addon_secret_key: str | None
     enable_nutrition: bool
@@ -41,6 +43,8 @@ class AddonConfig:
             repo_root=repo_root,
         )
         openai_api_key = os.environ.get("OPENAI_API_KEY") or None
+        ai_provider = os.environ.get("AI_PROVIDER", "mock").strip().lower()
+        ai_model = cls._get_ai_model(ai_provider)
         config = cls(
             repo_root=repo_root,
             workflow_directory=resolved_workflow_directory,
@@ -55,7 +59,9 @@ class AddonConfig:
             openai_api_key=openai_api_key,
             openai_base_url=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
             openai_model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
-            ai_enabled=bool(openai_api_key),
+            ai_provider=ai_provider,
+            ai_model=ai_model,
+            ai_enabled=cls._is_ai_enabled(ai_provider),
             addon_secret_key=os.environ.get("ADDON_SECRET_KEY") or None,
             enable_nutrition=cls._parse_bool(
                 os.environ.get("ENABLE_NUTRITION", "true")
@@ -79,6 +85,26 @@ class AddonConfig:
             return False
 
         return value.strip().lower() in {"1", "true", "yes", "on"}
+
+    @staticmethod
+    def _is_ai_enabled(provider: str) -> bool:
+        if provider == "openai":
+            return bool(os.environ.get("OPENAI_API_KEY"))
+        if provider == "anthropic":
+            return bool(os.environ.get("ANTHROPIC_API_KEY"))
+        if provider == "mistral":
+            return bool(os.environ.get("MISTRAL_API_KEY"))
+        return False
+
+    @staticmethod
+    def _get_ai_model(provider: str) -> str | None:
+        if provider == "openai":
+            return os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
+        if provider == "anthropic":
+            return os.environ.get("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+        if provider == "mistral":
+            return os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
+        return None
 
     @staticmethod
     def _resolve_workflow_directory(

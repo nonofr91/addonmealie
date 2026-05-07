@@ -166,7 +166,8 @@ class MealieImportOrchestrator:
             "mealie_version": mealie_version,
             "mealie_base_url": cfg.mealie_base_url or "(non configurée)",
             "ai_enabled": cfg.ai_enabled,
-            "ai_model": cfg.openai_model if cfg.ai_enabled else None,
+            "ai_model": cfg.ai_model if cfg.ai_enabled else None,
+            "ai_provider": cfg.ai_provider,
             "scraping_enabled": cfg.scraping_enabled,
         }
 
