@@ -250,8 +250,11 @@ class CostCalculator:
         # Écrire extras + notes dans un seul PATCH pour éviter les conflits
         cost_note = (
             f"💰 Coût estimé : {cost.cost_per_serving:.2f} €/portion"
-            f" ({cost.total_cost:.2f} € total pour {cost.servings} portions)"
+            f" ({cost.total_cost:.2f} € total pour {cost.servings} portions)\n\n"
+            f"📝 Détail des ingrédients :\n"
         )
+        for ing in cost.breakdown.ingredients:
+            cost_note += f"- {ing.quantity} {ing.unit} {ing.ingredient_name} : {ing.total_cost:.2f} € ({ing.price_source})\n"
         patched = client.patch_cost_data(slug, merged, cost_note)
 
         return {
