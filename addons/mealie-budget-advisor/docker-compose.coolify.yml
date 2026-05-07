@@ -128,7 +128,7 @@ services:
       - 'ADDON_API_URL=${SERVICE_URL_BUDGETAPI}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
       - 'MEALIE_BASE_URL=${SERVICE_URL_MEALIE}'
-    entrypoint: ["sh", "-c", "streamlit run /app/src/mealie_budget_advisor/ui.py --server.port=8503 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none"]
+    entrypoint: ["sh", "-c", "streamlit run /usr/local/lib/python3.11/site-packages/mealie_budget_advisor/ui.py --server.port=8503 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8503/_stcore/health || exit 1"]
       interval: 30s
