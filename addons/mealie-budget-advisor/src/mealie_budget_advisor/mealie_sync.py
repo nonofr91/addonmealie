@@ -196,7 +196,7 @@ class MealieClient:
     def patch_cost_data(
         self, slug: str, extras: dict[str, str], cost_note: str
     ) -> bool:
-        """Patch extras ET notes en un seul appel PATCH atomique."""
+        """Publie extras ET notes de coût sur la recette."""
         recipe = self.get_recipe(slug)
         if not recipe:
             return False
@@ -220,9 +220,11 @@ class MealieClient:
             existing_notes.append({"title": "", "text": cost_note})
 
         try:
-            response = self.session.patch(
+            recipe["extras"] = extras_payload
+            recipe["notes"] = existing_notes
+            response = self.session.put(
                 f"{self.base_url}/api/recipes/{slug}",
-                json={"extras": extras_payload, "notes": existing_notes},
+                json=recipe,
                 timeout=30,
             )
             response.raise_for_status()
