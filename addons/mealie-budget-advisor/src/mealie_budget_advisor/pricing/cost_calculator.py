@@ -9,6 +9,7 @@ from ..mealie_sync import MealieClient
 from ..models.cost import CostBreakdown, IngredientCost, RecipeCost
 from ..recipe_extras import build_addon_extras, merge_extras, read_override
 from .ingredient_matcher import IngredientMatcher
+from .ingredient_weights import get_ingredient_weight
 from .manual_pricer import ManualPricer
 from .open_prices_client import OpenPricesClient
 
@@ -105,6 +106,9 @@ class CostCalculator:
                 unit=unit,
                 price_per_unit=self._calculate_price_per_unit(price, quantity),
                 total_cost=price,
+                display_quantity=self._format_display_quantity(quantity, unit),
+                priced_quantity=self._format_priced_quantity(name, quantity, unit, source),
+                pricing_detail=self._format_pricing_detail(name, quantity, unit, price, source),
                 price_source=source,
                 confidence=confidence,
             )
@@ -190,6 +194,97 @@ class CostCalculator:
         if quantity == 0:
             return 0.0
         return round(total_price / quantity, 4)
+
+    def _format_display_quantity(self, quantity: float, unit: str) -> str:
+        return f"{self._format_number(quantity)} {self._french_unit(unit, quantity)}"
+
+    def _format_priced_quantity(
+        self,
+        ingredient_name: str,
+        quantity: float,
+        unit: str,
+        source: str,
+    ) -> str:
+        if source == "free":
+            return "gratuit"
+
+        qty_base, unit_base = self.matcher.normalize_quantity(quantity, unit)
+        if unit_base == "unit":
+            weight_kg = qty_base * get_ingredient_weight(ingredient_name)
+            return self._format_weight(weight_kg)
+        if unit_base == "ml":
+            return self._format_weight(self.matcher._estimate_ml_as_kg(ingredient_name, qty_base))
+        if unit_base == "kg":
+            return self._format_weight(qty_base)
+        if unit_base == "l":
+            return self._format_volume_l(qty_base)
+        return f"{self._format_number(qty_base)} {self._french_unit(unit_base, qty_base)}"
+
+    def _format_pricing_detail(
+        self,
+        ingredient_name: str,
+        quantity: float,
+        unit: str,
+        total_price: float,
+        source: str,
+    ) -> str:
+        if source == "free":
+            return "Ingrédient considéré comme gratuit"
+        priced_quantity = self._format_priced_quantity(ingredient_name, quantity, unit, source)
+        if total_price <= 0:
+            return f"Quantité valorisée : {priced_quantity}"
+        if priced_quantity.endswith("kg"):
+            qty = float(priced_quantity.replace(" kg", "").replace(",", "."))
+            unit_price = total_price / qty if qty else 0.0
+            return f"{priced_quantity} × {self._format_currency(unit_price)}/kg"
+        if priced_quantity.endswith("g"):
+            qty_g = float(priced_quantity.replace(" g", "").replace(",", "."))
+            qty_kg = qty_g / 1000
+            unit_price = total_price / qty_kg if qty_kg else 0.0
+            return f"{priced_quantity} × {self._format_currency(unit_price)}/kg"
+        if priced_quantity.endswith("cl"):
+            qty_cl = float(priced_quantity.replace(" cl", "").replace(",", "."))
+            qty_l = qty_cl / 100
+            unit_price = total_price / qty_l if qty_l else 0.0
+            return f"{priced_quantity} × {self._format_currency(unit_price)}/l"
+        if priced_quantity.endswith("l"):
+            qty_l = float(priced_quantity.replace(" l", "").replace(",", "."))
+            unit_price = total_price / qty_l if qty_l else 0.0
+            return f"{priced_quantity} × {self._format_currency(unit_price)}/l"
+        return f"Quantité valorisée : {priced_quantity}"
+
+    def _format_weight(self, weight_kg: float) -> str:
+        if weight_kg < 1:
+            return f"{self._format_number(weight_kg * 1000)} g"
+        return f"{self._format_number(weight_kg)} kg"
+
+    def _format_volume_l(self, volume_l: float) -> str:
+        if volume_l < 1:
+            return f"{self._format_number(volume_l * 100)} cl"
+        return f"{self._format_number(volume_l)} l"
+
+    def _french_unit(self, unit: str, quantity: float) -> str:
+        units = {
+            "unit": "pièce" if quantity <= 1 else "pièces",
+            "g": "g",
+            "kg": "kg",
+            "ml": "ml",
+            "cl": "cl",
+            "l": "l",
+            "tsp": "cuillère à café" if quantity <= 1 else "cuillères à café",
+            "tbsp": "cuillère à soupe" if quantity <= 1 else "cuillères à soupe",
+            "cup": "tasse" if quantity <= 1 else "tasses",
+        }
+        return units.get(unit, unit)
+
+    def _format_number(self, value: float) -> str:
+        rounded = round(value, 2)
+        if rounded.is_integer():
+            return str(int(rounded))
+        return f"{rounded:.2f}".replace(".", ",")
+
+    def _format_currency(self, value: float) -> str:
+        return f"{value:.2f} €".replace(".", ",")
 
     def sync_recipe_cost(
         self,

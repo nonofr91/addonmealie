@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mealie-budget-advisor"
-version = "0.2.13"
+version = "0.2.14"
 description = "Addon Mealie pour l'estimation des coûts et l'assistance au choix des recettes selon le budget"
 readme = "README.md"
 requires-python = ">=3.10"

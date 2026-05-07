@@ -450,21 +450,41 @@ with tabs[4]:
                         "manual": "🟢",
                         "open_prices": "🔵",
                         "estimated": "🟡",
+                        "free": "⚪",
                         "unknown": "⚪",
                     }
                     return colors.get(source, "⚪")
 
+                def get_source_label(source):
+                    labels = {
+                        "manual": "Prix manuel",
+                        "open_prices": "Open Prices",
+                        "estimated": "Estimation",
+                        "free": "Gratuit",
+                        "unknown": "Inconnu",
+                    }
+                    return labels.get(source, source or "Inconnu")
+
                 ing_data = []
                 for ing in ingredients:
+                    source = ing.get("price_source")
                     ing_data.append({
-                        "Source": get_source_color(ing.get("price_source")),
+                        "Source": f"{get_source_color(source)} {get_source_label(source)}",
                         "Ingrédient": ing.get("ingredient_name"),
-                        "Quantité": f"{ing.get('quantity')} {ing.get('unit')}",
-                        "Coût (€)": f"{ing.get('total_cost'):.2f}",
+                        "Quantité recette": ing.get("display_quantity") or f"{ing.get('quantity')} {ing.get('unit')}",
+                        "Quantité valorisée": ing.get("priced_quantity") or "",
+                        "Calcul": ing.get("pricing_detail") or "",
+                        "Coût": f"{ing.get('total_cost'):.2f} €".replace(".", ","),
                         "Confiance": f"{ing.get('confidence') * 100:.0f}%",
                     })
 
                 st.dataframe(ing_data, use_container_width=True, hide_index=True)
+                ingredients_total = sum(float(ing.get("total_cost") or 0) for ing in ingredients)
+                st.caption(f"Somme des lignes affichées : {ingredients_total:.2f} €".replace(".", ","))
+                st.caption(
+                    "La colonne « Quantité valorisée » indique la quantité réellement utilisée "
+                    "pour convertir les pièces, cuillères et autres unités culinaires en poids ou volume."
+                )
 
                 # Répartition des sources
                 st.divider()
@@ -474,7 +494,7 @@ with tabs[4]:
                     cols = st.columns(len(sources))
                     for i, (src, count) in enumerate(sources.items()):
                         with cols[i]:
-                            st.metric(src, count)
+                            st.metric(get_source_label(src), count)
 
             else:
                 st.info("Aucun ingrédient trouvé")

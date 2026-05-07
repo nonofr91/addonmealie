@@ -14,6 +14,9 @@ class IngredientCost(BaseModel):
     unit: str = Field(default="unit", description="Unité (g, kg, ml, l, cup, tbsp, tsp, unit)")
     price_per_unit: float = Field(default=0.0, description="Prix par unité de base (€)")
     total_cost: float = Field(default=0.0, description="Coût total pour cette quantité (€)")
+    display_quantity: str = Field(default="", description="Quantité lisible en français")
+    priced_quantity: str = Field(default="", description="Quantité réellement valorisée")
+    pricing_detail: str = Field(default="", description="Détail lisible du calcul de prix")
     price_source: str = Field(
         default="unknown",
         description="Source du prix: open_prices | manual | estimated | unknown"
