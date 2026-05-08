@@ -1,0 +1,47 @@
+{
+  "01.1.1": {
+    "min_price_per_kg": 0.5,
+    "max_price_per_kg": 10.0,
+    "category_name": "Légumes frais"
+  },
+  "01.1.2": {
+    "min_price_per_kg": 1.0,
+    "max_price_per_kg": 15.0,
+    "category_name": "Fruits frais"
+  },
+  "02.1.1": {
+    "min_price_per_kg": 5.0,
+    "max_price_per_kg": 50.0,
+    "category_name": "Viande"
+  },
+  "02.1.2": {
+    "min_price_per_kg": 8.0,
+    "max_price_per_kg": 40.0,
+    "category_name": "Poisson"
+  },
+  "01.1.4": {
+    "min_price_per_kg": 1.5,
+    "max_price_per_kg": 8.0,
+    "category_name": "Céréales et féculents"
+  },
+  "01.1.5": {
+    "min_price_per_l": 2.0,
+    "max_price_per_l": 20.0,
+    "category_name": "Huiles et graisses"
+  },
+  "01.1.6": {
+    "min_price_per_kg": 1.5,
+    "max_price_per_kg": 5.0,
+    "category_name": "Sucre"
+  },
+  "01.1.7": {
+    "min_price_per_kg": 5.0,
+    "max_price_per_kg": 30.0,
+    "category_name": "Produits laitiers et œufs"
+  },
+  "01.1.8": {
+    "min_price_per_kg": 10.0,
+    "max_price_per_kg": 100.0,
+    "category_name": "Café, thé et cacao"
+  }
+}

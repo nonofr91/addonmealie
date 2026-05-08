@@ -1,0 +1,16 @@
+services:
+  ingredient-price-collector:
+    build: .
+    container_name: ingredient-price-collector
+    ports:
+      - "${PRICE_COLLECTOR_API_PORT:-8004}:8004"
+    environment:
+      - PRICE_COLLECTOR_API_HOST=0.0.0.0
+      - PRICE_COLLECTOR_API_PORT=8004
+      - PRICE_COLLECTOR_DATA_DIR=/app/data
+      - PRICE_COLLECTOR_DATABASE_PATH=/app/data/prices.sqlite3
+      - PRICE_COLLECTOR_DEFAULT_CURRENCY=${PRICE_COLLECTOR_DEFAULT_CURRENCY:-EUR}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

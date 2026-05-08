@@ -47,6 +47,7 @@ def _build_calculator_with_stub_matcher(recipe: dict) -> CostCalculator:
     # Stub matcher.find_price : retourne un prix connu pour tout ingrédient
     calculator.matcher = MagicMock()
     calculator.matcher.parse_ingredient_note.side_effect = lambda note: (100.0, "g", note)
+    calculator.matcher.normalize_quantity.return_value = (0.1, "kg")
     calculator.matcher.find_price.return_value = (1.00, "manual", 1.0)
 
     # Stub get_recipe (HTTP directe) pour qu'il retourne la recette fournie
