@@ -1,0 +1,63 @@
+# Configuration du service drivecarrefour
+
+# Carrefour
+carrefour:
+  base_url: "https://www.carrefour.fr"
+  search_endpoint: "/s?q={query}"
+  request_timeout: 30.0  # secondes
+  max_retries: 3
+  cache_enabled: true
+  cache_expire: 86400  # 24h en secondes
+  cache_dir: "~/.cache/drivecarrefour"
+  user_agent_rotation: true
+
+# Mealie
+mealie:
+  api_url: "http://localhost:9000/api"
+  api_token: ""  # À remplir avec ton token Mealie
+  default_group: "1"  # ID du groupe par défaut
+
+# API (FastAPI)
+api:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false
+  title: "DriveCarrefour API"
+  description: "Service d'optimisation des listes de courses avec Carrefour"
+  version: "1.0.0"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "drivecarrefour.log"
+
+# Scraping
+scraping:
+  max_concurrent_requests: 5
+  delay_between_requests: 1.0  # secondes (pour éviter les bans)
+  proxies: []  # Liste de proxies au format "http://host:port"
+
+# Synonymes personnalisés (étend ceux par défaut)
+custom_synonyms:
+  # Exemple :
+  # "mon-produit": ["nom alternatif 1", "nom alternatif 2"]
+
+# Unités personnalisées
+custom_units:
+  # Exemple :
+  # "mon-unite": ["variante 1", "variante 2"]
+
+# Préférences utilisateur
+user_preferences:
+  # Marques préférées (priorité lors du choix)
+  preferred_brands: []
+  
+  # Marques à exclure
+  excluded_brands: []
+  
+  # Catégories à exclure
+  excluded_categories: []
+  
+  # Budget maximum par liste de courses (optionnel)
+  max_budget: null
