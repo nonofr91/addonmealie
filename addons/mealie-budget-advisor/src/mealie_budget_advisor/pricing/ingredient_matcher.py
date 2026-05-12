@@ -9,6 +9,7 @@ from rapidfuzz import fuzz, process
 from .ingredient_weights import get_ingredient_weight
 from .manual_pricer import ManualPricer
 from .open_prices_client import OpenPricesClient
+from .price_collector_client import PriceCollectorClient
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +56,11 @@ class IngredientMatcher:
         self,
         manual_pricer: Optional[ManualPricer] = None,
         open_prices: Optional[OpenPricesClient] = None,
+        price_collector: Optional[PriceCollectorClient] = None,
     ) -> None:
         self.manual = manual_pricer or ManualPricer()
         self.open_prices = open_prices or OpenPricesClient()
+        self.price_collector = price_collector
         self._open_prices_enabled = True
 
     def parse_ingredient_note(self, note: str) -> tuple[float, str, str]:
@@ -200,7 +203,21 @@ class IngredientMatcher:
             total_price = qty_base * manual_price.price_per_unit * price_multiplier
             return round(total_price, 2), "manual", 1.0
 
-        # 2. Chercher via Open Prices (si activé)
+        # 2. Chercher via Price Collector (addon interne — données fiables)
+        if self.price_collector:
+            result = self.price_collector.search_price(ingredient_name)
+            if result:
+                price_per_unit, pc_unit = result
+                qty_base, unit_base = self.normalize_quantity(quantity, unit)
+                if unit_base == "unit":
+                    weight_per_unit = get_ingredient_weight(ingredient_name)
+                    qty_base = qty_base * weight_per_unit
+                    unit_base = "kg"
+                price_multiplier = self._get_price_multiplier(pc_unit, unit_base)
+                total_price = qty_base * price_per_unit * price_multiplier
+                return round(total_price, 2), "price_collector", 0.9
+
+        # 3. Chercher via Open Prices (si activé)
         if use_open_prices and self._open_prices_enabled:
             prices = self.open_prices.search_prices(ingredient_name, limit=5)
 

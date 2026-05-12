@@ -12,6 +12,7 @@ from .ingredient_matcher import IngredientMatcher
 from .ingredient_weights import get_ingredient_weight
 from .manual_pricer import ManualPricer
 from .open_prices_client import OpenPricesClient
+from .price_collector_client import PriceCollectorClient
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,15 @@ class CostCalculator:
         else:
             manual = ManualPricer()
             open_prices = OpenPricesClient()
-            self.matcher = IngredientMatcher(manual, open_prices)
+            price_collector = None
+            try:
+                from ..config import get_config
+                cfg = get_config()
+                if cfg.price_collector_url:
+                    price_collector = PriceCollectorClient(cfg.price_collector_url)
+            except Exception:
+                pass
+            self.matcher = IngredientMatcher(manual, open_prices, price_collector)
 
         self._session = requests.Session()
         self._session.headers.update({
@@ -289,6 +298,7 @@ class CostCalculator:
     def _format_source_label(self, source: str) -> str:
         labels = {
             "manual": "prix manuel",
+            "price_collector": "prix collecté",
             "open_prices": "Open Prices",
             "estimated": "estimation",
             "free": "gratuit",

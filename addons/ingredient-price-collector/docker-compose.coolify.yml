@@ -1,9 +1,8 @@
 services:
-  price-collector:
+  priceapi:
     image: 'ghcr.io/nonofr91/ingredient-price-collector:0.1.0'
     environment:
-      - SERVICE_FQDN_PRICE_COLLECTOR_8004
-      - 'SERVICE_URL_PRICE_COLLECTOR=${SERVICE_URL_PRICE_COLLECTOR}'
+      - SERVICE_FQDN_PRICEAPI_8004
       - 'OPEN_PRICES_BASE_URL=${OPEN_PRICES_BASE_URL:-https://prices.openfoodfacts.org/api/v1}'
       - 'INSEE_IPC_BASE_URL=${INSEE_IPC_BASE_URL:-https://api.insee.fr}'
       - 'INSEE_IPC_TOKEN=${INSEE_IPC_TOKEN}'
@@ -11,14 +10,13 @@ services:
       - 'DRIVE_CACHE_TTL_HOURS=${DRIVE_CACHE_TTL_HOURS:-24}'
       - 'DRIVE_RATE_LIMIT_RPM=${DRIVE_RATE_LIMIT_RPM:-10}'
       - 'LOG_LEVEL=${LOG_LEVEL:-info}'
-      - ADDON_API_HOST=0.0.0.0
-      - ADDON_API_PORT=8004
+      - PRICE_COLLECTOR_API_HOST=0.0.0.0
+      - PRICE_COLLECTOR_API_PORT=8004
+      - 'PRICE_COLLECTOR_DEFAULT_CURRENCY=${PRICE_COLLECTOR_DEFAULT_CURRENCY:-EUR}'
     volumes:
       - 'price-collector-data:/app/data'
     entrypoint: ["uvicorn", "ingredient_price_collector.api:app", "--host", "0.0.0.0", "--port", "8004", "--log-level", "info"]
-    depends_on:
-      mealie:
-        condition: service_started
 
 volumes:
   price-collector-data:
+

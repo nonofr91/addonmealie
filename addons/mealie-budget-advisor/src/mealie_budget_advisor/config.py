@@ -48,6 +48,9 @@ class BudgetConfig:
         self.ui_port = int(os.environ.get("ADDON_UI_PORT", "8503"))
         self.api_url = os.environ.get("ADDON_API_URL", f"http://localhost:{self.api_port}")
 
+        # Price Collector (addon interne)
+        self.price_collector_url = os.environ.get("PRICE_COLLECTOR_URL", "").rstrip("/")
+
         # Open Prices
         self.open_prices_base_url = os.environ.get(
             "OPEN_PRICES_BASE_URL", "https://prices.openfoodfacts.org/api/v1"
@@ -118,6 +121,7 @@ class BudgetConfig:
             "api_port": self.api_port,
             "ui_port": self.ui_port,
             "api_url": self.api_url,
+            "price_collector_url": self.price_collector_url or "(non configuré)",
             "open_prices_base_url": self.open_prices_base_url,
             "enable_open_prices": self.enable_open_prices,
             "enable_manual_prices": self.enable_manual_prices,
