@@ -32,7 +32,15 @@ class BudgetManager:
             mealie_api_key: Clé API Mealie (requis si use_extras=True)
         """
         self.config_dir = config_dir or Path("config")
-        self.config_dir.mkdir(exist_ok=True)
+        # Try to create the directory, fallback to /tmp if permission denied
+        try:
+            self.config_dir.mkdir(exist_ok=True)
+        except (PermissionError, OSError):
+            logger.warning(
+                f"Cannot create config directory {self.config_dir}, using /tmp/config as fallback"
+            )
+            self.config_dir = Path("/tmp/config")
+            self.config_dir.mkdir(exist_ok=True)
         self.budget_file = self.config_dir / "budgets.json"
         self._budgets: dict[str, dict] = {}
         self._use_extras = use_extras
