@@ -130,7 +130,7 @@ class IngredientMatcher:
         # Priorité aux unités métriques explicites
         if unit_lower in ["g", "kg", "ml", "l", "cl", "mg"]:
             return unit_lower
-        
+
         # Gestion spéciale des cuillères - café avant soupe pour éviter les faux positifs
         if "café" in unit_lower:
             return "tsp"
@@ -138,6 +138,29 @@ class IngredientMatcher:
             return "tbsp"
 
         return self.UNIT_ALIASES.get(unit_lower, "unit")
+
+    def _normalize_ingredient_name(self, name: str) -> str:
+        """Normalise un nom d'ingrédient pour le matching.
+
+        Supprime les préfixes courants comme "d'", "de", "1 barquettes d'", etc.
+        """
+        name = name.strip().lower()
+        
+        # Supprimer les préfixes numériques + quantités + articles
+        patterns_to_remove = [
+            r"^\d+\s+(?:barquettes?|boîtes?|paquets?|bouteilles?|verres?|tasses?|cuill[èe]res?|gouttes?|pincées?)\s+d['e]?\s*",
+            r"^\d+/\d+\s+(?:barquettes?|boîtes?|paquets?|bouteilles?)\s+d['e]?\s*",
+            r"^(?:de|d')\s+",
+            r"^\d+\s*(?:barquettes?|boîtes?|paquets?|bouteilles?)\s+",
+        ]
+        
+        for pattern in patterns_to_remove:
+            name = re.sub(pattern, "", name, flags=re.IGNORECASE)
+        
+        # Nettoyer les espaces multiples
+        name = re.sub(r"\s+", " ", name).strip()
+        
+        return name
 
     def normalize_quantity(
         self, quantity: float, unit: str
@@ -205,7 +228,9 @@ class IngredientMatcher:
 
         # 2. Chercher via Price Collector (addon interne — données fiables)
         if self.price_collector:
-            result = self.price_collector.search_price(ingredient_name)
+            # Essayer avec le nom normalisé (sans préfixes)
+            normalized_name = self._normalize_ingredient_name(ingredient_name)
+            result = self.price_collector.search_price(normalized_name)
             if result:
                 price_per_unit, pc_unit = result
                 qty_base, unit_base = self.normalize_quantity(quantity, unit)
