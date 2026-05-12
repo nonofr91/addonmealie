@@ -1,11 +1,11 @@
 services:
   mealie-addon:
-    image: 'ghcr.io/nonofr91/mealie-import-addon:0.6.3'
+    image: 'ghcr.io/nonofr91/mealie-import-addon:0.6.4'
     environment:
       - SERVICE_FQDN_MEALIEADDON_8501
       - SERVICE_URL_MEALIEADDON_8501
-      - 'MEALIE_BASE_URL=https://mealie-zm8t8rcp7c48cw7oyz5gvtun.int.cubixmedia.fr'
-      - 'MEALIE_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb25nX3Rva2VuIjp0cnVlLCJpZCI6ImMzZGY0YjFlLTk4MTctNGI2MS05YzU3LTY0MDgzNjNmYWIwMiIsIm5hbWUiOiJBUEkiLCJpbnRlZ3JhdGlvbl9pZCI6ImdlbmVyaWMiLCJleHAiOjE5MzYxMTQ1NzF9.3rdbgAxiekacd3EJlK0VaowCEYJbhCl1h-ATUuqTbfY'
+      - 'MEALIE_BASE_URL=${MEALIE_BASE_URL}'
+      - 'MEALIE_API_KEY=${MEALIE_API_KEY}'
       - 'ADDON_SECRET_KEY=${ADDON_SECRET_KEY:-}'
       - 'ADDON_API_URL=http://localhost:8000'
       - 'ADDON_API_PORT=8000'
@@ -30,6 +30,4 @@ services:
     entrypoint:
       - sh
       - '-c'
-      - |
-        uvicorn mealie_import_orchestrator.api:app --host 0.0.0.0 --port 8000 &
-        streamlit run /usr/local/lib/python3.12/site-packages/mealie_import_orchestrator/ui.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none
+      - 'mealie-addon-api & sleep 2 && mealie-addon-ui'
