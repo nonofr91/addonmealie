@@ -112,13 +112,29 @@ class OpenPricesClient:
         try:
             product = item.get("product", {})
 
+            # Vérifier que les champs requis sont présents
+            quantity = item.get("quantity")
+            quantity_unit = item.get("quantity_unit")
+            price = item.get("price")
+
+            # Ignorer les prix sans information de quantité/unité
+            if quantity is None or quantity_unit is None:
+                logger.debug(f"Skipping price without quantity/unit: {item.get('id')}")
+                return None
+
+            # Ignorer les prix sans nom de produit
+            product_name = product.get("product_name") or product.get("name")
+            if not product_name:
+                logger.debug(f"Skipping price without product name: {item.get('id')}")
+                return None
+
             return OpenPrice(
-                product_name=product.get("product_name") or product.get("name", "Unknown"),
+                product_name=product_name,
                 product_code=product.get("code"),
-                price=float(item.get("price", 0)),
+                price=float(price),
                 currency=item.get("currency", "EUR"),
-                quantity=float(item.get("quantity", 1) or 1),
-                unit=item.get("quantity_unit", "unit"),
+                quantity=float(quantity),
+                unit=quantity_unit,
                 store_name=item.get("location", {}).get("name") if isinstance(item.get("location"), dict) else None,
                 store_location=item.get("location", {}).get("address") if isinstance(item.get("location"), dict) else None,
                 date_collected=item.get("date"),
