@@ -236,7 +236,9 @@ class IngredientMatcher:
         # 2. Chercher via Price Collector (addon interne — données fiables)
         if self.price_collector:
             normalized = self._normalize_ingredient_name(ingredient_name)
-            logger.info(f"Price search: '{ingredient_name}' -> normalized: '{normalized}'")
+            # Debug: afficher les codes Unicode des caractères
+            char_codes = [f"{c}=U+{ord(c):04X}" for c in ingredient_name[:10]]
+            logger.info(f"Price search: '{ingredient_name}' -> normalized: '{normalized}' [chars: {char_codes}]")
             result = self.price_collector.search_price(normalized)
             logger.info(f"Price collector result for '{normalized}': {result}")
             if result:
