@@ -2,7 +2,7 @@
 httpx>=0.25.0
 selectolax>=0.3.15
 fake-useragent>=2.2.0
-tenacity>=8.2.3
+tenacity>=9.1.4
 
 # Caching
 diskcache>=5.6.3
