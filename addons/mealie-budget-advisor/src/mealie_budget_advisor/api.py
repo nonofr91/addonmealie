@@ -28,7 +28,12 @@ cost_calculator = CostCalculator(
     config.mealie_api_key,
 )
 manual_pricer = ManualPricer()
-budget_manager = BudgetManager(config_dir=config.config_dir)
+budget_manager = BudgetManager(
+    config_dir=config.config_dir,
+    use_extras=True,  # Utiliser Mealie extras pour la persistance
+    mealie_base_url=config.mealie_base_url,
+    mealie_api_key=config.mealie_api_key,
+)
 budget_planner = BudgetAwarePlanner()
 _scheduler: Optional[BudgetScheduler] = None
 

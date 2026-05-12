@@ -75,9 +75,9 @@ class BudgetConfig:
             "MONTHLY_COST_REFRESH_CRON", "0 3 1 * *"
         ).strip()
 
-        # Data paths
-        self.data_dir = Path(__file__).parent.parent.parent / "data"
-        self.config_dir = Path(__file__).parent.parent.parent / "config"
+        # Data paths - use absolute paths for Docker volume mounts
+        self.data_dir = Path("/app/data")
+        self.config_dir = Path("/app/config")
 
         # Logs
         self.log_level = os.environ.get("LOG_LEVEL", "INFO")
