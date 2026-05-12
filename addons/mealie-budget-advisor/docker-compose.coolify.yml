@@ -1,6 +1,6 @@
 services:
   budget-api:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.35'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.36'
     environment:
       - SERVICE_FQDN_BUDGETAPI_8003
       - 'MEALIE_BASE_URL=${MEALIE_BASE_URL}'
@@ -30,7 +30,7 @@ services:
       - info
 
   budget-ui:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.35'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.36'
     environment:
       - SERVICE_FQDN_BUDGETUI_8503
       - SERVICE_URL_BUDGETUI_8503

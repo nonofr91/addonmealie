@@ -362,6 +362,9 @@ class IngredientMatcher:
             "fromage": 10.0, "emmental": 8.0, "gruyère": 12.0,
             "mozzarella": 6.0, "parmesan": 15.0,
 
+            # Viandes
+            "porc": 12.0, "filet": 15.0, "filets": 15.0,
+
             # Huiles/condiments
             "huile": 5.0, "vinaigre": 2.0, "moutarde": 3.0, "ketchup": 2.5,
 
@@ -386,7 +389,8 @@ class IngredientMatcher:
         elif unit_base == "l":
             return round(qty_base * base_price_per_kg * 0.8, 2)  # Légèrement moins cher que viande
         else:
-            return round(qty_base * base_price_per_kg * 0.1, 2)  # unités: estimation
+            # Pour les unités (pièces), on ne divise pas par 10 - le prix par kg est déjà correct
+            return round(qty_base * base_price_per_kg, 2)
 
     def match_ingredient_to_product(
         self,
