@@ -139,6 +139,9 @@ class IngredientMatcher:
 
         return self.UNIT_ALIASES.get(unit_lower, "unit")
 
+    # Variantes d'apostrophes Unicode à normaliser
+    APOSTROPHE_VARIANTS = "\u0027\u2019\u2018\u02bc\u00b4\u201a\u201b"
+    
     def _normalize_ingredient_name(self, name: str) -> str:
         """Normalise un nom d'ingrédient pour le matching.
 
@@ -146,8 +149,9 @@ class IngredientMatcher:
         """
         name = name.strip().lower()
         
-        # Normaliser les apostrophes (remplacer typographique U+2019 par droite U+0027)
-        name = name.replace("\u2019", "\u0027")
+        # Normaliser toutes les variantes d'apostrophes vers U+0027
+        for variant in self.APOSTROPHE_VARIANTS:
+            name = name.replace(variant, "\u0027")
         
         # Supprimer les préfixes numériques + quantités + articles
         patterns_to_remove = [
