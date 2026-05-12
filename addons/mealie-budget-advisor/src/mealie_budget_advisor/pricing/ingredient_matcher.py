@@ -196,7 +196,7 @@ class IngredientMatcher:
         Returns:
             Tuple (prix_total, source, confiance)
         """
-        normalized_name = ingredient_name.lower().strip()
+        normalized_name = self._normalize_ingredient_name(ingredient_name)
         
         # Conversion spéciale: moules en litres → kg (1l de moules ≈ 0.8 kg)
         if "moule" in normalized_name and unit == "l":
@@ -228,8 +228,6 @@ class IngredientMatcher:
 
         # 2. Chercher via Price Collector (addon interne — données fiables)
         if self.price_collector:
-            # Essayer avec le nom normalisé (sans préfixes)
-            normalized_name = self._normalize_ingredient_name(ingredient_name)
             result = self.price_collector.search_price(normalized_name)
             if result:
                 price_per_unit, pc_unit = result
