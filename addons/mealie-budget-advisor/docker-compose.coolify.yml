@@ -1,6 +1,6 @@
 services:
   budget-api:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.26'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.27'
     environment:
       - SERVICE_FQDN_BUDGETAPI_8003
       - 'MEALIE_BASE_URL=${MEALIE_BASE_URL}'
@@ -19,10 +19,18 @@ services:
     volumes:
       - 'budget-data:/app/data'
       - 'budget-config:/app/config'
-    entrypoint: ["uvicorn", "mealie_budget_advisor.api:app", "--host", "0.0.0.0", "--port", "8003", "--log-level", "info"]
+    entrypoint:
+      - uvicorn
+      - 'mealie_budget_advisor.api:app'
+      - '--host'
+      - 0.0.0.0
+      - '--port'
+      - '8003'
+      - '--log-level'
+      - info
 
   budget-ui:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.26'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.27'
     environment:
       - SERVICE_FQDN_BUDGETUI_8503
       - SERVICE_URL_BUDGETUI_8503
@@ -34,7 +42,9 @@ services:
       - '-c'
       - 'streamlit run /usr/local/lib/python3.11/site-packages/mealie_budget_advisor/ui.py --server.port=8503 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none'
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8503/_stcore/health || exit 1"]
+      test:
+        - CMD-SHELL
+        - 'curl -f http://localhost:8503/_stcore/health || exit 1'
       interval: 30s
       timeout: 10s
       retries: 3
@@ -44,5 +54,5 @@ services:
         condition: service_started
 
 volumes:
-  budget-data:
-  budget-config:
+  budget-data: null
+  budget-config: null

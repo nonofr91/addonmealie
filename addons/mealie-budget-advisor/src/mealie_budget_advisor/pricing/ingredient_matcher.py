@@ -445,33 +445,6 @@ class IngredientMatcher:
 
         return None
 
-    def _normalize_ingredient_name(self, name: str) -> str:
-        """Normalise un nom d'ingrédient pour le matching."""
-        name = name.lower().strip()
-
-        # Enlever les articles
-        name = re.sub(r"^(le|la|les|un|une|des|de|d')\s+", "", name, flags=re.IGNORECASE)
-
-        # Remplacer les caractères spéciaux
-        name = name.replace("é", "e").replace("è", "e").replace("ê", "e")
-        name = name.replace("à", "a").replace("â", "a")
-        name = name.replace("ô", "o").replace("ö", "o")
-        name = name.replace("î", "i").replace("ï", "i")
-        name = name.replace("ù", "u").replace("û", "u")
-        name = name.replace("ç", "c")
-
-        # Enlever les parenthèses et leur contenu
-        name = re.sub(r"\([^)]*\)", "", name)
-
-        # Enlever les mots de qualité (bio, frais, etc.)
-        quality_words = ["bio", "frais", "surgelé", "congelé", "nature", "entier"]
-        for word in quality_words:
-            name = re.sub(rf"\b{word}\b", "", name, flags=re.IGNORECASE)
-
-        # Nettoyer les espaces multiples
-        name = re.sub(r"\s+", " ", name).strip()
-
-        return name
 
     def _normalize_product_name(self, name: str) -> str:
         """Normalise un nom de produit Open Prices."""
