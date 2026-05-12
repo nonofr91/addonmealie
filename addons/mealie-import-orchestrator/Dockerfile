@@ -22,7 +22,7 @@ COPY mealie-workflow /app/mealie-workflow
 # Copy and install the addon (includes FastAPI + Streamlit)
 COPY addons/mealie-import-orchestrator /app/addons/mealie-import-orchestrator
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir "/app/addons/mealie-import-orchestrator[mistral]" rapidfuzz
+    pip install --no-cache-dir "/app/addons/mealie-import-orchestrator" rapidfuzz
 
 # Entrypoint script
 RUN chmod +x /app/addons/mealie-import-orchestrator/entrypoint.sh
