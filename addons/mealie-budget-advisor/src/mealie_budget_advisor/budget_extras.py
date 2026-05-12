@@ -67,7 +67,7 @@ def build_budget_extras(budget: BudgetSettings) -> dict[str, str]:
 
     return {
         f"{PREFIX}{period_key}_total": _fmt_float(budget.total_budget),
-        f"{PREFIX}{period_key}_daily": _fmt_float(budget.daily_limit),
+        f"{PREFIX}{period_key}_daily": _fmt_float(budget.budget_per_day),
         f"{PREFIX}{period_key}_updated": now,
     }
 
@@ -94,10 +94,10 @@ def read_budget_from_extras(
     if total is None:
         return None
 
+    # BudgetSettings ne prend pas daily_limit en paramètre, budget_per_day est calculé
     return BudgetSettings(
         period=period,
         total_budget=total,
-        daily_limit=daily or (total / 30),  # Fallback: total/30
     )
 
 
