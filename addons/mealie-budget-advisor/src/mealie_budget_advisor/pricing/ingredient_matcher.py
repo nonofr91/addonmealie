@@ -146,12 +146,14 @@ class IngredientMatcher:
         """
         name = name.strip().lower()
         
+        # Normaliser les apostrophes (remplacer typographique U+2019 par droite U+0027)
+        name = name.replace("\u2019", "\u0027")
+        
         # Supprimer les préfixes numériques + quantités + articles
-        # Note: gérer les deux types d'apostrophes (droite ' U+0027 et typographique ' U+2019)
         patterns_to_remove = [
-            r"^\d+\s+(?:barquettes?|boîtes?|paquets?|bouteilles?|verres?|tasses?|cuill[èe]res?|gouttes?|pincées?)\s+d[''e]?\s*",
-            r"^\d+/\d+\s+(?:barquettes?|boîtes?|paquets?|bouteilles?)\s+d[''e]?\s*",
-            r"^(?:de\s+|d[''])",
+            r"^\d+\s+(?:barquettes?|boîtes?|paquets?|bouteilles?|verres?|tasses?|cuill[èe]res?|gouttes?|pincées?)\s+d['e]?\s*",
+            r"^\d+/\d+\s+(?:barquettes?|boîtes?|paquets?|bouteilles?)\s+d['e]?\s*",
+            r"^(?:de\s+|d')",
             r"^\d+\s*(?:barquettes?|boîtes?|paquets?|bouteilles?)\s+",
         ]
         

@@ -1,6 +1,6 @@
 services:
   budget-api:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.23'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.24'
     environment:
       - SERVICE_FQDN_BUDGETAPI_8003
       - 'MEALIE_BASE_URL=${MEALIE_BASE_URL}'
@@ -22,7 +22,7 @@ services:
     entrypoint: ["uvicorn", "mealie_budget_advisor.api:app", "--host", "0.0.0.0", "--port", "8003", "--log-level", "info"]
 
   budget-ui:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.23'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.24'
     environment:
       - SERVICE_FQDN_BUDGETUI_8503
       - SERVICE_URL_BUDGETUI_8503
