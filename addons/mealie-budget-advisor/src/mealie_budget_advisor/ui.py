@@ -119,12 +119,14 @@ with tabs[1]:
         current_budget = _api("GET", "/budget")
         if current_budget.get("success") and current_budget.get("budget"):
             budget = current_budget.get("budget", {})
+            period = budget.get("period", {})
+            period_label = f"{period.get('year')}-{period.get('month'):02d}"
             b1, b2, b3 = st.columns(3)
             b1.metric("Budget total", f"{budget.get('total_budget', 0):.2f} €")
             b2.metric("Budget effectif", f"{budget.get('effective_budget', 0):.2f} €")
             b3.metric("Par repas", f"{budget.get('budget_per_meal', 0):.2f} €")
 
-            st.caption(f"Période: {budget.get('period', {}).get('period_label', '')}")
+            st.caption(f"Période: {period_label}")
         else:
             st.info("Aucun budget défini pour ce mois")
 
@@ -135,7 +137,9 @@ with tabs[1]:
             budgets = budgets_list.get("budgets", [])
             if budgets:
                 for b in budgets[:5]:
-                    with st.expander(f"{b.get('period', {}).get('period_label')}"):
+                    period = b.get("period", {})
+                    period_label = f"{period.get('year')}-{period.get('month'):02d}"
+                    with st.expander(f"{period_label}"):
                         st.write(f"Total: {b.get('total_budget', 0):.2f} €")
                         st.write(f"Effectif: {b.get('effective_budget', 0):.2f} €")
             else:
