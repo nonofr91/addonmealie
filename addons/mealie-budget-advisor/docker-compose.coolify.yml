@@ -1,6 +1,6 @@
 services:
   budget-api:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.37'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.38'
     environment:
       - SERVICE_FQDN_BUDGETAPI_8003
       - 'MEALIE_BASE_URL=${MEALIE_BASE_URL}'
@@ -9,6 +9,8 @@ services:
       - 'ADDON_API_URL=${SERVICE_URL_BUDGETAPI}'
       - 'PRICE_COLLECTOR_URL=${PRICE_COLLECTOR_URL:-}'
       - 'OPEN_PRICES_BASE_URL=${OPEN_PRICES_BASE_URL:-https://prices.openfoodfacts.org/api/v1}'
+      - 'MISTRAL_API_KEY=${MISTRAL_API_KEY:-}'
+      - 'MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}'
       - 'ENABLE_OPEN_PRICES=${ENABLE_OPEN_PRICES:-true}'
       - 'ENABLE_MANUAL_PRICES=${ENABLE_MANUAL_PRICES:-true}'
       - 'ENABLE_BUDGET_PLANNING=${ENABLE_BUDGET_PLANNING:-true}'
@@ -30,7 +32,7 @@ services:
       - info
 
   budget-ui:
-    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.37'
+    image: 'ghcr.io/nonofr91/mealie-budget-advisor:0.2.38'
     environment:
       - SERVICE_FQDN_BUDGETUI_8503
       - SERVICE_URL_BUDGETUI_8503

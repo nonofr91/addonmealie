@@ -36,14 +36,16 @@ class CostCalculator:
             manual = ManualPricer()
             open_prices = OpenPricesClient()
             price_collector = None
+            mistral_api_key = None
             try:
                 from ..config import get_config
                 cfg = get_config()
                 if cfg.price_collector_url:
                     price_collector = PriceCollectorClient(cfg.price_collector_url)
+                mistral_api_key = cfg.mistral_api_key
             except Exception:
                 pass
-            self.matcher = IngredientMatcher(manual, open_prices, price_collector)
+            self.matcher = IngredientMatcher(manual, open_prices, price_collector, mistral_api_key)
 
         self._session = requests.Session()
         self._session.headers.update({

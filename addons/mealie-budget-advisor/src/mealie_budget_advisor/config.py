@@ -56,6 +56,10 @@ class BudgetConfig:
             "OPEN_PRICES_BASE_URL", "https://prices.openfoodfacts.org/api/v1"
         ).rstrip("/")
 
+        # Mistral AI (pour parsing d'ingrédients)
+        self.mistral_api_key = os.environ.get("MISTRAL_API_KEY", "")
+        self.mistral_model = os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
+
         # Feature flags
         self._enable_open_prices = (
             os.environ.get("ENABLE_OPEN_PRICES", "true").lower() == "true"
@@ -123,6 +127,8 @@ class BudgetConfig:
             "api_url": self.api_url,
             "price_collector_url": self.price_collector_url or "(non configuré)",
             "open_prices_base_url": self.open_prices_base_url,
+            "mistral_model": self.mistral_model,
+            "mistral_enabled": bool(self.mistral_api_key),
             "enable_open_prices": self.enable_open_prices,
             "enable_manual_prices": self.enable_manual_prices,
             "enable_budget_planning": self.enable_budget_planning,

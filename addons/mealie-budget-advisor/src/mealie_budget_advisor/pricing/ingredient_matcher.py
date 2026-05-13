@@ -8,6 +8,7 @@ from rapidfuzz import fuzz, process
 
 from .ingredient_weights import get_ingredient_weight
 from .manual_pricer import ManualPricer
+from .mistral_parser import MistralIngredientParser
 from .open_prices_client import OpenPricesClient
 from .price_collector_client import PriceCollectorClient
 
@@ -57,11 +58,15 @@ class IngredientMatcher:
         manual_pricer: Optional[ManualPricer] = None,
         open_prices: Optional[OpenPricesClient] = None,
         price_collector: Optional[PriceCollectorClient] = None,
+        mistral_api_key: Optional[str] = None,
     ) -> None:
         self.manual = manual_pricer or ManualPricer()
         self.open_prices = open_prices or OpenPricesClient()
         self.price_collector = price_collector
         self._open_prices_enabled = True
+        
+        # Initialiser le parser Mistral
+        self.mistral_parser = MistralIngredientParser(api_key=mistral_api_key)
 
     def parse_ingredient_note(self, note: str) -> tuple[float, str, str]:
         """Parse une note d'ingrédient Mealie.
@@ -120,7 +125,17 @@ class IngredientMatcher:
 
                 return qty, unit, name
 
-        # Fallback: tout est le nom
+        # Fallback: essayer Mistral AI si disponible
+        if self.mistral_parser and self.mistral_parser.enabled:
+            mistral_result = self.mistral_parser.parse(note)
+            if mistral_result:
+                qty, unit, name = mistral_result
+                # Normaliser l'unité si nécessaire
+                unit = self._normalize_unit(unit)
+                logger.debug(f"Mistral parsed: {note} → {qty} {unit} {name}")
+                return qty, unit, name
+
+        # Dernier fallback: tout est le nom
         return 1.0, "unit", note
 
     def _normalize_unit(self, unit: str) -> str:
