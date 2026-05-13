@@ -4,7 +4,10 @@ import json
 import logging
 from typing import Optional, Tuple
 
-from mistralai.client import MistralClient
+try:
+    from mistralai import Mistral
+except ImportError:
+    Mistral = None
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +27,15 @@ class MistralIngredientParser:
         self.client = None
         self.enabled = False
 
-        if api_key:
+        if api_key and Mistral is not None:
             try:
-                self.client = MistralClient(api_key=api_key)
+                self.client = Mistral(api_key=api_key)
                 self.enabled = True
                 logger.info(f"Mistral parser initialisé avec modèle {model}")
             except Exception as e:
                 logger.warning(f"Impossible d'initialiser Mistral: {e}")
         else:
-            logger.info("Mistral parser désactivé (pas de clé API)")
+            logger.info("Mistral parser désactivé (pas de clé API ou bibliothèque non disponible)")
 
     def parse(self, note: str) -> Optional[Tuple[float, str, str]]:
         """Parse une note d'ingrédient avec Mistral AI.
@@ -60,7 +63,7 @@ Règles:
 - Si impossible de parser, quantity=0, unit="unknown", name="{note}"
 """
 
-            response = self.client.chat(
+            response = self.client.chat.complete(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,  # Bas pour plus de cohérence
