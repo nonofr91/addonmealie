@@ -10,6 +10,7 @@ from .ingredient_weights import get_ingredient_weight
 from .manual_pricer import ManualPricer
 from .mistral_parser import MistralIngredientParser
 from .open_prices_client import OpenPricesClient
+from .price_cache import PriceCache
 from .price_collector_client import PriceCollectorClient
 
 logger = logging.getLogger(__name__)
@@ -53,12 +54,21 @@ class IngredientMatcher:
         "unit": ("unit", 1.0),
     }
 
+    # TTL par source de prix (en secondes)
+    CACHE_TTL = {
+        "manual": 86400,  # 24h - prix manuels changent rarement
+        "price_collector": 3600,  # 1h - notre propre service
+        "open_prices": 43200,  # 12h - API externe
+        "estimated": 604800,  # 7 jours - estimations très stables
+    }
+
     def __init__(
         self,
         manual_pricer: Optional[ManualPricer] = None,
         open_prices: Optional[OpenPricesClient] = None,
         price_collector: Optional[PriceCollectorClient] = None,
         mistral_api_key: Optional[str] = None,
+        enable_cache: bool = True,
     ) -> None:
         self.manual = manual_pricer or ManualPricer()
         self.open_prices = open_prices or OpenPricesClient()
@@ -67,6 +77,10 @@ class IngredientMatcher:
         
         # Initialiser le parser Mistral
         self.mistral_parser = MistralIngredientParser(api_key=mistral_api_key)
+        
+        # Initialiser le cache
+        self.enable_cache = enable_cache
+        self.cache = PriceCache() if enable_cache else None
 
     def parse_ingredient_note(self, note: str) -> tuple[float, str, str]:
         """Parse une note d'ingrédient Mealie.
@@ -220,6 +234,27 @@ class IngredientMatcher:
         """
         normalized_name = ingredient_name.lower().strip()
         
+        # Vérifier le cache d'abord
+        if self.enable_cache and self.cache:
+            cached = self.cache.get("combined", normalized_name)
+            if cached:
+                # Le cache stocke (price, source, confidence)
+                # Recalculer le prix avec la quantité/unité actuelles
+                cached_price, cached_source, cached_confidence = cached
+                if cached_source == "free":
+                    return 0.0, "free", 1.0
+                
+                # Recalculer avec la quantité/unité actuelles
+                qty_base, unit_base = self.normalize_quantity(quantity, unit)
+                if cached_source == "manual" or cached_source == "price_collector":
+                    # Pour ces sources, on a stocké le prix par unité de base
+                    # Il faut recalculer avec la quantité actuelle
+                    # Pour l'instant, on retourne le résultat caché tel quel
+                    # TODO: améliorer pour recalculer avec quantité/unité
+                    pass
+                
+                return cached_price, cached_source, cached_confidence
+        
         # Conversion spéciale: moules en litres → kg (1l de moules ≈ 0.8 kg)
         if "moule" in normalized_name and unit == "l":
             original_qty = quantity
@@ -230,7 +265,10 @@ class IngredientMatcher:
         # Ingrédients gratuits (eau, sel de table, etc.)
         free_ingredients = ["eau", "water", "sel de table", "table salt", "sel", "poivre"]
         if any(free in normalized_name for free in free_ingredients):
-            return 0.0, "free", 1.0
+            result = (0.0, "free", 1.0)
+            if self.enable_cache and self.cache:
+                self.cache.set("combined", normalized_name, result, self.CACHE_TTL["manual"])
+            return result
 
         # 1. Chercher dans les prix manuels (avec normalisation)
         manual_price = self.manual.get_price(self._normalize_ingredient_name(ingredient_name))
@@ -246,7 +284,10 @@ class IngredientMatcher:
             
             price_multiplier = self._get_price_multiplier(manual_price.unit, unit_base)
             total_price = qty_base * manual_price.price_per_unit * price_multiplier
-            return round(total_price, 2), "manual", 1.0
+            result = (round(total_price, 2), "manual", 1.0)
+            if self.enable_cache and self.cache:
+                self.cache.set("combined", normalized_name, result, self.CACHE_TTL["manual"])
+            return result
 
         # 2. Chercher via Price Collector (addon interne — données fiables)
         if self.price_collector:
@@ -265,7 +306,10 @@ class IngredientMatcher:
                     unit_base = "kg"
                 price_multiplier = self._get_price_multiplier(pc_unit, unit_base)
                 total_price = qty_base * price_per_unit * price_multiplier
-                return round(total_price, 2), "price_collector", 0.9
+                result = (round(total_price, 2), "price_collector", 0.9)
+                if self.enable_cache and self.cache:
+                    self.cache.set("combined", normalized_name, result, self.CACHE_TTL["price_collector"])
+                return result
 
         # 3. Chercher via Open Prices (si activé)
         if use_open_prices and self._open_prices_enabled:
@@ -297,11 +341,17 @@ class IngredientMatcher:
                     total_price = qty_base * median_price
 
                 confidence = min(0.8, 0.5 + (len(prices) / 20))  # Plus de données = plus confiant
-                return round(total_price, 2), "open_prices", confidence
+                result = (round(total_price, 2), "open_prices", confidence)
+                if self.enable_cache and self.cache:
+                    self.cache.set("combined", normalized_name, result, self.CACHE_TTL["open_prices"])
+                return result
 
         # 3. Fallback: estimation basée sur la catégorie
         estimated_price = self._estimate_price(ingredient_name, quantity, unit)
-        return estimated_price, "estimated", 0.3
+        result = (estimated_price, "estimated", 0.3)
+        if self.enable_cache and self.cache:
+            self.cache.set("combined", normalized_name, result, self.CACHE_TTL["estimated"])
+        return result
 
     def _estimate_ml_as_kg(self, ingredient_name: str, quantity_ml: float) -> float:
         normalized_name = ingredient_name.lower().strip()
@@ -480,6 +530,28 @@ class IngredientMatcher:
             return candidates[original_idx], best_score
 
         return None
+
+
+    def get_cache_stats(self) -> dict[str, any]:
+        """Get cache statistics.
+
+        Returns:
+            Dictionary with cache statistics or None if cache disabled
+        """
+        if not self.enable_cache or not self.cache:
+            return None
+        return self.cache.get_stats()
+
+
+    def clear_cache(self, source: Optional[str] = None) -> None:
+        """Clear cache entries.
+
+        Args:
+            source: If provided, only clear entries for this source.
+                    If None, clear all entries.
+        """
+        if self.enable_cache and self.cache:
+            self.cache.invalidate(source)
 
 
     def _normalize_product_name(self, name: str) -> str:

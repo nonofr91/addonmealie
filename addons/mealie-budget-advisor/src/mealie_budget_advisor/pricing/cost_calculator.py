@@ -37,15 +37,17 @@ class CostCalculator:
             open_prices = OpenPricesClient()
             price_collector = None
             mistral_api_key = None
+            enable_cache = True
             try:
                 from ..config import get_config
                 cfg = get_config()
                 if cfg.price_collector_url:
                     price_collector = PriceCollectorClient(cfg.price_collector_url)
                 mistral_api_key = cfg.mistral_api_key
+                enable_cache = cfg.enable_price_cache
             except Exception:
                 pass
-            self.matcher = IngredientMatcher(manual, open_prices, price_collector, mistral_api_key)
+            self.matcher = IngredientMatcher(manual, open_prices, price_collector, mistral_api_key, enable_cache)
 
         self._session = requests.Session()
         self._session.headers.update({

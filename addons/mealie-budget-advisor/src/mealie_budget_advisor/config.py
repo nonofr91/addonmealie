@@ -60,6 +60,11 @@ class BudgetConfig:
         self.mistral_api_key = os.environ.get("MISTRAL_API_KEY", "")
         self.mistral_model = os.environ.get("MISTRAL_MODEL", "mistral-small-latest")
 
+        # Cache de prix
+        self.enable_price_cache = (
+            os.environ.get("ENABLE_PRICE_CACHE", "true").lower() == "true"
+        )
+
         # Feature flags
         self._enable_open_prices = (
             os.environ.get("ENABLE_OPEN_PRICES", "true").lower() == "true"
@@ -129,6 +134,7 @@ class BudgetConfig:
             "open_prices_base_url": self.open_prices_base_url,
             "mistral_model": self.mistral_model,
             "mistral_enabled": bool(self.mistral_api_key),
+            "enable_price_cache": self.enable_price_cache,
             "enable_open_prices": self.enable_open_prices,
             "enable_manual_prices": self.enable_manual_prices,
             "enable_budget_planning": self.enable_budget_planning,
