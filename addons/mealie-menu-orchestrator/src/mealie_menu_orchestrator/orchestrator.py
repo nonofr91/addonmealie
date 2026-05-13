@@ -81,6 +81,7 @@ class MenuOrchestrator:
         # Generate menu entries
         entries: list[MenuEntry] = []
         current_date = request.start_date
+        session_history = list(menu_history)
         
         while current_date <= request.end_date:
             # Generate entries for each meal type
@@ -89,33 +90,36 @@ class MenuOrchestrator:
                     date=current_date,
                     meal_type=MealType.BREAKFAST,
                     recipe_slugs=recipe_slugs,
-                    menu_history=menu_history,
+                    menu_history=session_history,
                     current_date=current_date,
                 )
                 if entry:
                     entries.append(entry)
+                    session_history.append(entry.recipe_slug)
             
             if request.include_lunch:
                 entry = self._generate_entry(
                     date=current_date,
                     meal_type=MealType.LUNCH,
                     recipe_slugs=recipe_slugs,
-                    menu_history=menu_history,
+                    menu_history=session_history,
                     current_date=current_date,
                 )
                 if entry:
                     entries.append(entry)
+                    session_history.append(entry.recipe_slug)
             
             if request.include_dinner:
                 entry = self._generate_entry(
                     date=current_date,
                     meal_type=MealType.DINNER,
                     recipe_slugs=recipe_slugs,
-                    menu_history=menu_history,
+                    menu_history=session_history,
                     current_date=current_date,
                 )
                 if entry:
                     entries.append(entry)
+                    session_history.append(entry.recipe_slug)
             
             current_date = self._next_day(current_date)
         
