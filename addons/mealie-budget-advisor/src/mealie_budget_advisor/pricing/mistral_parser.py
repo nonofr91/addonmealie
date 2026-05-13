@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Optional, Tuple
 
-from mistralai import Mistral
+from mistralai.client import MistralClient
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class MistralIngredientParser:
 
         if api_key:
             try:
-                self.client = Mistral(api_key=api_key)
+                self.client = MistralClient(api_key=api_key)
                 self.enabled = True
                 logger.info(f"Mistral parser initialisé avec modèle {model}")
             except Exception as e:
@@ -60,7 +60,7 @@ Règles:
 - Si impossible de parser, quantity=0, unit="unknown", name="{note}"
 """
 
-            response = self.client.chat.complete(
+            response = self.client.chat(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,  # Bas pour plus de cohérence
