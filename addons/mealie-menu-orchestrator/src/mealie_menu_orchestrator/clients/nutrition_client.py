@@ -42,7 +42,7 @@ class NutritionClient:
     def get_recipe_nutrition(self, slug: str) -> Optional[dict]:
         """Get nutrition data for a specific recipe."""
         try:
-            resp = self._client.get(f"{self.base_url}/nutrition/recipe/{slug}")
+            resp = self._client.post(f"{self.base_url}/nutrition/recipe/{slug}")
             resp.raise_for_status()
             return resp.json()
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
