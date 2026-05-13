@@ -54,16 +54,18 @@ class PriceCache:
 
         if entry is None:
             self._stats["misses"] += 1
+            logger.info(f"Cache miss: {key}")
             return None
 
         if time.time() > entry.expires_at:
             # Entry expired, remove it
             del self._cache[key]
             self._stats["misses"] += 1
+            logger.info(f"Cache expired: {key}")
             return None
 
         self._stats["hits"] += 1
-        logger.debug(f"Cache hit: {key}")
+        logger.info(f"Cache hit: {key}")
         return entry.value
 
     def set(
@@ -85,7 +87,7 @@ class PriceCache:
         expires_at = time.time() + ttl_seconds
         self._cache[key] = CacheEntry(value=value, expires_at=expires_at)
         self._stats["sets"] += 1
-        logger.debug(f"Cache set: {key} (TTL: {ttl_seconds}s)")
+        logger.info(f"Cache set: {key} (TTL: {ttl_seconds}s)")
 
     def invalidate(self, source: Optional[str] = None) -> None:
         """Invalidate cache entries.
