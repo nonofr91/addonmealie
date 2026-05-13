@@ -215,3 +215,7 @@ def start() -> None:
         port=config.api_port,
         reload=False,
     )
+
+
+if __name__ == "__main__":
+    start()
