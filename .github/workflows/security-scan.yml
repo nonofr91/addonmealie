@@ -3,8 +3,12 @@ name: Custom Secret Scan
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - '**.py'
+      - '**.toml'
+      - '.github/workflows/**'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   secret-scan:

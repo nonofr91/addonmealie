@@ -3,6 +3,11 @@ name: CI
 on:
   push:
     branches: [ main, 'feature/**', 'fix/**' ]
+    paths:
+      - '**.py'
+      - '**.toml'
+      - '**.txt'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main ]
 
@@ -10,6 +15,33 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      mcp: ${{ steps.filter.outputs.mcp }}
+      import: ${{ steps.filter.outputs.import }}
+      budget: ${{ steps.filter.outputs.budget }}
+      menu: ${{ steps.filter.outputs.menu }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            mcp:
+              - 'mealie-mcp-server/**'
+            import:
+              - 'addons/mealie-import-orchestrator/**'
+            budget:
+              - 'addons/mealie-budget-advisor/**'
+            menu:
+              - 'addons/mealie-menu-orchestrator/**'
+            python:
+              - '**.py'
+              - '**.toml'
+
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -32,6 +64,8 @@ jobs:
 
   python-lint:
     name: Python Lint
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -52,6 +86,7 @@ jobs:
           ruff check mealie-workflow/src/ || true
           ruff check addons/mealie-import-orchestrator/src/ || true
           ruff check addons/mealie-nutrition-advisor/src/ || true
+          ruff check addons/mealie-menu-orchestrator/src/ || true
 
   repo-hygiene:
     name: Repository Hygiene
@@ -84,6 +119,8 @@ jobs:
 
   mcp-server-test:
     name: MCP Server Test
+    needs: changes
+    if: needs.changes.outputs.mcp == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -106,6 +143,8 @@ jobs:
 
   addon-import-test:
     name: Addon Package Validation
+    needs: changes
+    if: needs.changes.outputs.import == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -155,6 +194,8 @@ jobs:
 
   budget-advisor-test:
     name: Budget Advisor Test
+    needs: changes
+    if: needs.changes.outputs.budget == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
