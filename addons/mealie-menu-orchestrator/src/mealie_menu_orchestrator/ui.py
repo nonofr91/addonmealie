@@ -74,11 +74,14 @@ def render_sidebar() -> None:
     
     # Connection status
     st.sidebar.subheader("Connection Status")
-    health = call_api("/health")
-    if health:
-        st.sidebar.success("✅ API Connected")
-    else:
-        st.sidebar.error("❌ API Disconnected")
+    try:
+        health = call_api("/health")
+        if health:
+            st.sidebar.success("✅ API Connected")
+        else:
+            st.sidebar.error("❌ API Disconnected")
+    except Exception as exc:
+        st.sidebar.error(f"❌ API Error: {exc}")
     
     # Configuration display
     with st.sidebar.expander("View Configuration"):
