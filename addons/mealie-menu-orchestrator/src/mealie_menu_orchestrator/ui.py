@@ -38,6 +38,8 @@ def get_config() -> MenuOrchestratorConfig:
 def get_api_url() -> str:
     """Get API URL from config."""
     config = get_config()
+    if config.api_url:
+        return config.api_url.rstrip("/")
     return f"http://{config.api_host}:{config.api_port}"
 
 

@@ -35,6 +35,7 @@ class MenuOrchestratorConfig(BaseSettings):
     # API server
     api_host: str = Field(default="0.0.0.0", description="API server host")
     api_port: int = Field(default=8004, description="API server port")
+    api_url: Optional[str] = Field(default=None, description="Full API URL (overrides api_host:api_port if set)")
     addon_secret_key: Optional[str] = Field(
         default=None, description="Secret key for API authentication"
     )
