@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  menu-orchestrator-api:
+    image: ghcr.io/nonofr91/mealie-menu-orchestrator:0.1.0
+    container_name: mealie-menu-orchestrator-api
+    environment:
+      - MEALIE_BASE_URL=${MEALIE_BASE_URL}
+      - MEALIE_API_KEY=${MEALIE_API_KEY}
+      - NUTRITION_ADVISOR_URL=${NUTRITION_ADVISOR_URL}
+      - NUTRITION_ADVISOR_KEY=${NUTRITION_ADVISOR_KEY}
+      - BUDGET_ADVISOR_URL=${BUDGET_ADVISOR_URL}
+      - BUDGET_ADVISOR_KEY=${BUDGET_ADVISOR_KEY}
+      - API_HOST=0.0.0.0
+      - API_PORT=8004
+      - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
+      - ENABLE_MENU_GENERATION=true
+      - ENABLE_VARIETY_TRACKING=true
+      - ENABLE_SEASONALITY=false
+      - WEIGHT_NUTRITION=0.25
+      - WEIGHT_BUDGET=0.25
+      - WEIGHT_VARIETY=0.25
+      - WEIGHT_SEASON=0.25
+    ports:
+      - "8004:8004"
+    networks:
+      - mealie-addons
+    restart: unless-stopped
+
+  menu-orchestrator-ui:
+    image: ghcr.io/nonofr91/mealie-menu-orchestrator:0.1.0
+    container_name: mealie-menu-orchestrator-ui
+    command: streamlit run src/mealie_menu_orchestrator/ui.py --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none
+    environment:
+      - MEALIE_BASE_URL=${MEALIE_BASE_URL}
+      - MEALIE_API_KEY=${MEALIE_API_KEY}
+      - NUTRITION_ADVISOR_URL=${NUTRITION_ADVISOR_URL}
+      - NUTRITION_ADVISOR_KEY=${NUTRITION_ADVISOR_KEY}
+      - BUDGET_ADVISOR_URL=${BUDGET_ADVISOR_URL}
+      - BUDGET_ADVISOR_KEY=${BUDGET_ADVISOR_KEY}
+      - API_HOST=menu-orchestrator-api
+      - API_PORT=8004
+      - ADDON_SECRET_KEY=${ADDON_SECRET_KEY}
+      - ENABLE_MENU_GENERATION=true
+      - ENABLE_VARIETY_TRACKING=true
+      - ENABLE_SEASONALITY=false
+      - WEIGHT_NUTRITION=0.25
+      - WEIGHT_BUDGET=0.25
+      - WEIGHT_VARIETY=0.25
+      - WEIGHT_SEASON=0.25
+    ports:
+      - "8504:8501"
+    networks:
+      - mealie-addons
+    restart: unless-stopped
+
+networks:
+  mealie-addons:
+    external: true

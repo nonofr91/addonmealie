@@ -1,0 +1,111 @@
+"""Pydantic models for menu planning."""
+
+from __future__ import annotations
+
+from datetime import date
+from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, Field
+
+
+class MealType(str, Enum):
+    """Types of meals in a day."""
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    DINNER = "dinner"
+    SIDE = "side"
+
+
+class MenuGenerationRequest(BaseModel):
+    """Request for menu generation."""
+
+    start_date: date = Field(description="Start date for the menu (YYYY-MM-DD)")
+    end_date: date = Field(description="End date for the menu (YYYY-MM-DD)")
+    household_id: Optional[str] = Field(default=None, description="Household ID for profiles")
+    budget_limit: Optional[float] = Field(default=None, description="Budget limit in currency")
+    priorities: Optional[dict[str, float]] = Field(
+        default=None,
+        description="Priority weights for nutrition, budget, variety, season",
+    )
+    include_breakfast: bool = Field(default=True, description="Include breakfast in menu")
+    include_lunch: bool = Field(default=True, description="Include lunch in menu")
+    include_dinner: bool = Field(default=True, description="Include dinner in menu")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "start_date": "2026-01-01",
+                "end_date": "2026-01-07",
+                "budget_limit": 200.0,
+                "priorities": {"nutrition": 0.3, "budget": 0.3, "variety": 0.2, "season": 0.2},
+            }
+        }
+
+
+class MenuEntry(BaseModel):
+    """A single menu entry (recipe for a specific meal on a specific date)."""
+
+    date: date
+    meal_type: MealType
+    recipe_id: Optional[str] = None
+    recipe_slug: Optional[str] = None
+    recipe_name: Optional[str] = None
+    quantity: int = Field(default=1, description="Number of servings/quantities")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "date": "2026-01-01",
+                "meal_type": "dinner",
+                "recipe_id": "uuid",
+                "recipe_slug": "carbonara",
+                "recipe_name": "Pasta Carbonara",
+                "quantity": 2,
+            }
+        }
+
+
+class Menu(BaseModel):
+    """Complete menu for a date range."""
+
+    id: Optional[str] = None
+    start_date: date
+    end_date: date
+    entries: list[MenuEntry] = Field(default_factory=list)
+    total_cost: Optional[float] = None
+    total_nutrition: Optional[dict] = None
+    scores: Optional[dict[str, float]] = None
+    created_at: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "start_date": "2026-01-01",
+                "end_date": "2026-01-07",
+                "entries": [],
+                "total_cost": 150.0,
+                "scores": {"nutrition": 0.85, "budget": 0.9, "variety": 0.7, "season": 0.8},
+            }
+        }
+
+
+class MenuQuantitiesUpdate(BaseModel):
+    """Request to update quantities for a menu."""
+
+    quantities: dict[str, int] = Field(
+        description="Map of entry_id to quantity",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "quantities": {"entry-1": 2, "entry-2": 3},
+            }
+        }
+
+
+class MenuPushRequest(BaseModel):
+    """Request to push a menu to Mealie mealplan."""
+
+    menu_id: str
