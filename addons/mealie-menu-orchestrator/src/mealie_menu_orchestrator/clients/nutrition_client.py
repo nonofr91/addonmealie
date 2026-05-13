@@ -19,6 +19,7 @@ class NutritionClient:
         if api_key:
             headers["X-Addon-Key"] = api_key
         self._client = httpx.Client(timeout=timeout, headers=headers)
+        self._cache: dict[str, Optional[dict]] = {}
 
     def close(self) -> None:
         self._client.close()
@@ -41,13 +42,17 @@ class NutritionClient:
 
     def get_recipe_nutrition(self, slug: str) -> Optional[dict]:
         """Get nutrition data for a specific recipe."""
+        if slug in self._cache:
+            return self._cache[slug]
         try:
             resp = self._client.post(f"{self.base_url}/nutrition/recipe/{slug}")
             resp.raise_for_status()
-            return resp.json()
+            result: Optional[dict] = resp.json()
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get nutrition for recipe %s: %s", slug, exc)
-            return None
+            result = None
+        self._cache[slug] = result
+        return result
 
     def scan_recipes(self) -> Optional[dict]:
         """Scan Mealie recipes for missing nutrition data."""

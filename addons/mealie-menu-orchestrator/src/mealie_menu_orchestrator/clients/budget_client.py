@@ -19,6 +19,7 @@ class BudgetClient:
         if api_key:
             headers["X-Addon-Key"] = api_key
         self._client = httpx.Client(timeout=timeout, headers=headers)
+        self._cache: dict[str, Optional[dict]] = {}
 
     def close(self) -> None:
         self._client.close()
@@ -41,13 +42,17 @@ class BudgetClient:
 
     def get_recipe_cost(self, slug: str) -> Optional[dict]:
         """Get cost data for a specific recipe."""
+        if slug in self._cache:
+            return self._cache[slug]
         try:
             resp = self._client.get(f"{self.base_url}/recipes/{slug}/cost")
             resp.raise_for_status()
-            return resp.json()
+            result: Optional[dict] = resp.json()
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get cost for recipe %s: %s", slug, exc)
-            return None
+            result = None
+        self._cache[slug] = result
+        return result
 
     def calculate_menu_cost(self, recipe_ids: list[str]) -> Optional[dict]:
         """Calculate total cost for a list of recipes."""

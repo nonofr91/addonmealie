@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
 from typing import Optional
 
@@ -167,16 +168,29 @@ class CombinedScorer:
         Returns:
             List of (recipe_slug, score) tuples sorted by score descending
         """
+        if not recipe_slugs:
+            return []
+
         scored_recipes: list[tuple[str, float]] = []
-        
-        for slug in recipe_slugs:
-            scores = self.score_recipe(slug, menu_history, current_date)
-            scored_recipes.append((slug, scores["combined"]))
-        
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_slug = {
+                executor.submit(self.score_recipe, slug, menu_history, current_date): slug
+                for slug in recipe_slugs
+            }
+            for future in as_completed(future_to_slug):
+                slug = future_to_slug[future]
+                try:
+                    scores = future.result()
+                    scored_recipes.append((slug, scores["combined"]))
+                except Exception as exc:
+                    logger.warning("Failed to score recipe %s: %s", slug, exc)
+                    scored_recipes.append((slug, 0.0))
+
         # Sort by score descending
         scored_recipes.sort(key=lambda x: x[1], reverse=True)
-        
+
         if limit:
             scored_recipes = scored_recipes[:limit]
-        
+
         return scored_recipes
