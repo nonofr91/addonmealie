@@ -7,12 +7,12 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Copy requirements and source
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e .
-
-# Copy source code
 COPY src/ ./src/
+
+# Install
+RUN pip install --no-cache-dir -e .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
