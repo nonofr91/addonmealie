@@ -17,6 +17,14 @@ class MealType(str, Enum):
     SIDE = "side"
 
 
+class CourseType(str, Enum):
+    """Types of courses within a meal."""
+    STARTER = "starter"
+    MAIN = "main"
+    DESSERT = "dessert"
+    SIDE = "side"
+
+
 class MenuGenerationRequest(BaseModel):
     """Request for menu generation."""
 
@@ -31,6 +39,18 @@ class MenuGenerationRequest(BaseModel):
     include_breakfast: bool = Field(default=True, description="Include breakfast in menu")
     include_lunch: bool = Field(default=True, description="Include lunch in menu")
     include_dinner: bool = Field(default=True, description="Include dinner in menu")
+    meal_composition: dict[str, list[str]] = Field(
+        default_factory=lambda: {
+            "breakfast": ["main"],
+            "lunch": ["main"],
+            "dinner": ["main"],
+        },
+        description=(
+            "Courses to generate per meal type. "
+            "Keys: breakfast/lunch/dinner. Values: list of starter/main/dessert/side. "
+            "Example: {'dinner': ['starter', 'main', 'dessert']}"
+        ),
+    )
 
     class Config:
         json_schema_extra = {
@@ -39,6 +59,11 @@ class MenuGenerationRequest(BaseModel):
                 "end_date": "2026-01-07",
                 "budget_limit": 200.0,
                 "priorities": {"nutrition": 0.3, "budget": 0.3, "variety": 0.2, "season": 0.2},
+                "meal_composition": {
+                    "breakfast": ["main"],
+                    "lunch": ["main"],
+                    "dinner": ["starter", "main", "dessert"],
+                },
             }
         }
 
@@ -48,6 +73,7 @@ class MenuEntry(BaseModel):
 
     date: date
     meal_type: MealType
+    course_type: CourseType = Field(default=CourseType.MAIN, description="Course type within the meal")
     recipe_id: Optional[str] = None
     recipe_slug: Optional[str] = None
     recipe_name: Optional[str] = None
@@ -58,6 +84,7 @@ class MenuEntry(BaseModel):
             "example": {
                 "date": "2026-01-01",
                 "meal_type": "dinner",
+                "course_type": "main",
                 "recipe_id": "uuid",
                 "recipe_slug": "carbonara",
                 "recipe_name": "Pasta Carbonara",

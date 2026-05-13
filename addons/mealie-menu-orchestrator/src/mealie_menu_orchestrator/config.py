@@ -43,7 +43,8 @@ class MenuOrchestratorConfig(BaseSettings):
     # Feature flags
     enable_menu_generation: bool = Field(default=True, description="Enable menu generation")
     enable_variety_tracking: bool = Field(default=True, description="Enable menu variety tracking")
-    enable_seasonality: bool = Field(default=False, description="Enable seasonality filtering")
+    enable_seasonality: bool = Field(default=False, description="Enable seasonality filtering (requires season tags on recipes)")
+    enable_course_filtering: bool = Field(default=False, description="Filter recipes by course type category (requires course categories on recipes)")
 
     # Scoring weights (default equal weights)
     weight_nutrition: float = Field(default=0.25, ge=0.0, le=1.0, description="Weight for nutrition score")
@@ -59,6 +60,29 @@ class MenuOrchestratorConfig(BaseSettings):
             "dinner": 1,
         },
         description="Default quantities per meal type",
+    )
+
+    # Course type → Mealie category slugs mapping
+    # Slugs are lowercased and compared case-insensitively
+    course_categories: dict[str, list[str]] = Field(
+        default_factory=lambda: {
+            "starter": ["entree", "entrée", "entrees", "entrées", "starter", "starters"],
+            "main": ["plat-principal", "plat principal", "plats", "main", "main-course"],
+            "dessert": ["dessert", "desserts"],
+            "side": ["accompagnement", "accompagnements", "side", "sides"],
+        },
+        description="Mealie category slugs/names for each course type (case-insensitive)",
+    )
+
+    # Season → Mealie tag slugs mapping
+    season_tags: dict[str, list[str]] = Field(
+        default_factory=lambda: {
+            "spring": ["printemps", "spring"],
+            "summer": ["ete", "été", "summer"],
+            "autumn": ["automne", "autumn", "fall"],
+            "winter": ["hiver", "winter"],
+        },
+        description="Mealie tag slugs/names for each season (case-insensitive)",
     )
 
     class Config:

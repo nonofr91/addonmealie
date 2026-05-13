@@ -44,6 +44,7 @@ class CombinedScorer:
         recipe_slug: str,
         menu_history: Optional[list[str]] = None,
         current_date: Optional[date] = None,
+        recipe_tags: Optional[list[str]] = None,
     ) -> dict[str, float]:
         """
         Calculate combined score for a recipe.
@@ -90,7 +91,7 @@ class CombinedScorer:
 
         # Season score (if enabled)
         if self.config.enable_seasonality:
-            scores["season"] = self._calculate_season_score(recipe_slug, current_date)
+            scores["season"] = self._calculate_season_score(recipe_tags or [], current_date)
         else:
             scores["season"] = 1.0  # Neutral if disabled
 
@@ -138,16 +139,42 @@ class CombinedScorer:
         score = 1.0 - (cost / max_reasonable_cost)
         return max(0.0, min(1.0, score))
 
-    def _calculate_season_score(self, recipe_slug: str, current_date: Optional[date]) -> float:
+    def _get_current_season(self, d: date) -> str:
+        """Return the current astronomical season name."""
+        month = d.month
+        if month in (3, 4, 5):
+            return "spring"
+        if month in (6, 7, 8):
+            return "summer"
+        if month in (9, 10, 11):
+            return "autumn"
+        return "winter"
+
+    def _calculate_season_score(self, recipe_tags: list[str], current_date: Optional[date]) -> float:
         """
-        Calculate season score for a recipe.
-        
-        For now, return neutral score (1.0) until season tags are implemented.
-        Will be enhanced when seasonality is added to Nutrition Advisor.
+        Calculate season score using recipe tags from Mealie.
+
+        Scoring:
+        - Recipe has current season tag → 1.0 (perfect match)
+        - Recipe has no season tag → 0.7 (neutral, no penalty)
+        - Recipe has a different season tag → 0.1 (out-of-season penalty)
         """
-        # TODO: Implement proper seasonality checking once tags are added
-        # For now, return neutral score
-        return 1.0
+        if not current_date:
+            return 1.0
+
+        current_season = self._get_current_season(current_date)
+        season_slugs_for_current = set(self.config.season_tags.get(current_season, []))
+
+        recipe_tag_set = {t.lower() for t in recipe_tags}
+
+        if season_slugs_for_current & recipe_tag_set:
+            return 1.0
+
+        all_season_slugs = {s for slugs in self.config.season_tags.values() for s in slugs}
+        if all_season_slugs & recipe_tag_set:
+            return 0.1  # Tagged for a different season
+
+        return 0.7  # No season tag = neutral
 
     def rank_recipes(
         self,
@@ -155,6 +182,7 @@ class CombinedScorer:
         menu_history: Optional[list[str]] = None,
         current_date: Optional[date] = None,
         limit: Optional[int] = None,
+        recipe_metadata: Optional[dict[str, dict]] = None,
     ) -> list[tuple[str, float]]:
         """
         Rank recipes by combined score.
@@ -174,10 +202,11 @@ class CombinedScorer:
         scored_recipes: list[tuple[str, float]] = []
 
         with ThreadPoolExecutor(max_workers=10) as executor:
-            future_to_slug = {
-                executor.submit(self.score_recipe, slug, menu_history, current_date): slug
-                for slug in recipe_slugs
-            }
+            future_to_slug: dict = {}
+            for slug in recipe_slugs:
+                tags = recipe_metadata.get(slug, {}).get("tags", []) if recipe_metadata else []
+                future = executor.submit(self.score_recipe, slug, menu_history, current_date, tags)
+                future_to_slug[future] = slug
             for future in as_completed(future_to_slug):
                 slug = future_to_slug[future]
                 try:

@@ -11,7 +11,7 @@ from .clients.budget_client import BudgetClient
 from .clients.mealie_client import MealieClient
 from .clients.nutrition_client import NutritionClient
 from .config import MenuOrchestratorConfig
-from .models.menu import Menu, MenuEntry, MealType, MenuGenerationRequest
+from .models.menu import CourseType, Menu, MenuEntry, MealType, MenuGenerationRequest
 from .scoring.combined_scorer import CombinedScorer
 from .storage import get_storage
 
@@ -72,59 +72,66 @@ class MenuOrchestrator:
         # Get all recipes from Mealie
         recipes = self.mealie_client.get_all_recipes()
         recipe_slugs = [r.get("slug") for r in recipes if r.get("slug")]
-        
+
+        # Build metadata dict: slug → {tags, categories} for season & course filtering
+        recipe_metadata: dict[str, dict] = {}
+        for r in recipes:
+            slug = r.get("slug")
+            if slug:
+                recipe_metadata[slug] = {
+                    "tags": [t.get("slug", t.get("name", "")).lower() for t in r.get("tags", [])],
+                    "categories": [c.get("slug", c.get("name", "")).lower() for c in r.get("recipeCategory", [])],
+                }
+
         logger.info("Found %d recipes to consider", len(recipe_slugs))
-        
+
         # Get menu history for variety (from Mealie mealplans)
         menu_history = self._get_menu_history(request.start_date)
-        
+
+        # Meal type enablement map
+        meal_enabled = {
+            "breakfast": request.include_breakfast,
+            "lunch": request.include_lunch,
+            "dinner": request.include_dinner,
+        }
+
         # Generate menu entries
         entries: list[MenuEntry] = []
         current_date = request.start_date
         session_history = list(menu_history)
-        
+
         while current_date <= request.end_date:
-            # Generate entries for each meal type
-            if request.include_breakfast:
-                entry = self._generate_entry(
-                    date=current_date,
-                    meal_type=MealType.BREAKFAST,
-                    recipe_slugs=recipe_slugs,
-                    menu_history=session_history,
-                    current_date=current_date,
-                )
-                if entry:
-                    entries.append(entry)
-                    session_history.append(entry.recipe_slug)
-            
-            if request.include_lunch:
-                entry = self._generate_entry(
-                    date=current_date,
-                    meal_type=MealType.LUNCH,
-                    recipe_slugs=recipe_slugs,
-                    menu_history=session_history,
-                    current_date=current_date,
-                )
-                if entry:
-                    entries.append(entry)
-                    session_history.append(entry.recipe_slug)
-            
-            if request.include_dinner:
-                entry = self._generate_entry(
-                    date=current_date,
-                    meal_type=MealType.DINNER,
-                    recipe_slugs=recipe_slugs,
-                    menu_history=session_history,
-                    current_date=current_date,
-                )
-                if entry:
-                    entries.append(entry)
-                    session_history.append(entry.recipe_slug)
-            
+            for meal_key, courses in request.meal_composition.items():
+                if not meal_enabled.get(meal_key, False):
+                    continue
+                meal_type = MealType(meal_key)
+                for course_str in courses:
+                    try:
+                        course_type = CourseType(course_str)
+                    except ValueError:
+                        logger.warning("Unknown course type '%s', skipping", course_str)
+                        continue
+                    filtered_slugs = self._filter_by_course(
+                        recipe_slugs, course_type, recipe_metadata
+                    )
+                    entry = self._generate_entry(
+                        date=current_date,
+                        meal_type=meal_type,
+                        recipe_slugs=filtered_slugs,
+                        menu_history=session_history,
+                        current_date=current_date,
+                        course_type=course_type,
+                        recipe_metadata=recipe_metadata,
+                    )
+                    if entry:
+                        entries.append(entry)
+                        if entry.recipe_slug:
+                            session_history.append(entry.recipe_slug)
+
             current_date = self._next_day(current_date)
         
         # Calculate scores and totals
-        scores = self._calculate_menu_scores(entries)
+        scores = self._calculate_menu_scores(entries, recipe_metadata)
         total_cost = self._calculate_total_cost(entries)
         
         menu = Menu(
@@ -144,6 +151,38 @@ class MenuOrchestrator:
         logger.info("Generated menu with %d entries", len(entries))
         return menu
 
+    def _filter_by_course(
+        self,
+        recipe_slugs: list[str],
+        course_type: CourseType,
+        recipe_metadata: dict[str, dict],
+    ) -> list[str]:
+        """
+        Filter recipe pool to those matching the given course type category.
+        Falls back to the full pool if filtering is disabled or no recipes match.
+        """
+        if not self.config.enable_course_filtering:
+            return recipe_slugs
+
+        course_cats = {c.lower() for c in self.config.course_categories.get(course_type.value, [])}
+        if not course_cats:
+            return recipe_slugs
+
+        filtered = [
+            slug for slug in recipe_slugs
+            if course_cats & set(recipe_metadata.get(slug, {}).get("categories", []))
+        ]
+        if not filtered:
+            logger.debug(
+                "No recipes found for course '%s' — falling back to full pool", course_type.value
+            )
+            return recipe_slugs
+
+        logger.debug(
+            "Course filter '%s': %d/%d recipes match", course_type.value, len(filtered), len(recipe_slugs)
+        )
+        return filtered
+
     def _generate_entry(
         self,
         date: date,
@@ -151,6 +190,8 @@ class MenuOrchestrator:
         recipe_slugs: list[str],
         menu_history: list[str],
         current_date: date,
+        course_type: CourseType = CourseType.MAIN,
+        recipe_metadata: Optional[dict[str, dict]] = None,
     ) -> Optional[MenuEntry]:
         """Generate a single menu entry by selecting the best recipe."""
         # Rank recipes by combined score
@@ -159,27 +200,29 @@ class MenuOrchestrator:
             menu_history=menu_history,
             current_date=current_date,
             limit=10,
+            recipe_metadata=recipe_metadata,
         )
-        
+
         if not ranked_recipes:
-            logger.warning("No recipes available for %s on %s", meal_type, date)
+            logger.warning("No recipes available for %s/%s on %s", meal_type, course_type, date)
             return None
-        
+
         # Select top recipe
         best_slug, best_score = ranked_recipes[0]
-        
-        # Get recipe details
+
+        # Get recipe details from metadata cache first, fall back to API
         recipe = self.mealie_client.get_recipe(best_slug)
         if not recipe:
             logger.warning("Could not get recipe details for %s", best_slug)
             return None
-        
+
         # Use default quantity (will be updated in second step)
         default_quantity = self.config.default_weekly_quantities.get(meal_type.value, 1)
-        
+
         return MenuEntry(
             date=date,
             meal_type=meal_type,
+            course_type=course_type,
             recipe_id=recipe.get("id"),
             recipe_slug=best_slug,
             recipe_name=recipe.get("name", best_slug),
@@ -206,16 +249,19 @@ class MenuOrchestrator:
         
         return history
 
-    def _calculate_menu_scores(self, entries: list[MenuEntry]) -> dict[str, float]:
+    def _calculate_menu_scores(
+        self, entries: list[MenuEntry], recipe_metadata: Optional[dict[str, dict]] = None
+    ) -> dict[str, float]:
         """Calculate overall scores for the menu."""
         if not entries:
             return {"nutrition": 0.0, "budget": 0.0, "variety": 0.0, "season": 0.0}
-        
+
         # Get scores for each entry and average
         all_scores = []
         for entry in entries:
             if entry.recipe_slug:
-                scores = self.scorer.score_recipe(entry.recipe_slug)
+                tags = recipe_metadata.get(entry.recipe_slug, {}).get("tags", []) if recipe_metadata else []
+                scores = self.scorer.score_recipe(entry.recipe_slug, recipe_tags=tags)
                 all_scores.append(scores)
         
         if not all_scores:
