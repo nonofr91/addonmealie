@@ -78,7 +78,7 @@ git push origin main
 ### 3. Variables d'environnement requises
 
 ```
-MEALIE_BASE_URL=https://mealie-ffkfjdtvq2irbm3s5553sako.int.cubixmedia.fr
+MEALIE_BASE_URL=https://your-mealie-instance.com
 MEALIE_API_KEY=votre_clé_api_mealie
 NUTRITION_ADVISOR_URL=https://nutrition-advisor-url
 NUTRITION_ADVISOR_KEY=votre_clé_api_nutrition
