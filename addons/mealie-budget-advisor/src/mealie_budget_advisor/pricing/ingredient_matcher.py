@@ -383,14 +383,31 @@ class IngredientMatcher:
         # Convertir vers unité de base
         qty_base, unit_base = self.normalize_quantity(quantity, unit)
 
+        # Pour les unités (pièces), convertir en kg en utilisant le poids moyen
+        if unit_base == "unit":
+            weight_per_unit = get_ingredient_weight(ingredient_name)
+            qty_kg = qty_base * weight_per_unit
+            return round(qty_kg * base_price_per_kg, 2)
+
         # Calculer prix
         if unit_base == "kg":
             return round(qty_base * base_price_per_kg, 2)
         elif unit_base == "l":
             return round(qty_base * base_price_per_kg * 0.8, 2)  # Légèrement moins cher que viande
         else:
-            # Pour les unités (pièces), on ne divise pas par 10 - le prix par kg est déjà correct
-            return round(qty_base * base_price_per_kg, 2)
+            # Autres unités (g, ml, cl) - convertir vers kg/l
+            if unit_base == "g":
+                qty_kg = qty_base / 1000
+                return round(qty_kg * base_price_per_kg, 2)
+            elif unit_base == "ml":
+                qty_l = qty_base / 1000
+                return round(qty_l * base_price_per_kg * 0.8, 2)
+            elif unit_base == "cl":
+                qty_l = qty_base / 100
+                return round(qty_l * base_price_per_kg * 0.8, 2)
+            else:
+                # Fallback
+                return round(qty_base * base_price_per_kg, 2)
 
     def match_ingredient_to_product(
         self,
