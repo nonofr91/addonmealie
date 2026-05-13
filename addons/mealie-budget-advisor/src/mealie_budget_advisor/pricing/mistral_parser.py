@@ -4,11 +4,6 @@ import json
 import logging
 from typing import Optional, Tuple
 
-try:
-    from mistralai import Mistral
-except ImportError:
-    Mistral = None
-
 logger = logging.getLogger(__name__)
 
 
@@ -27,15 +22,19 @@ class MistralIngredientParser:
         self.client = None
         self.enabled = False
 
-        if api_key and Mistral is not None:
+        if api_key:
             try:
+                # Lazy import - only import when actually needed
+                from mistralai import Mistral
                 self.client = Mistral(api_key=api_key)
                 self.enabled = True
                 logger.info(f"Mistral parser initialisé avec modèle {model}")
+            except ImportError as e:
+                logger.warning(f"Impossible d'importer Mistral: {e}")
             except Exception as e:
                 logger.warning(f"Impossible d'initialiser Mistral: {e}")
         else:
-            logger.info("Mistral parser désactivé (pas de clé API ou bibliothèque non disponible)")
+            logger.info("Mistral parser désactivé (pas de clé API)")
 
     def parse(self, note: str) -> Optional[Tuple[float, str, str]]:
         """Parse une note d'ingrédient avec Mistral AI.
