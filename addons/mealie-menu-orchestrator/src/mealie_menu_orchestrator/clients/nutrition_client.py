@@ -35,7 +35,7 @@ class NutritionClient:
             resp = self._client.get(f"{self.base_url}/status")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get nutrition status: %s", exc)
             return None
 
@@ -45,7 +45,7 @@ class NutritionClient:
             resp = self._client.get(f"{self.base_url}/nutrition/recipe/{slug}")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get nutrition for recipe %s: %s", slug, exc)
             return None
 
@@ -55,7 +55,7 @@ class NutritionClient:
             resp = self._client.get(f"{self.base_url}/nutrition/scan")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to scan recipes: %s", exc)
             return None
 
@@ -65,6 +65,6 @@ class NutritionClient:
             resp = self._client.get(f"{self.base_url}/profiles")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get profiles: %s", exc)
             return None

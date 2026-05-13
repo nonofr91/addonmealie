@@ -35,7 +35,7 @@ class BudgetClient:
             resp = self._client.get(f"{self.base_url}/status")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get budget status: %s", exc)
             return None
 
@@ -45,7 +45,7 @@ class BudgetClient:
             resp = self._client.get(f"{self.base_url}/recipes/{slug}/cost")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get cost for recipe %s: %s", slug, exc)
             return None
 
@@ -58,7 +58,7 @@ class BudgetClient:
             )
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to calculate menu cost: %s", exc)
             return None
 
@@ -68,6 +68,6 @@ class BudgetClient:
             resp = self._client.get(f"{self.base_url}/budget")
             resp.raise_for_status()
             return resp.json()
-        except httpx.HTTPStatusError as exc:
+        except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             logger.warning("Failed to get budget: %s", exc)
             return None
