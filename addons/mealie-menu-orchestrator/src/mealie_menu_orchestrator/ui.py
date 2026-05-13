@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 import requests
 import streamlit as st
 
-from .config import MenuOrchestratorConfig
+from mealie_menu_orchestrator.config import MenuOrchestratorConfig
 
 logger = logging.getLogger(__name__)
 
