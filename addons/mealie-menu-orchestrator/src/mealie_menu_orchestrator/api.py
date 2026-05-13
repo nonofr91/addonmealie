@@ -117,6 +117,8 @@ def generate_menu(
         orchestrator = _get_orchestrator()
         menu = orchestrator.generate_menu(request)
         return menu
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("Error generating menu")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
