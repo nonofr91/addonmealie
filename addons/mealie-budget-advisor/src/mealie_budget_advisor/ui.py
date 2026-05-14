@@ -441,22 +441,39 @@ with tabs[4]:
                     prices_resp = _api("GET", "/prices/manual")
                     manual_prices = prices_resp.get("prices", []) if prices_resp.get("success") else []
 
-                    # Filtrer pour cet ingrédient
+                    # Filtrer pour cet ingrédient (correspondance exacte)
                     food_name_lower = selected_food.get("name", "").lower()
                     ingredient_prices = [p for p in manual_prices if p.get("ingredient_name", "").lower() == food_name_lower]
 
+                    # Si pas de correspondance exacte, chercher une correspondance partielle
+                    if not ingredient_prices:
+                        for p in manual_prices:
+                            ing_name = p.get("ingredient_name", "").lower()
+                            if food_name_lower in ing_name or ing_name in food_name_lower:
+                                ingredient_prices.append(p)
+                                break
+
                     if ingredient_prices:
-                        st.caption(f"Prix manuels existants pour {selected_food.get('name', '')}")
+                        st.caption(f"Prix manuels pour {selected_food.get('name', '')}")
                         for p in ingredient_prices:
                             with st.expander(f"{p.get('price_per_unit')}€/{p.get('unit')} - {p.get('store', '—')}"):
                                 st.write(f"**Prix**: {p.get('price_per_unit')}€/{p.get('unit')}")
                                 st.write(f"**Magasin**: {p.get('store', '—')}")
+                                st.write(f"**Ingrédient**: {p.get('ingredient_name', '')}")
 
                                 if st.button("🗑️ Supprimer", key=f"del-price-{p.get('ingredient_name')}-{p.get('unit')}"):
                                     # TODO: implémenter suppression
                                     st.warning("Suppression à implémenter")
                     else:
                         st.info(f"Aucun prix manuel pour {selected_food.get('name', '')}")
+
+                        # Debug: montrer tous les prix disponibles
+                        with st.expander("Voir tous les prix manuels disponibles"):
+                            if manual_prices:
+                                for p in manual_prices:
+                                    st.write(f"- {p.get('ingredient_name')}: {p.get('price_per_unit')}€/{p.get('unit')}")
+                            else:
+                                st.write("Aucun prix manuel enregistré")
 
                     st.divider()
                     st.caption("Ajouter un prix manuel")
