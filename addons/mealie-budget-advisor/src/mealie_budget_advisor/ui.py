@@ -374,7 +374,7 @@ with tabs[3]:
 # Tab Ingrédients
 with tabs[4]:
     st.header("🥗 Gestion des ingrédients Mealie")
-    st.caption("Éditez les ingrédients en base Mealie pour corriger les prix au kg par exemple")
+    st.caption("Éditez les ingrédients en base Mealie et les prix manuels")
 
     col_search, col_refresh = st.columns([3, 1])
     with col_search:
@@ -394,45 +394,94 @@ with tabs[4]:
 
         if foods:
             # Sélectionner un food à éditer
-            food_options = {f"{f.get('name', '')} (ID: {f.get('id', '')[:8]}...)": f for f in foods}
-            selected_food_label = st.selectbox("Sélectionner un ingrédient à éditer", options=list(food_options.keys()), key="food-select")
-            selected_food = food_options.get(selected_food_label)
+            food_options = {f.get("name"): f for f in foods}
+            selected_food_name = st.selectbox("Sélectionner un ingrédient à éditer", options=list(food_options.keys()), key="food-select")
+            selected_food = food_options.get(selected_food_name)
 
             if selected_food:
                 st.divider()
-                st.subheader(f"✏️ Éditer: {selected_food.get('name', '')}")
+                col_edit, col_prices = st.columns([1, 1])
 
-                with st.form("food_edit_form"):
-                    col_name, col_desc = st.columns([2, 3])
-                    with col_name:
+                with col_edit:
+                    st.subheader(f"✏️ Éditer: {selected_food.get('name', '')}")
+
+                    with st.form("food_edit_form"):
                         edit_name = st.text_input("Nom", value=selected_food.get("name", ""), key="edit-food-name")
-                    with col_desc:
                         edit_description = st.text_area("Description", value=selected_food.get("description", ""), key="edit-food-desc")
 
-                    # Afficher les métadonnées
-                    st.caption("Métadonnées (lecture seule):")
-                    st.json({
-                        "id": selected_food.get("id"),
-                        "labelId": selected_food.get("labelId"),
-                        "aliases": selected_food.get("aliases", []),
-                        "createdAt": selected_food.get("createdAt"),
-                        "updatedAt": selected_food.get("updatedAt"),
-                    })
+                        # Afficher les métadonnées
+                        with st.expander("Métadonnées (lecture seule)"):
+                            st.json({
+                                "id": selected_food.get("id"),
+                                "labelId": selected_food.get("labelId"),
+                                "aliases": selected_food.get("aliases", []),
+                                "createdAt": selected_food.get("createdAt"),
+                                "updatedAt": selected_food.get("updatedAt"),
+                            })
 
-                    if st.form_submit_button("💾 Enregistrer les modifications", type="primary"):
-                        # Préparer le payload complet (PUT remplace l'objet entier)
-                        food_payload = selected_food.copy()
-                        food_payload["name"] = edit_name
-                        food_payload["description"] = edit_description
+                        if st.form_submit_button("💾 Enregistrer les modifications", type="primary"):
+                            # Préparer le payload complet (PUT remplace l'objet entier)
+                            food_payload = selected_food.copy()
+                            food_payload["name"] = edit_name
+                            food_payload["description"] = edit_description
 
-                        with st.spinner("Mise à jour en cours..."):
-                            resp = _api("PUT", f"/foods/{selected_food['id']}", json=food_payload)
+                            with st.spinner("Mise à jour en cours..."):
+                                resp = _api("PUT", f"/foods/{selected_food['id']}", json=food_payload)
 
-                        if resp.get("success"):
-                            st.success(f"✅ {edit_name} mis à jour avec succès")
-                            st.rerun()
-                        else:
-                            st.error(f"Erreur: {resp.get('error')}")
+                            if resp.get("success"):
+                                st.success(f"✅ {edit_name} mis à jour avec succès")
+                                st.rerun()
+                            else:
+                                st.error(f"Erreur: {resp.get('error')}")
+
+                with col_prices:
+                    st.subheader("💰 Prix manuels")
+
+                    # Récupérer les prix manuels existants
+                    prices_resp = _api("GET", "/prices/manual")
+                    manual_prices = prices_resp.get("prices", []) if prices_resp.get("success") else []
+
+                    # Filtrer pour cet ingrédient
+                    food_name_lower = selected_food.get("name", "").lower()
+                    ingredient_prices = [p for p in manual_prices if p.get("ingredient_name", "").lower() == food_name_lower]
+
+                    if ingredient_prices:
+                        st.caption(f"Prix manuels existants pour {selected_food.get('name', '')}")
+                        for p in ingredient_prices:
+                            with st.expander(f"{p.get('price_per_unit')}€/{p.get('unit')} - {p.get('store', '—')}"):
+                                st.write(f"**Prix**: {p.get('price_per_unit')}€/{p.get('unit')}")
+                                st.write(f"**Magasin**: {p.get('store', '—')}")
+
+                                if st.button("🗑️ Supprimer", key=f"del-price-{p.get('ingredient_name')}-{p.get('unit')}"):
+                                    # TODO: implémenter suppression
+                                    st.warning("Suppression à implémenter")
+                    else:
+                        st.info(f"Aucun prix manuel pour {selected_food.get('name', '')}")
+
+                    st.divider()
+                    st.caption("Ajouter un prix manuel")
+
+                    with st.form("add_price_form", key=f"add-price-{selected_food.get('id')}"):
+                        price = st.number_input("Prix par unité (€)", min_value=0.01, value=1.0, step=0.01, key=f"price-val-{selected_food.get('id')}")
+                        unit = st.selectbox("Unité", ["kg", "g", "l", "ml", "unit"], key=f"price-unit-{selected_food.get('id')}")
+                        store = st.text_input("Magasin (optionnel)", placeholder="ex: Carrefour", key=f"price-store-{selected_food.get('id')}")
+
+                        if st.form_submit_button("➕ Ajouter"):
+                            resp = _api(
+                                "POST",
+                                "/prices/manual",
+                                params={
+                                    "ingredient_name": selected_food.get("name"),
+                                    "price_per_unit": price,
+                                    "unit": unit,
+                                    "store": store,
+                                },
+                            )
+                            if resp.get("success"):
+                                st.success(f"Prix ajouté pour {selected_food.get('name')}")
+                                st.rerun()
+                            else:
+                                st.error(f"Erreur: {resp.get('error')}")
         else:
             st.info("Aucun ingrédient trouvé")
     else:
