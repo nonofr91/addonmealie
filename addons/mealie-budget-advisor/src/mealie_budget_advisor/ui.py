@@ -461,7 +461,7 @@ with tabs[4]:
                     st.divider()
                     st.caption("Ajouter un prix manuel")
 
-                    with st.form("add_price_form", key=f"add-price-{selected_food.get('id')}"):
+                    with st.form(f"add-price-{selected_food.get('id')}"):
                         price = st.number_input("Prix par unité (€)", min_value=0.01, value=1.0, step=0.01, key=f"price-val-{selected_food.get('id')}")
                         unit = st.selectbox("Unité", ["kg", "g", "l", "ml", "unit"], key=f"price-unit-{selected_food.get('id')}")
                         store = st.text_input("Magasin (optionnel)", placeholder="ex: Carrefour", key=f"price-store-{selected_food.get('id')}")
