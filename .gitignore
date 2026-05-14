@@ -21,6 +21,9 @@ build/
 logs/
 tmp/
 data/generated/
+# Données générées par les scripts scraper/batch (one-shot, non versionnées)
+addons/*/data/marmiton_urls_*.json
+addons/*/data/batch_import_checkpoint.json
 workflow_reports/
 import_reports/
 scraped_data/
