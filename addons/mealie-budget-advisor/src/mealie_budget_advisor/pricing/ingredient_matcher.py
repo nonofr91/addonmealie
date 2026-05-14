@@ -270,24 +270,56 @@ class IngredientMatcher:
                 self.cache.set("combined", normalized_name, result, self.CACHE_TTL["manual"])
             return result
 
-        # 1. Chercher dans les prix manuels (avec normalisation)
-        manual_price = self.manual.get_price(self._normalize_ingredient_name(ingredient_name))
+        # 1. Chercher dans les prix manuels (avec normalisation et fuzzy matching)
+        normalized_name = self._normalize_ingredient_name(ingredient_name)
+        manual_price = self.manual.get_price(normalized_name)
         if manual_price:
             qty_base, unit_base = self.normalize_quantity(quantity, unit)
-            
+
             # Si l'ingrédient est en unit mais le prix est en kg/l, utiliser le poids moyen
             if unit_base == "unit" and manual_price.unit in ["kg", "l"]:
                 weight_per_unit = get_ingredient_weight(ingredient_name)
                 qty_base = qty_base * weight_per_unit
                 unit_base = manual_price.unit
                 logger.debug(f"Conversion {ingredient_name}: {quantity} unit × {weight_per_unit}kg/unit = {qty_base}{unit_base}")
-            
+
             price_multiplier = self._get_price_multiplier(manual_price.unit, unit_base)
             total_price = qty_base * manual_price.price_per_unit * price_multiplier
             result = (round(total_price, 2), "manual", 1.0)
             if self.enable_cache and self.cache:
                 self.cache.set("combined", normalized_name, result, self.CACHE_TTL["manual"])
             return result
+
+        # 1b. Si pas de correspondance exacte, essayer fuzzy matching avec les prix manuels
+        manual_prices = self.manual.list_prices()
+        if manual_prices:
+            # Extraire les noms des ingrédients avec prix manuels
+            candidate_names = [p.ingredient_name for p in manual_prices]
+            # Utiliser fuzzy matching pour trouver le meilleur candidat
+            match_result = self.match_ingredient_to_product(
+                ingredient_name,
+                candidate_names,
+                threshold=60.0  # Seuil plus bas pour les prix manuels (plus tolérant)
+            )
+            if match_result:
+                matched_name, score = match_result
+                manual_price = self.manual.get_price(matched_name.lower())
+                if manual_price:
+                    qty_base, unit_base = self.normalize_quantity(quantity, unit)
+
+                    if unit_base == "unit" and manual_price.unit in ["kg", "l"]:
+                        weight_per_unit = get_ingredient_weight(ingredient_name)
+                        qty_base = qty_base * weight_per_unit
+                        unit_base = manual_price.unit
+                        logger.debug(f"Fuzzy match {ingredient_name} -> {matched_name} (score: {score}): {quantity} unit × {weight_per_unit}kg/unit = {qty_base}{unit_base}")
+
+                    price_multiplier = self._get_price_multiplier(manual_price.unit, unit_base)
+                    total_price = qty_base * manual_price.price_per_unit * price_multiplier
+                    result = (round(total_price, 2), "manual", 0.8)  # Confiance réduite pour fuzzy match
+                    if self.enable_cache and self.cache:
+                        self.cache.set("combined", normalized_name, result, self.CACHE_TTL["manual"])
+                    logger.info(f"Fuzzy match found: {ingredient_name} -> {matched_name} (score: {score})")
+                    return result
 
         # 2. Chercher via Price Collector (addon interne — données fiables)
         if self.price_collector:
