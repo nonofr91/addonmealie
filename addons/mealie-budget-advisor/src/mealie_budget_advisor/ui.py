@@ -405,9 +405,9 @@ with tabs[4]:
                 with col_edit:
                     st.subheader(f"✏️ Éditer: {selected_food.get('name', '')}")
 
-                    with st.form("food_edit_form"):
-                        edit_name = st.text_input("Nom", value=selected_food.get("name", ""), key="edit-food-name")
-                        edit_description = st.text_area("Description", value=selected_food.get("description", ""), key="edit-food-desc")
+                    with st.form(f"food_edit_form_{selected_food.get('id')}"):
+                        edit_name = st.text_input("Nom", value=selected_food.get("name", ""), key=f"edit-food-name-{selected_food.get('id')}")
+                        edit_description = st.text_area("Description", value=selected_food.get("description", ""), key=f"edit-food-desc-{selected_food.get('id')}")
 
                         # Afficher les métadonnées
                         with st.expander("Métadonnées (lecture seule)"):
