@@ -2,6 +2,8 @@ services:
   mealie-addon:
     image: 'ghcr.io/nonofr91/mealie-import-addon:0.6.4'
     environment:
+      - SERVICE_FQDN_MEALIEADDON_8000
+      - SERVICE_URL_MEALIEADDON_8000
       - SERVICE_FQDN_MEALIEADDON_8501
       - SERVICE_URL_MEALIEADDON_8501
       - 'MEALIE_BASE_URL=${MEALIE_BASE_URL}'

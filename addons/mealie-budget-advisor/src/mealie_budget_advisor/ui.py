@@ -18,14 +18,14 @@ if _SECRET:
     _HEADERS["X-Addon-Key"] = _SECRET
 
 
-def _api(method: str, path: str, **kwargs) -> dict:
+def _api(method: str, path: str, timeout: int = 120, **kwargs) -> dict:
     """Effectue un appel API."""
     try:
         r = requests.request(
             method,
             f"{API_URL}{path}",
             headers=_HEADERS,
-            timeout=120,
+            timeout=timeout,
             **kwargs,
         )
         r.raise_for_status()
@@ -207,7 +207,7 @@ with tabs[2]:
             if st.button("🔄 Rafraîchir coûts Mealie", key="refresh-all"):
                 payload = {"month": refresh_month} if refresh_month.strip() else {}
                 with st.spinner("Recalcul et publication en cours..."):
-                    resp = _api("POST", "/recipes/refresh-costs", json=payload)
+                    resp = _api("POST", "/recipes/refresh-costs", json=payload, timeout=600)
                 if resp.get("success"):
                     summary = resp.get("summary", {})
                     st.success(
@@ -394,7 +394,7 @@ with tabs[4]:
         if st.button("🔄 Calculer et publier tous les coûts", type="primary", key="refresh-all-costs"):
             payload = {"month": cost_refresh_month} if cost_refresh_month.strip() else {}
             with st.spinner("Recalcul et publication en cours pour toutes les recettes..."):
-                resp = _api("POST", "/recipes/refresh-costs", json=payload)
+                resp = _api("POST", "/recipes/refresh-costs", json=payload, timeout=600)
             if resp.get("success"):
                 summary = resp.get("summary", {})
                 st.success(
