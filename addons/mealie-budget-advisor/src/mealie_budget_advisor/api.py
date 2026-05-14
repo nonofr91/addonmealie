@@ -519,3 +519,88 @@ async def generate_cost_report(
         "budget": budget.model_dump(),
         "report": report,
     }
+
+
+@app.get("/foods")
+async def list_foods(
+    search: Optional[str] = Query(None, description="Filtrer par nom d'ingrédient"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(100, ge=1, le=1000),
+):
+    """Liste les ingrédients (foods) Mealie avec pagination.
+
+    Args:
+        search: Filtre optionnel sur le nom
+        page: Page à récupérer
+        per_page: Nombre d'items par page
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - foods: List of food objects
+        - total: Total count
+    """
+    foods = mealie_client.get_foods()
+
+    # Filtrer par recherche si fourni
+    if search:
+        foods = [f for f in foods if search.lower() in f.get("name", "").lower()]
+
+    # Pagination
+    total = len(foods)
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_foods = foods[start:end]
+
+    return {
+        "success": True,
+        "foods": paginated_foods,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+    }
+
+
+@app.get("/foods/{food_id}")
+async def get_food(food_id: str):
+    """Récupère un food par son ID.
+
+    Args:
+        food_id: UUID du food
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - food: Food object
+    """
+    food = mealie_client.get_food(food_id)
+    if not food:
+        raise HTTPException(status_code=404, detail=f"Food {food_id} non trouvé")
+
+    return {
+        "success": True,
+        "food": food,
+    }
+
+
+@app.put("/foods/{food_id}")
+async def update_food(food_id: str, food_data: dict = Body(...)):
+    """Met à jour un food Mealie.
+
+    Args:
+        food_id: UUID du food
+        food_data: Payload complet du food (PUT remplace l'objet entier)
+
+    Returns:
+        JSON response with:
+        - success: Boolean
+        - message: String
+    """
+    success = mealie_client.update_food(food_id, food_data)
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Échec de la mise à jour du food {food_id}")
+
+    return {
+        "success": True,
+        "message": f"Food {food_id} mis à jour",
+    }

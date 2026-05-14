@@ -76,7 +76,7 @@ with col_btn:
         )
 
 # Onglets
-tabs = st.tabs(["📊 Statut", "💰 Budget", "🎯 Planning", "🏷️ Prix", "📈 Coûts"])
+tabs = st.tabs(["📊 Statut", "💰 Budget", "🎯 Planning", "🏷️ Prix", "🥗 Ingrédients", "📈 Coûts"])
 
 # Tab Statut
 with tabs[0]:
@@ -371,8 +371,75 @@ with tabs[3]:
     else:
         st.error(f"Erreur: {prices_resp.get('error')}")
 
-# Tab Coûts
+# Tab Ingrédients
 with tabs[4]:
+    st.header("🥗 Gestion des ingrédients Mealie")
+    st.caption("Éditez les ingrédients en base Mealie pour corriger les prix au kg par exemple")
+
+    col_search, col_refresh = st.columns([3, 1])
+    with col_search:
+        search_food = st.text_input("Rechercher un ingrédient", placeholder="ex: farine", key="food-search")
+    with col_refresh:
+        st.write("")
+        if st.button("🔄 Rafraîchir", key="refresh-foods"):
+            st.rerun()
+
+    # Lister les foods
+    foods_resp = _api("GET", "/foods", params={"search": search_food if search_food else None, "page": 1, "per_page": 100})
+    if foods_resp.get("success"):
+        foods = foods_resp.get("foods", [])
+        total = foods_resp.get("total", 0)
+
+        st.caption(f"Total: {total} ingrédients")
+
+        if foods:
+            # Sélectionner un food à éditer
+            food_options = {f"{f.get('name', '')} (ID: {f.get('id', '')[:8]}...)": f for f in foods}
+            selected_food_label = st.selectbox("Sélectionner un ingrédient à éditer", options=list(food_options.keys()), key="food-select")
+            selected_food = food_options.get(selected_food_label)
+
+            if selected_food:
+                st.divider()
+                st.subheader(f"✏️ Éditer: {selected_food.get('name', '')}")
+
+                with st.form("food_edit_form"):
+                    col_name, col_desc = st.columns([2, 3])
+                    with col_name:
+                        edit_name = st.text_input("Nom", value=selected_food.get("name", ""), key="edit-food-name")
+                    with col_desc:
+                        edit_description = st.text_area("Description", value=selected_food.get("description", ""), key="edit-food-desc")
+
+                    # Afficher les métadonnées
+                    st.caption("Métadonnées (lecture seule):")
+                    st.json({
+                        "id": selected_food.get("id"),
+                        "labelId": selected_food.get("labelId"),
+                        "aliases": selected_food.get("aliases", []),
+                        "createdAt": selected_food.get("createdAt"),
+                        "updatedAt": selected_food.get("updatedAt"),
+                    })
+
+                    if st.form_submit_button("💾 Enregistrer les modifications", type="primary"):
+                        # Préparer le payload complet (PUT remplace l'objet entier)
+                        food_payload = selected_food.copy()
+                        food_payload["name"] = edit_name
+                        food_payload["description"] = edit_description
+
+                        with st.spinner("Mise à jour en cours..."):
+                            resp = _api("PUT", f"/foods/{selected_food['id']}", json=food_payload)
+
+                        if resp.get("success"):
+                            st.success(f"✅ {edit_name} mis à jour avec succès")
+                            st.rerun()
+                        else:
+                            st.error(f"Erreur: {resp.get('error')}")
+        else:
+            st.info("Aucun ingrédient trouvé")
+    else:
+        st.error(f"Erreur: {foods_resp.get('error')}")
+
+# Tab Coûts
+with tabs[5]:
     st.header("📈 Coût des recettes")
     st.caption("Calculez le coût de vos recettes Mealie")
 

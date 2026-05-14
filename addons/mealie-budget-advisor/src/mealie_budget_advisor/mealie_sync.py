@@ -120,6 +120,33 @@ class MealieClient:
             logger.error(f"Erreur récupération units: {e}")
             return []
 
+    def get_food(self, food_id: str) -> Optional[dict]:
+        """Récupère un food par son ID."""
+        try:
+            response = self.session.get(
+                f"{self.base_url}/api/foods/{food_id}",
+                timeout=30,
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erreur récupération food {food_id}: {e}")
+            return None
+
+    def update_food(self, food_id: str, food_data: dict) -> bool:
+        """Met à jour un food via PUT (Mealie v3.15+)."""
+        try:
+            response = self.session.put(
+                f"{self.base_url}/api/foods/{food_id}",
+                json=food_data,
+                timeout=30,
+            )
+            response.raise_for_status()
+            return True
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erreur mise à jour food {food_id}: {e}")
+            return False
+
     def get_recipe_extras(self, slug: str) -> dict[str, str]:
         """Récupère le dictionnaire ``extras`` d'une recette (ou ``{}`` si absent)."""
         recipe = self.get_recipe(slug)
