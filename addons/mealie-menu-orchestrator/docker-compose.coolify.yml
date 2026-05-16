@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   menu-orchestrator-api:
-    image: ghcr.io/nonofr91/mealie-menu-orchestrator:0.6.2
+    image: ghcr.io/nonofr91/mealie-menu-orchestrator:0.1.9
     container_name: mealie-menu-orchestrator-api
     environment:
       - MEALIE_BASE_URL=${MEALIE_BASE_URL}
@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
   menu-orchestrator-ui:
-    image: ghcr.io/nonofr91/mealie-menu-orchestrator:0.6.2
+    image: ghcr.io/nonofr91/mealie-menu-orchestrator:0.1.6
     container_name: mealie-menu-orchestrator-ui
     command: streamlit run src/mealie_menu_orchestrator/ui.py --server.headless=true --browser.gatherUsageStats=false --server.fileWatcherType=none
     environment:
