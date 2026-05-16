@@ -32,18 +32,19 @@ class MenuGenerationRequest(BaseModel):
     end_date: date = Field(description="End date for the menu (YYYY-MM-DD)")
     household_id: Optional[str] = Field(default=None, description="Household ID for profiles")
     budget_limit: Optional[float] = Field(default=None, description="Budget limit in currency")
-    priorities: Optional[dict[str, float]] = Field(
+    default_household_size: int = Field(default=4, ge=1, description="Default number of people for meals")
+    meal_quantity_overrides: Optional[dict[str, int]] = Field(
         default=None,
-        description="Priority weights for nutrition, budget, variety, season",
+        description="Override meal quantities by key (e.g., '2026-01-01_dinner': 5)",
     )
-    include_breakfast: bool = Field(default=True, description="Include breakfast in menu")
+    include_breakfast: bool = Field(default=False, description="Include breakfast in menu")
     include_lunch: bool = Field(default=True, description="Include lunch in menu")
     include_dinner: bool = Field(default=True, description="Include dinner in menu")
     meal_composition: dict[str, list[str]] = Field(
         default_factory=lambda: {
             "breakfast": ["main"],
-            "lunch": ["main"],
-            "dinner": ["main"],
+            "lunch": ["starter", "main", "dessert"],
+            "dinner": ["starter", "main", "dessert"],
         },
         description=(
             "Courses to generate per meal type. "
@@ -58,10 +59,14 @@ class MenuGenerationRequest(BaseModel):
                 "start_date": "2026-01-01",
                 "end_date": "2026-01-07",
                 "budget_limit": 200.0,
-                "priorities": {"nutrition": 0.3, "budget": 0.3, "variety": 0.2, "season": 0.2},
+                "default_household_size": 4,
+                "meal_quantity_overrides": {"2026-01-01_dinner": 5},
+                "include_breakfast": False,
+                "include_lunch": True,
+                "include_dinner": True,
                 "meal_composition": {
                     "breakfast": ["main"],
-                    "lunch": ["main"],
+                    "lunch": ["starter", "main", "dessert"],
                     "dinner": ["starter", "main", "dessert"],
                 },
             }

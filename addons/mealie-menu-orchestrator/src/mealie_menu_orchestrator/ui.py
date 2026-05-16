@@ -107,27 +107,31 @@ def render_menu_generation() -> None:
     """Render the menu generation tab."""
     st.header("📋 Generate Menu")
     
+    # Date range
     col1, col2 = st.columns(2)
-    
     with col1:
         start_date = st.date_input("Start Date", date.today())
-    
     with col2:
         end_date = st.date_input("End Date", date.today() + timedelta(days=6))
     
+    # Budget and household
     col3, col4 = st.columns(2)
-    
     with col3:
         budget_limit = st.number_input("Budget Limit (€)", min_value=0.0, value=200.0, step=10.0)
-    
     with col4:
-        st.write("Priority Weights (coming soon)")
+        household_size = st.number_input("Default Household Size", min_value=1, value=4, step=1)
     
-    # Meal types
-    st.subheader("Meal Types")
+    # Household ID for nutrition profiles
+    household_id = st.text_input("Household ID (for nutrition profiles)", placeholder="Optional: enter household ID")
+    
+    # Meal rules info
+    st.info("📅 **Default Meal Rules**: Weekdays (Mon-Fri) = Dinner only | Weekends (Sat-Sun) = Lunch + Dinner")
+    
+    # Meal types (override defaults if needed)
+    st.subheader("Meal Types (override defaults)")
     col5, col6, col7 = st.columns(3)
     with col5:
-        include_breakfast = st.checkbox("Breakfast", value=True)
+        include_breakfast = st.checkbox("Breakfast", value=False)
     with col6:
         include_lunch = st.checkbox("Lunch", value=True)
     with col7:
@@ -140,6 +144,8 @@ def render_menu_generation() -> None:
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
                 "budget_limit": budget_limit,
+                "default_household_size": household_size,
+                "household_id": household_id if household_id else None,
                 "include_breakfast": include_breakfast,
                 "include_lunch": include_lunch,
                 "include_dinner": include_dinner,
@@ -160,7 +166,24 @@ def render_menu_generation() -> None:
                 with col9:
                     st.metric("Entries", len(menu.get('entries', [])))
                 with col10:
-                    st.metric("Nutrition Score", f"{menu.get('scores', {}).get('nutrition', 0):.2f}")
+                    st.metric("Combined Score", f"{menu.get('scores', {}).get('combined', 0):.2f}")
+                
+                # Display detailed scores
+                st.subheader("Detailed Scores")
+                scores = menu.get('scores', {})
+                score_cols = st.columns(6)
+                with score_cols[0]:
+                    st.metric("Nutrition", f"{scores.get('nutrition', 0):.2f}")
+                with score_cols[1]:
+                    st.metric("Budget", f"{scores.get('budget', 0):.2f}")
+                with score_cols[2]:
+                    st.metric("Variety", f"{scores.get('variety', 0):.2f}")
+                with score_cols[3]:
+                    st.metric("Season", f"{scores.get('season', 0):.2f}")
+                with score_cols[4]:
+                    st.metric("Rating", f"{scores.get('rating', 0):.2f}")
+                with score_cols[5]:
+                    st.metric("Time", f"{scores.get('time', 0):.2f}")
 
 
 def render_menu_exploration() -> None:
@@ -240,13 +263,19 @@ def render_mealie_sync() -> None:
     
     st.subheader("Scores")
     scores = menu.get('scores', {})
-    col3, col4 = st.columns(2)
-    with col3:
+    score_cols = st.columns(6)
+    with score_cols[0]:
         st.metric("Nutrition", f"{scores.get('nutrition', 0):.2f}")
+    with score_cols[1]:
         st.metric("Budget", f"{scores.get('budget', 0):.2f}")
-    with col4:
+    with score_cols[2]:
         st.metric("Variety", f"{scores.get('variety', 0):.2f}")
+    with score_cols[3]:
         st.metric("Season", f"{scores.get('season', 0):.2f}")
+    with score_cols[4]:
+        st.metric("Rating", f"{scores.get('rating', 0):.2f}")
+    with score_cols[5]:
+        st.metric("Time", f"{scores.get('time', 0):.2f}")
     
     # Push button
     if st.button("📤 Push to Mealie", type="primary", use_container_width=True):

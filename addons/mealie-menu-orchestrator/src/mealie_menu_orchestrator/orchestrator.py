@@ -73,7 +73,7 @@ class MenuOrchestrator:
         recipes = self.mealie_client.get_all_recipes()
         recipe_slugs = [r.get("slug") for r in recipes if r.get("slug")]
 
-        # Build metadata dict: slug → {tags, categories} for season & course filtering
+        # Build metadata dict: slug → {tags, categories, rating, time} for season, course, rating, time filtering
         recipe_metadata: dict[str, dict] = {}
         for r in recipes:
             slug = r.get("slug")
@@ -81,14 +81,36 @@ class MenuOrchestrator:
                 recipe_metadata[slug] = {
                     "tags": [t.get("slug", t.get("name", "")).lower() for t in r.get("tags", [])],
                     "categories": [c.get("slug", c.get("name", "")).lower() for c in r.get("recipeCategory", [])],
+                    "rating": r.get("rating", 0),
+                    "totalTime": r.get("totalTime"),
+                    "prepTime": r.get("prepTime"),
+                    "cookTime": r.get("cookTime"),
                 }
 
         logger.info("Found %d recipes to consider", len(recipe_slugs))
 
+        # Get household profiles for nutrition filtering and scoring
+        household_profiles = {}
+        if request.household_id:
+            profiles_data = self.nutrition_client.get_profiles()
+            if profiles_data:
+                household_profiles = profiles_data.get("members", {})
+                logger.info("Loaded %d household member profiles", len(household_profiles))
+
+        # Extract allergens and foods to avoid from profiles
+        allergens_to_avoid = self._extract_allergens(household_profiles)
+        if allergens_to_avoid:
+            logger.info("Allergens to avoid: %s", allergens_to_avoid)
+
+        # Set household profiles in scorer for pathology-aware nutrition scoring
+        if household_profiles:
+            self.scorer.set_household_profiles(household_profiles)
+
         # Get menu history for variety (from Mealie mealplans)
         menu_history = self._get_menu_history(request.start_date)
 
-        # Meal type enablement map
+        # Meal type enablement map with default rules
+        # Weekdays: dinner only; Weekends/holidays: lunch + dinner
         meal_enabled = {
             "breakfast": request.include_breakfast,
             "lunch": request.include_lunch,
@@ -99,34 +121,45 @@ class MenuOrchestrator:
         entries: list[MenuEntry] = []
         current_date = request.start_date
         session_history = list(menu_history)
+        weekly_cost_so_far = 0.0
 
         while current_date <= request.end_date:
+            # Apply default meal rules if not overridden
+            day_meal_enabled = self._get_meal_enablement_for_day(
+                current_date, meal_enabled, request
+            )
+
             for meal_key, courses in request.meal_composition.items():
-                if not meal_enabled.get(meal_key, False):
+                if not day_meal_enabled.get(meal_key, False):
                     continue
                 meal_type = MealType(meal_key)
-                for course_str in courses:
-                    try:
-                        course_type = CourseType(course_str)
-                    except ValueError:
-                        logger.warning("Unknown course type '%s', skipping", course_str)
-                        continue
-                    filtered_slugs = self._filter_by_course(
-                        recipe_slugs, course_type, recipe_metadata
-                    )
-                    entry = self._generate_entry(
-                        date=current_date,
-                        meal_type=meal_type,
-                        recipe_slugs=filtered_slugs,
-                        menu_history=session_history,
-                        current_date=current_date,
-                        course_type=course_type,
-                        recipe_metadata=recipe_metadata,
-                    )
-                    if entry:
-                        entries.append(entry)
+                
+                # Generate complete meal (all courses together)
+                meal_entries = self._generate_meal(
+                    date=current_date,
+                    meal_type=meal_type,
+                    courses=courses,
+                    recipe_slugs=recipe_slugs,
+                    recipe_metadata=recipe_metadata,
+                    menu_history=session_history,
+                    current_date=current_date,
+                    weekly_cost_so_far=weekly_cost_so_far,
+                    budget_limit=request.budget_limit,
+                    household_size=request.default_household_size,
+                    quantity_overrides=request.meal_quantity_overrides,
+                    allergens_to_avoid=allergens_to_avoid,
+                )
+                
+                if meal_entries:
+                    entries.extend(meal_entries)
+                    # Update history and cost
+                    for entry in meal_entries:
                         if entry.recipe_slug:
                             session_history.append(entry.recipe_slug)
+                        # Update cost
+                        cost_data = self.budget_client.get_recipe_cost(entry.recipe_slug)
+                        if cost_data:
+                            weekly_cost_so_far += cost_data.get("total_cost", 0) * entry.quantity
 
             current_date = self._next_day(current_date)
         
@@ -151,6 +184,228 @@ class MenuOrchestrator:
         logger.info("Generated menu with %d entries", len(entries))
         return menu
 
+    def _extract_allergens(self, household_profiles: dict) -> set[str]:
+        """Extract allergens and foods to avoid from household profiles."""
+        allergens: set[str] = set()
+        
+        for member_id, member_data in household_profiles.items():
+            allergies = member_data.get("allergies", [])
+            if isinstance(allergies, list):
+                allergens.update(allergies)
+            
+            intolerances = member_data.get("intolerances", [])
+            if isinstance(intolerances, list):
+                allergens.update(intolerances)
+            
+            foods_to_avoid = member_data.get("foods_to_avoid", [])
+            if isinstance(foods_to_avoid, list):
+                allergens.update(foods_to_avoid)
+        
+        return {a.lower() for a in allergens if a}
+
+    def _get_meal_enablement_for_day(
+        self, current_date: date, meal_enabled: dict[str, bool], request: MenuGenerationRequest
+    ) -> dict[str, bool]:
+        """
+        Apply default meal rules for the day.
+        Weekdays (Mon-Fri): dinner only
+        Weekends (Sat-Sun): lunch + dinner
+        """
+        # If user explicitly set all flags, respect them
+        if request.include_breakfast or request.include_lunch or request.include_dinner:
+            return meal_enabled
+        
+        # Default rules
+        is_weekend = current_date.weekday() >= 5  # 5=Saturday, 6=Sunday
+        # Note: holidays detection could be added here with a holidays library
+        
+        if is_weekend:
+            # Weekend: lunch + dinner
+            return {"breakfast": False, "lunch": True, "dinner": True}
+        else:
+            # Weekday: dinner only
+            return {"breakfast": False, "lunch": False, "dinner": True}
+
+    def _generate_meal(
+        self,
+        date: date,
+        meal_type: MealType,
+        courses: list[str],
+        recipe_slugs: list[str],
+        recipe_metadata: dict[str, dict],
+        menu_history: list[str],
+        current_date: date,
+        weekly_cost_so_far: float,
+        budget_limit: Optional[float],
+        household_size: int,
+        quantity_overrides: Optional[dict[str, int]],
+        allergens_to_avoid: set[str],
+    ) -> list[MenuEntry]:
+        """
+        Generate a complete meal with all courses, considering budget compensation, time penalty, and allergens.
+        """
+        meal_entries: list[MenuEntry] = []
+        total_meal_time_minutes = 0.0
+        
+        # Filter recipes for each course
+        course_recipes: dict[str, list[str]] = {}
+        for course_str in courses:
+            try:
+                course_type = CourseType(course_str)
+                filtered_slugs = self._filter_by_course(
+                    recipe_slugs, course_type, recipe_metadata
+                )
+                # Further filter by allergens
+                if allergens_to_avoid:
+                    filtered_slugs = self._filter_by_allergens(
+                        filtered_slugs, allergens_to_avoid, recipe_metadata
+                    )
+                course_recipes[course_str] = filtered_slugs
+            except ValueError:
+                logger.warning("Unknown course type '%s', skipping", course_str)
+                continue
+        
+        # Select best combination of recipes for all courses
+        # For simplicity, select best recipe per course independently (could be improved with joint optimization)
+        for course_str, slugs in course_recipes.items():
+            if not slugs:
+                logger.warning("No recipes available for course '%s' on %s", course_str, date)
+                continue
+            
+            try:
+                course_type = CourseType(course_str)
+            except ValueError:
+                continue
+            
+            # Rank recipes for this course
+            ranked_recipes = self.scorer.rank_recipes(
+                recipe_slugs=slugs,
+                menu_history=menu_history,
+                current_date=current_date,
+                limit=10,
+                recipe_metadata=recipe_metadata,
+            )
+            
+            if not ranked_recipes:
+                continue
+            
+            # Select top recipe
+            best_slug, best_score = ranked_recipes[0]
+            
+            # Get recipe details
+            recipe = self.mealie_client.get_recipe(best_slug)
+            if not recipe:
+                continue
+            
+            # Calculate quantity
+            meal_key = f"{date.isoformat()}_{meal_type.value}"
+            quantity = quantity_overrides.get(meal_key, household_size) if quantity_overrides else household_size
+            
+            # Extract time for this recipe
+            recipe_meta = recipe_metadata.get(best_slug, {})
+            total_time_minutes = self._extract_total_time_minutes(recipe_meta)
+            total_meal_time_minutes += total_time_minutes
+            
+            entry = MenuEntry(
+                date=date,
+                meal_type=meal_type,
+                course_type=course_type,
+                recipe_id=recipe.get("id"),
+                recipe_slug=best_slug,
+                recipe_name=recipe.get("name", best_slug),
+                quantity=quantity,
+            )
+            meal_entries.append(entry)
+        
+        # Check total meal time and log warning if > 2h
+        if total_meal_time_minutes > 120:
+            logger.warning(
+                "Meal on %s (%s) exceeds 2h total time: %.1f minutes",
+                date, meal_type.value, total_meal_time_minutes
+            )
+        
+        # Budget compensation check
+        if budget_limit:
+            meal_cost = sum(
+                (self.budget_client.get_recipe_cost(e.recipe_slug).get("total_cost", 0) if e.recipe_slug else 0) * e.quantity
+                for e in meal_entries
+            )
+            projected_total = weekly_cost_so_far + meal_cost
+            if projected_total > budget_limit:
+                logger.info(
+                    "Meal cost %.2f would exceed budget (projected total: %.2f/%.2f)",
+                    meal_cost, projected_total, budget_limit
+                )
+        
+        return meal_entries
+
+    def _extract_total_time_minutes(self, recipe_metadata: dict) -> float:
+        """Extract total preparation time in minutes from recipe metadata."""
+        total_time = recipe_metadata.get("totalTime", 0)
+        if total_time:
+            if isinstance(total_time, str) and total_time.startswith("PT"):
+                hours = 0
+                minutes = 0
+                if "H" in total_time:
+                    hours = int(total_time.split("H")[0].replace("PT", ""))
+                if "M" in total_time:
+                    minutes = int(total_time.split("M")[0].split("H")[-1])
+                return hours * 60 + minutes
+            elif isinstance(total_time, (int, float)):
+                return float(total_time)
+        
+        # Fallback to prepTime + cookTime
+        prep_time = recipe_metadata.get("prepTime", 0)
+        cook_time = recipe_metadata.get("cookTime", 0)
+        
+        def parse_time(t):
+            if isinstance(t, str) and t.startswith("PT"):
+                hours = 0
+                minutes = 0
+                if "H" in t:
+                    hours = int(t.split("H")[0].replace("PT", ""))
+                if "M" in t:
+                    minutes = int(t.split("M")[0].split("H")[-1])
+                return hours * 60 + minutes
+            elif isinstance(t, (int, float)):
+                return float(t)
+            return 0
+        
+        return parse_time(prep_time) + parse_time(cook_time)
+
+    def _filter_by_allergens(
+        self,
+        recipe_slugs: list[str],
+        allergens_to_avoid: set[str],
+        recipe_metadata: dict[str, dict],
+    ) -> list[str]:
+        """
+        Filter recipes that contain allergens or foods to avoid.
+        """
+        filtered = []
+        for slug in recipe_slugs:
+            metadata = recipe_metadata.get(slug, {})
+            # Check recipe name and tags for allergens
+            recipe_name = metadata.get("name", "").lower()
+            tags = set(metadata.get("tags", []))
+            
+            # Simple heuristic: check if any allergen appears in name or tags
+            contains_allergen = False
+            for allergen in allergens_to_avoid:
+                if allergen in recipe_name or allergen in tags:
+                    contains_allergen = True
+                    break
+            
+            if not contains_allergen:
+                filtered.append(slug)
+            else:
+                logger.debug("Recipe %s filtered due to allergens", slug)
+        
+        if len(filtered) < len(recipe_slugs):
+            logger.info("Filtered %d recipes due to allergens", len(recipe_slugs) - len(filtered))
+        
+        return filtered
+
     def _filter_by_course(
         self,
         recipe_slugs: list[str],
@@ -158,25 +413,31 @@ class MenuOrchestrator:
         recipe_metadata: dict[str, dict],
     ) -> list[str]:
         """
-        Filter recipe pool to those matching the given course type category.
-        Falls back to the full pool if filtering is disabled or no recipes match.
+        Filter recipe pool to those matching the given course type category or tag.
+        Strict filtering: no fallback to full pool if no recipes match.
         """
-        if not self.config.enable_course_filtering:
-            return recipe_slugs
-
         course_cats = {c.lower() for c in self.config.course_categories.get(course_type.value, [])}
         if not course_cats:
-            return recipe_slugs
+            logger.warning("No course categories configured for '%s', returning empty list", course_type.value)
+            return []
 
-        filtered = [
-            slug for slug in recipe_slugs
-            if course_cats & set(recipe_metadata.get(slug, {}).get("categories", []))
-        ]
+        filtered = []
+        for slug in recipe_slugs:
+            metadata = recipe_metadata.get(slug, {})
+            categories = set(metadata.get("categories", []))
+            tags = set(metadata.get("tags", []))
+            
+            # Match if course category appears in either categories or tags
+            if course_cats & (categories | tags):
+                filtered.append(slug)
+
         if not filtered:
-            logger.debug(
-                "No recipes found for course '%s' — falling back to full pool", course_type.value
+            logger.warning(
+                "No recipes found for course '%s' with categories/tags: %s. "
+                "Consider running diagnose_recipe_metadata() to see available tags/categories.",
+                course_type.value,
+                sorted(course_cats)
             )
-            return recipe_slugs
 
         logger.debug(
             "Course filter '%s': %d/%d recipes match", course_type.value, len(filtered), len(recipe_slugs)

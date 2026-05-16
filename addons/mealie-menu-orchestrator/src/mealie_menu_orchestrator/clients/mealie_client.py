@@ -101,3 +101,41 @@ class MealieClient:
         except httpx.HTTPStatusError as exc:
             logger.warning("Failed to get mealplans: %s", exc)
             return []
+
+    def diagnose_recipe_metadata(self) -> dict[str, Any]:
+        """
+        Scan all recipes to extract unique tags and categories.
+        
+        Returns:
+            Dictionary with unique tags and categories found in recipes.
+        """
+        recipes = self.get_all_recipes()
+        unique_tags: set[str] = set()
+        unique_categories: set[str] = set()
+        
+        for recipe in recipes:
+            # Extract tags
+            tags = recipe.get("tags", [])
+            for tag in tags:
+                slug = tag.get("slug", tag.get("name", "")).lower()
+                if slug:
+                    unique_tags.add(slug)
+            
+            # Extract categories
+            categories = recipe.get("recipeCategory", [])
+            for cat in categories:
+                slug = cat.get("slug", cat.get("name", "")).lower()
+                if slug:
+                    unique_categories.add(slug)
+        
+        logger.info(
+            "Diagnosed recipe metadata: %d unique tags, %d unique categories",
+            len(unique_tags),
+            len(unique_categories)
+        )
+        
+        return {
+            "unique_tags": sorted(unique_tags),
+            "unique_categories": sorted(unique_categories),
+            "total_recipes": len(recipes),
+        }
