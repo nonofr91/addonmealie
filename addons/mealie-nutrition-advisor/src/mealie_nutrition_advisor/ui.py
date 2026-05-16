@@ -67,6 +67,34 @@ def _map_goal_to_english(value: str) -> str:
     }
     return mapping.get(value, value)
 
+def _map_medical_conditions_to_english(conditions: list[str]) -> list[str]:
+    """Map French medical conditions to English."""
+    mapping = {
+        "diabète": "diabetes",
+        "hypertension": "hypertension",
+        "cholestérol_élevé": "high_cholesterol",
+        "goutte": "gout",
+        "rfg": "gerd",
+        "maladie_rénale": "kidney_disease",
+        "foie_gras": "fatty_liver",
+        "colon_irritable": "irritable_bowel",
+    }
+    return [mapping.get(c, c) for c in conditions]
+
+def _map_medical_conditions_to_french(conditions: list[str]) -> list[str]:
+    """Map English medical conditions to French."""
+    mapping = {
+        "diabetes": "diabète",
+        "hypertension": "hypertension",
+        "high_cholesterol": "cholestérol_élevé",
+        "gout": "goutte",
+        "gerd": "rfg",
+        "kidney_disease": "maladie_rénale",
+        "fatty_liver": "foie_gras",
+        "irritable_bowel": "colon_irritable",
+    }
+    return [mapping.get(c, c) for c in conditions]
+
 
 def _api(method: str, path: str, **kwargs) -> dict:
     try:
@@ -277,7 +305,7 @@ if ENABLE_PROFILE_UI:
                     conditions = st.multiselect(
                         "Sélectionnez si applicable",
                         ["diabète", "hypertension", "cholestérol_élevé", "goutte", "rfg", "maladie_rénale", "foie_gras", "colon_irritable"],
-                        default=editing_member.get('medical_conditions', []),
+                        default=_map_medical_conditions_to_french(editing_member.get('medical_conditions', [])),
                         key="conditions_edit"
                     )
                 else:
@@ -326,7 +354,7 @@ if ENABLE_PROFILE_UI:
                             "height_cm": height,
                             "activity_level": _map_activity_level_to_english(activity),
                             "goal": _map_goal_to_english(goal),
-                            "medical_conditions": conditions,
+                            "medical_conditions": _map_medical_conditions_to_english(conditions),
                             "dietary_restrictions": restrictions,
                             "allergies": allergies,
                             "foods_to_avoid": foods_to_avoid,
